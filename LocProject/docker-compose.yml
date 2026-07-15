@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # WARNING: bitnamilegacy images are frozen and receive no security updates.
+  # DO NOT USE IN STAGING/PRODUCTION. Strictly for local dev only.
+  postgres-primary:
+    image: bitnamilegacy/postgresql:15
+    container_name: postgres-primary
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres_password
+      - POSTGRESQL_DATABASE=ecommerce
+      - ALLOW_EMPTY_PASSWORD=no
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_primary_data:/bitnami/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # WARNING: bitnamilegacy images are frozen and receive no security updates.
+  # DO NOT USE IN STAGING/PRODUCTION. Strictly for local dev only.
+  postgres-replica:
+    image: bitnamilegacy/postgresql:15
+    container_name: postgres-replica
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      # Lưu ý: "master"/"slave" ở đây là do entrypoint script cũ của bitnamilegacy chỉ
+      # nhận diện từ khóa này, KHÔNG phải quy ước đặt tên của dự án (dự án dùng
+      # primary/replica xuyên suốt tài liệu). Xem PROJECT_CONTEXT.md mục nợ kỹ thuật.
+      - POSTGRESQL_MASTER_HOST=postgres-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_PASSWORD=postgres_password
+      - POSTGRESQL_DATABASE=ecommerce
+      - ALLOW_EMPTY_PASSWORD=no
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_replica_data:/bitnami/postgresql
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # WARNING: bitnamilegacy images are frozen and receive no security updates.
+  # DO NOT USE IN STAGING/PRODUCTION. Strictly for local dev only.
+  pgbouncer:
+    image: bitnamilegacy/pgbouncer:latest
+    container_name: pgbouncer
+    environment:
+      - PGBOUNCER_DATABASE=ecommerce
+      - POSTGRESQL_HOST=postgres-primary
+      - POSTGRESQL_PORT=5432
+      - PGBOUNCER_PORT=6432
+      - PGBOUNCER_POOL_MODE=transaction
+      - PGBOUNCER_MAX_CLIENT_CONN=1000
+      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres_password
+      - PGBOUNCER_STATS_USERS=postgres
+      - PGBOUNCER_AUTH_TYPE=scram-sha-256
+      - ALLOW_EMPTY_PASSWORD=no
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/common/bin/wait-for-port", "6432"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-create-buckets:
+    image: minio/mc:latest
+    container_name: minio-create-buckets
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb --ignore-existing local/ecommerce-uploads;
+      /usr/bin/mc anonymous set public local/ecommerce-uploads;
+      exit 0;
+      "
+
+volumes:
+  postgres_primary_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
