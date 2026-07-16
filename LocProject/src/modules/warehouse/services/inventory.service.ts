@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
+import { InsufficientStockException } from '../exceptions/insufficient-stock.exception';
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Tạm giữ (reserve) tồn kho khi khách tạo đơn hàng.
@@ -31,7 +32,8 @@ export class InventoryService {
       `;
 
       if (affected === 0) {
-        throw new BadRequestException('Không đủ tồn kho để giữ hàng');
+        const available = Math.max(0, (stockItem.qtyOnHand ?? 0) - (stockItem.qtyReserved ?? 0));
+        throw new InsufficientStockException(productVariantId, qty, available);
       }
 
       // 3. Ghi audit trail — StockMovement type RESERVED
@@ -116,7 +118,7 @@ export class InventoryService {
       `;
 
       if (affected === 0) {
-        throw new BadRequestException('Lỗi tồn kho: dữ liệu không nhất quán');
+        throw new InsufficientStockException(productVariantId, qty, 0);
       }
 
       // Ghi audit trail — StockMovement type OUTBOUND

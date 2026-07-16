@@ -1,5 +1,7 @@
-import { Controller, Post, Body, Res, Req, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, UseGuards, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { AuthGuard } from '@nestjs/passport';
+import { User } from '../decorators/user.decorator';
 import { AuthService } from '../services/auth.service';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
@@ -7,7 +9,7 @@ import { Public } from '../decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Public()
   @Post('register')
@@ -19,11 +21,18 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
-    const { accessToken, refreshToken } = await this.authService.login(dto);
+    const { accessToken, refreshToken, user } = await this.authService.login(dto);
 
     this.setRefreshTokenCookie(response, refreshToken);
 
-    return { accessToken };
+    return { accessToken, user };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  async me(@User('userId') userId: string) {
+    return this.authService.getProfile(userId);
   }
 
   @Public()
@@ -50,14 +59,14 @@ export class AuthController {
     if (refreshToken) {
       await this.authService.logout(refreshToken);
     }
-    
+
     response.clearCookie('refresh_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/api/auth/refresh',
     });
-    
+
     return { message: 'Đăng xuất thành công' };
   }
 

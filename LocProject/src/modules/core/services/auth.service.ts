@@ -23,7 +23,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
@@ -53,7 +53,37 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
-    return this.generateTokens(user.id);
+    const { accessToken, refreshToken } = await this.generateTokens(user.id);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.toUserDto(user),
+    };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User không tồn tại');
+    }
+
+    return this.toUserDto(user);
+  }
+
+  private toUserDto(user: {
+    id: string;
+    email: string;
+    fullName: string;
+  }) {
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+    };
   }
 
   async rotateTokens(refreshToken: string) {

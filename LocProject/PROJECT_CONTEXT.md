@@ -31,10 +31,10 @@ Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / 
 
 ## 3. Việc đang làm dở (để phiên sau tiếp tục đúng chỗ)
 - Backend Core hoàn tất.
-- Bước tiếp theo: Thiết kế UI tại Stitch → export → bắt đầu Next.js Storefront (App Router). Ưu tiên 3 trang đầu tiên:
-  1. Trang chủ (hero, featured products, banner)
-  2. Trang danh sách sản phẩm theo danh mục
-  3. Trang chi tiết sản phẩm + nút thêm vào giỏ
+- Storefront (Next.js): đang thực hiện Phase B — Convert HTML → React, từng file build pass mới chuyển tiếp.
+  - File 1 (Design system / Tailwind config): ✅ Xong — đã xác minh 13/13 class đúng màu.
+  - File 2 (Trang chủ): ✅ Xong — build pass, 10 component đã tạo, typography đã điều chỉnh.
+  - File 3 (Danh sách SP): ⏳ Đang làm.
 - Sau khi có storefront tối thiểu: chạy test thật VNPay sandbox để đóng open item cuối cùng của Sales module.
 
 ## 4. Quyết định/giả định cần xác nhận với chủ dự án
@@ -52,6 +52,18 @@ Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / 
 |---|---|---|
 | 2026-07-13 | Sử dụng Prisma v6.19.3 và tách biệt DATABASE_URL / DIRECT_URL | Tránh các rào cản cấu hình phức tạp của Prisma 7 (driver adapters) và đảm bảo các câu lệnh migration không đi qua cổng PgBouncer. |
 | 2026-07-13 | Chuyển sang dùng `bitnamilegacy/*` cho local dev | Nhóm hình ảnh `bitnami/` mặc định cho Postgres 15 và PgBouncer đã không còn được phân phối công cộng trên Docker Hub. |
-| 2026-07-14 | Phân tách Domain Event cho Compensating Action | Sửa đổi logic để không cho Warehouse tự cập nhật bảng Order của Sales. Warehouse sẽ emit event `inventory.allocation.failed` để Sales tự động hủy đơn. |
+| 2026-07-15 | Typography scale convention cho Frontend | Text quá nhỏ trên trang chủ. Scale up lên 1 bậc: body text dùng text-body-lg, label/tag dùng text-body-sm, hệ heading dùng text-display-lg (không dùng -mobile suffix trừ khi cần responsive riêng biệt). |
 
+## 7. Frontend Typography Convention (bắt buộc áp dụng khi convert các trang tiếp theo)
 
+| Vị trí | Class phải dùng | Class CẤM dùng |
+|---|---|---|
+| Heading trang (h1/h2 hero) | `text-display-lg` | `text-display-lg-mobile` |
+| Heading section (h2/h3) | `text-headline-lg` | `text-headline-md` (trừ card) |
+| Tên sản phẩm card | `text-headline-md` | `text-label-bold` |
+| Body text chính (mô tả) | `text-body-lg` | `text-body-md` |
+| Label / tag / badge text | `text-body-sm` | `text-caption` |
+| Footnote / meta / thời gian | `text-caption` | (giữ nguyên) |
+
+**Responsive rule:** Mobile class giữ nguyên, `md:` trở lên scale up 1 bậc nếu container hẹp. 
+Ví dụ: `text-body-lg md:text-headline-md` cho tên sản phẩm ở sidebar.

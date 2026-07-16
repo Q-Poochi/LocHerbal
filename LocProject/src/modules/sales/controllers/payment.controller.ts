@@ -10,7 +10,20 @@ export class PaymentController {
   constructor(
     private readonly vnpayService: VNPayService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
+
+  /**
+   * Resolve Customer.id từ JWT (payload.sub = User.id).
+   */
+  private async getCustomerId(req: Request): Promise<string | undefined> {
+    const userId = (req as any).user?.userId;
+    if (!userId) return undefined;
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    return customer?.id;
+  }
 
   /**
    * Tạo URL thanh toán VNPay.
@@ -36,15 +49,9 @@ export class PaymentController {
     }
 
     // Kiểm tra quyền sở hữu: user đang đăng nhập phải là chủ đơn hàng
-    const userId = (req as any).user?.userId;
-    if (userId) {
-      // Tìm customer theo userId
-      const customer = await this.prisma.customer.findUnique({
-        where: { userId },
-      });
-      if (customer && customer.id !== order.customerId) {
-        throw new ForbiddenException('Bạn không có quyền thanh toán đơn hàng này');
-      }
+    const customerId = await this.getCustomerId(req);
+    if (customerId && order.customerId !== customerId) {
+      throw new ForbiddenException('Bạn không có quyền thanh toán đơn hàng này');
     }
 
     const ipAddr =

@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InventoryService } from '../services/inventory.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
+import { InsufficientStockException } from '../exceptions/insufficient-stock.exception';
 
 describe('InventoryService', () => {
   let service: InventoryService;
@@ -51,13 +52,29 @@ describe('InventoryService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException if insufficient stock', async () => {
-      mockPrisma.stockItem.findFirst.mockResolvedValue({ id: 'si-1', productVariantId: 'variant-1' });
+    it('should throw InsufficientStockException if insufficient stock', async () => {
+      mockPrisma.stockItem.findFirst.mockResolvedValue({ id: 'si-1', productVariantId: 'variant-1', qtyOnHand: 10, qtyReserved: 5 });
       mockPrisma.$executeRaw.mockResolvedValue(0); // affected = 0 → không đủ tồn kho
 
       await expect(
         service.allocate('variant-1', 100),
-      ).rejects.toThrow('Không đủ tồn kho để giữ hàng');
+      ).rejects.toThrow(InsufficientStockException);
+    });
+
+    it('InsufficientStockException should expose variantId, requested, available', async () => {
+      mockPrisma.stockItem.findFirst.mockResolvedValue({ id: 'si-1', productVariantId: 'variant-1', qtyOnHand: 10, qtyReserved: 5 });
+      mockPrisma.$executeRaw.mockResolvedValue(0);
+
+      try {
+        await service.allocate('variant-1', 100);
+        fail('Should have thrown');
+      } catch (e) {
+        expect(e).toBeInstanceOf(InsufficientStockException);
+        const ex = e as InsufficientStockException;
+        expect(ex.variantId).toBe('variant-1');
+        expect(ex.requested).toBe(100);
+        expect(ex.available).toBe(5); // qtyOnHand(10) - qtyReserved(5)
+      }
     });
 
     it('should allocate successfully when stock is sufficient', async () => {
@@ -143,13 +160,13 @@ describe('InventoryService', () => {
       });
     });
 
-    it('should throw BadRequestException if qty_on_hand < qty (data integrity check)', async () => {
+    it('should throw InsufficientStockException if qty_on_hand < qty (data integrity check)', async () => {
       mockPrisma.stockItem.findFirst.mockResolvedValue({ id: 'si-1', productVariantId: 'variant-1' });
       mockPrisma.$executeRaw.mockResolvedValue(0); // affected = 0 → dữ liệu không nhất quán
 
       await expect(
         service.deduct('variant-1', 100),
-      ).rejects.toThrow('Lỗi tồn kho: dữ liệu không nhất quán');
+      ).rejects.toThrow(InsufficientStockException);
 
       // Phải KHÔNG ghi StockMovement nếu deduct thất bại
       expect(mockPrisma.stockMovement.create).not.toHaveBeenCalled();

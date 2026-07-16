@@ -4,7 +4,7 @@ import { CreateProductDto, UpdateProductDto, UpsertProductAttributeValueDto } fr
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(dto: CreateProductDto) {
     const existing = await this.prisma.product.findUnique({ where: { slug: dto.slug } });
@@ -88,12 +88,71 @@ export class ProductService {
     });
   }
 
+  private transformProductDetail(product: any) {
+    // Transform variants to include stock from StockItem
+    const variantsWithStock = (product.variants || []).map((variant: any) => ({
+      ...variant,
+      stock: variant.stockItems?.reduce((sum: number, item: any) => sum + (item.qtyOnHand || 0), 0) || 0,
+    }));
+
+    // Transform attributeValues to specifications
+    const specifications = (product.attributeValues || []).map((av: any) => ({
+      label: av.attribute?.label || av.attribute?.key || 'Thuộc tính',
+      value: av.value,
+    }));
+
+    // For now, use description as benefits (split by period or return empty)
+    const benefits = product.description ?
+      product.description.split('. ').filter((s: string) => s.length > 0).slice(0, 4) :
+      [];
+
+    return {
+      ...product,
+      variants: variantsWithStock,
+      ingredients: product.description || '',
+      dosage: 'Theo hướng dẫn của bác sĩ hoặc trên bao bì sản phẩm',
+      contraindications: 'Không dùng cho người dưới 18 tuổi, phụ nữ có thai hoặc cho con nhiễm',
+      rating: 4.5,
+      reviewCount: 0,
+      soldCount: 0,
+      specifications,
+      benefits,
+      usageTips: 'Sử dụng theo liều lượng và thời gian được khuyến cáo trên bao bì sản phẩm.',
+    };
+  }
+
+  async findBySlug(slug: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { slug },
+      include: {
+        category: true,
+        variants: {
+          include: {
+            stockItems: true,
+          },
+        },
+        images: true,
+        attributeValues: {
+          include: {
+            attribute: true,
+          },
+        },
+      },
+    });
+    if (!product) throw new NotFoundException('Không tìm thấy sản phẩm');
+    return this.transformProductDetail(product);
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
         images: true,
-        variants: true,
+        variants: {
+          include: {
+            stockItems: true,
+          },
+        },
         category: true,
         attributeValues: {
           include: {
@@ -106,7 +165,7 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('Không tìm thấy sản phẩm');
     }
-    return product;
+    return this.transformProductDetail(product);
   }
 
   async update(id: string, dto: UpdateProductDto) {
