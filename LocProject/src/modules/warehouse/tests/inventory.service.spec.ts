@@ -11,6 +11,7 @@ describe('InventoryService', () => {
   const mockPrisma = {
     stockItem: {
       findFirst: jest.fn(),
+      upsert: jest.fn(),
     },
     stockMovement: {
       create: jest.fn(),
@@ -170,6 +171,55 @@ describe('InventoryService', () => {
 
       // Phải KHÔNG ghi StockMovement nếu deduct thất bại
       expect(mockPrisma.stockMovement.create).not.toHaveBeenCalled();
+    });
+  });
+
+  // ===== INBOUND =====
+
+  describe('inbound', () => {
+    it('should create StockItem if not exists (upsert)', async () => {
+      mockPrisma.stockItem.upsert = jest.fn().mockResolvedValue({ id: 'si-new' });
+      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.stockMovement.create = jest.fn().mockResolvedValue({});
+
+      await service.inbound('variant-1', 'wh-1', 10, 'po-1');
+
+      expect(mockPrisma.stockItem.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { warehouseId_productVariantId: { warehouseId: 'wh-1', productVariantId: 'variant-1' } },
+          create: expect.objectContaining({ warehouseId: 'wh-1', productVariantId: 'variant-1' }),
+        }),
+      );
+    });
+
+    it('should increase qty_on_hand by correct amount', async () => {
+      mockPrisma.stockItem.upsert = jest.fn().mockResolvedValue({ id: 'si-1' });
+      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.stockMovement.create = jest.fn().mockResolvedValue({});
+
+      await service.inbound('variant-1', 'wh-1', 10, 'po-1');
+
+      const callArgs = mockPrisma.$executeRaw.mock.calls[0][0];
+      const sqlString = Array.isArray(callArgs) ? callArgs.join('') : callArgs;
+      expect(sqlString).toContain('qty_on_hand = qty_on_hand +');
+    });
+
+    it('should create StockMovement with type INBOUND', async () => {
+      mockPrisma.stockItem.upsert = jest.fn().mockResolvedValue({ id: 'si-1' });
+      mockPrisma.$executeRaw.mockResolvedValue(1);
+      mockPrisma.stockMovement.create = jest.fn().mockResolvedValue({});
+
+      await service.inbound('variant-1', 'wh-1', 7, 'po-99');
+
+      expect(mockPrisma.stockMovement.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          stockItemId: 'si-1',
+          type: 'INBOUND',
+          qty: 7,
+          referenceType: 'PURCHASE_ORDER',
+          referenceId: 'po-99',
+        }),
+      });
     });
   });
 });

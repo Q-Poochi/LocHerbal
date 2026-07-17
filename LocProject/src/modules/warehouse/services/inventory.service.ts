@@ -136,4 +136,54 @@ export class InventoryService {
       return { success: true, stockItemId: stockItem.id, qtyDeducted: qty };
     });
   }
+
+  /**
+   * Nhập kho thực tế khi nhận hàng từ nhà cung cấp (Purchase Order).
+   * Upsert StockItem (tạo mới nếu chưa có với qty_on_hand/qty_reserved = 0),
+   * sau đó cộng qty_on_hand bằng UPDATE atomic, và ghi StockMovement INBOUND.
+   */
+  async inbound(
+    productVariantId: string,
+    warehouseId: string,
+    qty: number,
+    referenceId?: string,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Upsert StockItem theo (warehouseId, productVariantId)
+      const stockItem = await tx.stockItem.upsert({
+        where: {
+          warehouseId_productVariantId: {
+            warehouseId,
+            productVariantId,
+          },
+        },
+        update: {},
+        create: {
+          warehouseId,
+          productVariantId,
+          qtyOnHand: 0,
+          qtyReserved: 0,
+        },
+      });
+
+      // 2. Atomic UPDATE tăng qty_on_hand
+      await tx.$executeRaw`
+        UPDATE stock_items
+        SET qty_on_hand = qty_on_hand + ${qty}
+        WHERE id = ${stockItem.id}
+      `;
+
+      // 3. Ghi audit trail — StockMovement type INBOUND
+      await tx.stockMovement.create({
+        data: {
+          stockItemId: stockItem.id,
+          type: 'INBOUND',
+          qty,
+          referenceType: 'PURCHASE_ORDER',
+          referenceId: referenceId || null,
+          note: `Nhập kho ${qty} đơn vị từ đơn đặt hàng`,
+        },
+      });
+    });
+  }
 }
