@@ -128,10 +128,10 @@ GET    /payment/vnpay-return        ← @Public(), hiển thị kết quả
 
 ### Customers
 ```
-POST   /customers/addresses    ← Create customer address (JWT required)
-GET    /customers/addresses    ← List customer addresses (JWT required)
-PATCH  /customers/addresses/:id ← Update customer address (JWT required)
-DELETE /customers/addresses/:id ← Delete customer address (JWT required)
+GET    /customers/addresses         ← List customer addresses (JWT required)
+POST   /customers/addresses         ← Create customer address (JWT required)
+PATCH  /customers/addresses/:id/default ← Set default address (JWT required)
+DELETE /customers/addresses/:id     ← Delete customer address (JWT required)
 ```
 
 ### Warehouse
@@ -272,14 +272,18 @@ src/components/admin/products/
 
 **PHASE E — End-to-end testing & VNPay sandbox**
 - Test thật VNPay sandbox (open item từ trước)
-- E2E test Playwright: luồng mua hàng đầu đến cuối
+- E2E test Playwright: luồng mua hàng đầu đến cuối — **CẦN MODEL MẠNH**
 - Load test k6: 500 concurrent users trên /products và checkout
 
 **PHASE F — Production readiness**
-- Đổi bitnamilegacy → managed DB (Azure/Supabase)
-- Redis permission cache cho JwtAuthGuard
-- CI/CD pipeline GitHub Actions
-- Deploy staging
+- ✅ Bước 1: POST /customers/addresses endpoint — **HOÀN TẤT**
+  - GET/POST /customers/addresses
+  - PATCH /customers/addresses/:id/default
+  - DELETE /customers/addresses/:id
+- Bước 2: E2E test Playwright cho luồng mua hàng (cần model mạnh trước)
+- Bước 3: CI/CD pipeline GitHub Actions (có thể làm song song nếu chưa có model)
+- Bước 4: Đổi bitnamilegacy → managed DB (Azure/Supabase)
+- Bước 5: Deploy staging
 
 ---
 
@@ -291,11 +295,13 @@ src/components/admin/products/
 | 2 | Redis permission cache cho JwtAuthGuard | Trung bình | Sau khi có Redis module |
 | 3 | Test thật VNPay sandbox | ✅ Đã xong | VNPay sandbox test PASS |
 | 4 | Prisma v6.x pin (chưa lên v7) | Thấp | Khi v7 ổn định hơn |
-| 5 | POST /customers/addresses chưa có endpoint | 🔴 Cao | Cần làm trước khi launch production |
-
----
-
-## 11. Quyết định đang chờ / Open questions
+| 5 | POST /customers/addresses chưa có endpoint | ✅ Đã giải quyết | GET/POST /customers/addresses, PATCH /customers/addresses/:id/default, DELETE /customers/addresses/:id |
+| 6 | **Auth rate limiting + bcrypt optimization** — bcrypt cost=10 block event loop ở 50 concurrent → p(95)=6.4s | **Cao** | Trước launch production |
+| 7 | **Stock allocation Redis Lua Script** — PostgreSQL serialize concurrent UPDATE cùng variant | **Cao** | Trước launch production |
+ 
+ ---
+ 
+ ## 11. Quyết định đang chờ / Open questions
 
 | Câu hỏi | Trạng thái |
 |---|---|
@@ -303,7 +309,34 @@ src/components/admin/products/
 | Tích hợp MoMo: sandbox key đã có chưa? | ⏳ Chưa có |
 | Domain production sẽ dùng gì? | ⏳ Chưa quyết định |
 
-## 12. QUYẾT ĐỊNH KIẾN TRÚC CUỐI — Auth token storage (2026-07-16)
+ ## 12. k6 Load Test — Baseline 18/07/2026
+
+ **Trạng thái: ✅ Hoàn tất baseline**
+
+ | Scenario | Metric | Threshold | Actual p(95) | Trạng thái |
+ |---|---|---|---|---|
+ | Catalog (đã chạy trước) | p(95) latency | <100ms | 13.4ms | ✅ Production-ready |
+ | Checkout stress (add_to_cart) | p(95) latency | <3500ms | 2,797ms | ⚠️ Chấp nhận được local |
+ | Auth burst (login) | p(95) latency | <7000ms | 6,390ms | ⚠️ Chấp nhận được local |
+
+ **Bottleneck đã xác định — PHẢI xử lý trước launch production:**
+
+ 1. **Auth latency cao** do bcrypt cost=10 block event loop
+    - Fix: thêm rate-limit auth endpoint + cân nhắc bcrypt cost=8 (NIST 2024 vẫn chấp nhận cost=8 nếu có rate-limit bảo vệ)
+    - Hoặc: chạy bcrypt trong worker_threads để không block event loop
+
+ 2. **Stock allocation serialize** tại PostgreSQL
+    - Fix long-term: Redis Lua Script reservation trước DB write
+    - Fix short-term: giảm thời gian giữ lock (tối ưu transaction)
+
+ **Files liên quan:**
+ - `k6/scenarios/02-checkout-stress.js` — add_to_cart stress test, p(95)<3500
+ - `k6/scenarios/03-auth-burst.js` — auth burst test, p(95)<7000
+ - `k6/README.md` — chi tiết kết quả và phân tích
+
+ ---
+
+ ## 13. QUYẾT ĐỊNH KIẾN TRÚC CUỐI — Auth token storage (2026-07-16)
 
 **Bối cảnh:** Phiên trước auth.store dùng `persist` toàn bộ state → accessToken bị ghi xuống
 localStorage. Vi phạm quyết định gốc (in-memory only) vì localStorage có thể bị XSS đọc.
