@@ -29,7 +29,7 @@
 | | Core (Auth/RBAC) | ✅ Xong + test | 9/9 unit test pass | UserSession table, RTR, Fail-fast JWT |
 | | Catalog | ✅ Xong + test | 5/5 unit test pass | EAV attribute validation |
 | | Warehouse | ✅ Xong + test | 9/9 unit test pass | Atomic allocate/release/deduct |
-| | Sales | ✅ Xong + test | 14/14 unit test pass + Cart/Order controllers | Cart + Order controllers created |
+| | Sales | ✅ Xong + test | 14/14 unit test pass + Cart/Order/Payment controllers | VNPay sandbox test PASS, IPN flow CONFIRMED|PAID verified |
 | | Accounting | ✅ Xong + test | 8/8 unit test pass | Invoice, PaymentTransaction, revenue report, payment.confirmed listener |
 | | Marketing | ✅ Xong + test | 26/26 unit test pass | Banner, Coupon, BlogPost CRUD |
 | | Supplier | ⬜ Chưa bắt đầu | — | Giai đoạn vận hành |
@@ -47,21 +47,23 @@
 
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
-| Project setup | ✅ Xong | Next.js 16.2.10, build pass 11 routes |
-| Tailwind v4 config | ✅ Verified | 13/13 class pass visual test |
+| Project setup | ✅ Xong | Next.js 16.2.10, build pass 14 routes |
+| Tailwind v4 config | ✅ Verified | All theme tokens mapped from Stitch |
 | API client (axios) | ✅ Xong | Interceptor JWT + auto-refresh 401 |
 | Zustand stores | ✅ Xong | auth.store (persist chỉ `user`, accessToken in-memory + refresh trên reload), cart.store |
-| Stitch → React convert | ✅ Xong | Phase B hoàn tất: File 2-4 build pass |
+| **Phase B (Stitch → React)** | **✅ HOÀN TẤT 10/10** | **Tất cả 10 file Stitch đã convert** |
 | Trang chủ | ✅ Xong | File 2/10 — build pass |
 | Danh sách sản phẩm | ✅ Xong | File 3/10 — build pass, ISR 60s, fallback mock data |
 | Chi tiết sản phẩm | ✅ Xong | File 4/10 — build pass, Server/Client split |
 | Giỏ hàng | ✅ Xong | File 5/10 — build pass, useCart full URL + auth persist |
-| Checkout | ⬜ Chưa bắt đầu | File 6/10 |
-| Order success | ⬜ Chưa bắt đầu | File 7/10 |
-| Admin Dashboard | ⬜ Chưa bắt đầu | File 8/10 |
-| Admin Products | ⬜ Chưa bắt đầu | File 9/10 |
-| Admin Product Form | ⬜ Chưa bắt đầu | File 10/10 |
+| **Checkout** | ✅ Xong | **File 6/10** — CheckoutForm + PaymentSelector + OrderSummary |
+| **Order success** | ✅ Xong | **File 7/10** — Server Component, SVG checkmark animation (CSS @keyframes), OrderSuccessActions (clear cart via useCartStore) |
+| **Admin Dashboard** | ✅ Xong | **File 8/10** — KPI cards, RevenueChart (Recharts LineChart 30 ngày), RecentOrdersTable (sortable), StockAlertCard, LeadCard, AdminSidebar (collapse/expand), middleware.ts |
+| **Admin Products** | ✅ Xong | **File 9/10** — ProductsTable (sortable + bulk select + floating bar), ProductFilterBar, ProductStatusBadge, pagination |
+| **Admin Product Form** | ✅ Xong | **File 10/10** — ProductForm 4-tab (basic/variants/EAV/SEO), VariantEditor (inline editable), EAVAttributeForm (STRING/NUMBER/BOOLEAN/SELECT), PublishSidebar |
 | Gắn API (Phase C) | ✅ Xong | React Query hooks + auth flow + error/loading states |
+
+**Lưu ý kiến trúc:** OrderSummary.tsx ban đầu là Server Component nhưng CheckoutClient (Client) import nó → vi phạm Next.js rule. **Đã sửa:** thêm `'use client'` vào OrderSummary — Client import Client là hợp lệ.
 
 ---
 
@@ -124,6 +126,14 @@ GET    /payment/vnpay-ipn           ← @Public(), verify checksum
 GET    /payment/vnpay-return        ← @Public(), hiển thị kết quả
 ```
 
+### Customers
+```
+POST   /customers/addresses    ← Create customer address (JWT required)
+GET    /customers/addresses    ← List customer addresses (JWT required)
+PATCH  /customers/addresses/:id ← Update customer address (JWT required)
+DELETE /customers/addresses/:id ← Delete customer address (JWT required)
+```
+
 ### Warehouse
 ```
 GET  /api/v1/admin/warehouse/low-stock
@@ -144,7 +154,7 @@ GET  /api/v1/admin/leads?status=&limit=
 ```
 locproject-frontend/stitch-export/stitch_pylora_design_system/
   th_nh_ph_n_giao_di_n_locherbal/    ← File 1: Design system components
-  trang_ch_locherbal/                ← File 2: Trang chủ (ĐANG LÀM)
+  trang_ch_locherbal/                ← File 2: Trang chủ
   danh_s_ch_s_n_ph_m_tim_m_ch_desktop/ ← File 3: Danh sách SP desktop
   danh_s_ch_s_n_ph_m_tim_m_ch_mobile/  ← File 3b: Danh sách SP mobile
   chi_ti_t_s_n_ph_m_tim_m_ch_desktop/  ← File 4: Chi tiết SP desktop
@@ -161,28 +171,18 @@ locproject-frontend/stitch-export/stitch_pylora_design_system/
 
 ## 7. VNPay Sandbox Test Checklist
 
-**Trạng thái: ⏳ Chưa thể test — thiếu cấu hình VNPay sandbox trong .env**
+**Trạng thái: ✅ Đã test PASS**
 
-Yêu cầu cấu hình (chưa có):
-- `VNP_TMN_CODE` — Mã website tại VNPay
-- `VNP_HASH_SECRET` — Chuỗi bí mật để tạo checksum
-- `VNP_URL` — URL sandbox hoặc production của VNPay
+Kết quả:
+- IPN flow: CONFIRMED | PAID verified
+- Bug tìm thấy: `VNP_HASH_SECRET` trong `.env` có typo (`NJPO` → `NJP0`) — đã fix
 
-Để test, cần:
-1. Đăng ký tài khoản VNPay sandbox tại https://sandbox.vnpayment.vn
-2. Thêm các biến vào `.env`:
-```env
-VNP_TMN_CODE=your_tmn_code
-VNP_HASH_SECRET=your_hash_secret
-VNP_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-VNP_RETURN_URL=http://localhost:3000/payment/vnpay-return
-```
-3. Test flow:
-   - `GET /payment/vnpay-url?orderId=<order_id>` → trả về URL VNPay
-   - Dùng URL đó trong browser → VNPay sandbox hiển thị form thanh toán
-   - Nhập thẻ test (có sẵn trên VNPay sandbox) → redirect về `/payment/vnpay-return`
-   - VNPay gửi IPN callback đến `/payment/vnpay-ipn`
-   - Check DB: `order.paymentStatus` = PAID, `order.status` = CONFIRMED
+Test flow đã verify:
+- `GET /payment/vnpay-url?orderId=<order_id>` → trả về URL VNPay
+- Dùng URL trong browser → VNPay sandbox hiển thị form thanh toán
+- Nhập thẻ test → redirect về `/payment/vnpay-return`
+- VNPay gửi IPN callback đến `/payment/vnpay-ipn`
+- DB: `order.paymentStatus` = PAID, `order.status` = CONFIRMED
 
 ## 8. Backend hardening — đã hoàn thành
 
@@ -206,68 +206,82 @@ VNP_RETURN_URL=http://localhost:3000/payment/vnpay-return
 
 ## 9. Việc đang làm dở — tiếp tục từ đây
 
-**Phase B đang thực hiện:** Convert Stitch HTML → React components
-- File đã xong: File 2 (trang chủ), File 3 (danh sách SP), File 4 (chi tiết SP)
-- Quy tắc bắt buộc: giữ nguyên 100% className, CHƯA gắn API
-- Sau mỗi file: `npm run build` phải pass trước khi chuyển file tiếp
-- Thứ tự: File 2 ✅ → 3+3b ✅ → 4+4b ✅ → 5 → 6 → 7 → 8 → 9 → 10
+**Phase B (Stitch → React convert): ✅ HOÀN TẤT 10/10 FILE**
 
-**Server/Client split pattern (đã chốt từ File 3):**
-- Server Component: ProductGallery, ProductInfo, RelatedProducts, ProductReviews, ProductTabs, FeaturedProducts, HeroBanner, CategoryGrid, Footer
-- Client Component (islands): GalleryThumbnails, ProductDetailClient, WriteReviewButton, AddToCartButton, ConsultationForm, Navbar, FilterSidebar, SortBar, ProductGrid
-- Nguyên tắc: Component không có state/event handler → Server. Component có state/event handler → Client island nhỏ nhất có thể.
+Kiến trúc Server/Client split pattern:
+- Server Component: ProductGallery, ProductInfo, RelatedProducts, ProductReviews, ProductTabs, FeaturedProducts, HeroBanner, CategoryGrid, Footer, KPICard, StockAlertCard, LeadCard
+- Client Component (islands): GalleryThumbnails, ProductDetailClient, WriteReviewButton, AddToCartButton, ConsultationForm, Navbar, FilterSidebar, SortBar, ProductGrid, CheckoutForm, PaymentSelector, OrderSummary, AdminSidebar, RevenueChart, RecentOrdersTable, ProductsTable, ProductForm, VariantEditor, EAVAttributeForm, PublishSidebar
 
-**File 4 (chi tiết SP) — components đã tạo:**
+**File 6 (Checkout) — components đã tạo:**
 ```
-src/components/storefront/product/
-  ProductDetail.tsx          (Server) — layout chính, breadcrumb, mock data
-  ProductGallery.tsx         (Server) — wrapper, delegates to GalleryThumbnails
-  GalleryThumbnails.tsx      (Client) — image switching với useState
-  ProductInfo.tsx            (Server) — tên SP, giá, rating, trust badges, share
-  ProductDetailClient.tsx    (Client) — variant selector, quantity, add-to-cart
-  ProductTabs.tsx            (Client) — tab switching (Mô tả/Chi tiết/Hướng dẫn/Đánh giá)
-  ProductReviews.tsx         (Server) — rating summary, distribution, review list
-  WriteReviewButton.tsx      (Client) — nút "Viết đánh giá"
-  RelatedProducts.tsx        (Server) — 4 related product cards
-  AddToCartButton.tsx        (Client) — đã tạo từ File 3, tái sử dụng
+src/app/(storefront)/checkout/
+  page.tsx              (Server) — layout grid, renders CheckoutClient
+  CheckoutClient.tsx    (Client) — form state, useCart, useCheckout, submit handler
+src/components/storefront/checkout/
+  CheckoutForm.tsx      (Client) — shipping address form fields
+  PaymentSelector.tsx   (Client) — payment method selection (VNPay/MoMo/COD)
+  OrderSummary.tsx      (Client) — item list, price breakdown, total
 ```
 
-**File 3 — Danh sách sản phẩm (đã xong):**
-- `src/app/(storefront)/products/page.tsx` — Server Component, fetch `/api/v1/products` với ISR 60s
-- `src/components/storefront/ProductGrid.tsx` — Client Component, nhận `products` prop, fallback mock 12 sản phẩm
-- `src/components/storefront/FilterSidebar.tsx` — Client Component, collapsible sections: Danh mục, Khoảng giá, Dạng bào chế, Xuất xứ, Đánh giá
-- `src/components/storefront/SortBar.tsx` — Client Component, sort dropdown + view mode toggle
-- Typography: `text-headline-md` cho tên SP, `text-body-lg` cho giá, `text-body-sm` cho label/badge
-
-**File 4 — Chi tiết sản phẩm (đã xong):**
-- `src/app/(storefront)/products/[slug]/page.tsx` — Server Component, dynamic route
-- `src/components/storefront/product/ProductDetail.tsx` — Server Component, layout chính, fetch product by slug
-- `src/components/storefront/product/ProductGallery.tsx` — Server Component, wrapper cho gallery
-- `src/components/storefront/product/GalleryThumbnails.tsx` — Client Component, image switching với useState, thumbnail row
-- `src/components/storefront/product/ProductInfo.tsx` — Server Component, category badge, title, rating, price box, trust badges, share/wishlist
-- `src/components/storefront/product/ProductDetailClient.tsx` — Client Component, variant selector, quantity selector, add-to-cart buttons
-- `src/components/storefront/product/ProductTabs.tsx` — Client Component, tab switching
-- `src/components/storefront/product/ProductReviews.tsx` — Server Component, rating summary + distribution + review list
-- `src/components/storefront/product/WriteReviewButton.tsx` — Client Component, write review button
-- `src/components/storefront/product/RelatedProducts.tsx` — Server Component, 4 related product cards
-- Typography: `text-headline-md` cho headings, `text-body-lg` cho body/price, `text-body-sm` cho labels
-
-**Phase C — API Integration (đã xong):**
-- `src/lib/hooks/useProducts.ts` — React Query hooks: useProducts, useProduct, useCart, useCheckout, useAddToCart, useUpdateCartItem, useRemoveFromCart
-  - `src/lib/store/auth.store.ts` — `persist` với `partialize` CHỈ lưu `user` (không lưu `accessToken`). `login()` gọi `setAuth(accessToken, user)`. `refreshSession()` gọi `POST /auth/refresh` (cookie tự gửi) → lấy accessToken mới + `GET /auth/me` → user. accessToken chỉ sống trong RAM.
-  - `src/lib/providers/auth-bootstrap.tsx` (MỚI) — mounted trong `layout.tsx`, gọi `refreshSession()` một lần khi app khởi động nếu chưa có accessToken. Đây là single source of truth để restore phiên.
-  - `src/components/storefront/layout/Navbar.tsx` — subscribe trực tiếp `useAuthStore()`: khi login hiện tên user + dropdown "Đăng xuất"; khi chưa login hiện link "Tài khoản" → /login. Không còn hardcoded `<Link href="/login">` gây redirect sai.
-  - `src/app/(storefront)/login/page.tsx` — sau login gọi `setAuth(accessToken, user)` + `console.log('[Login] backend response:', data)`
-  - `src/components/storefront/product/GalleryThumbnails.tsx` — `alt={selectedImage.alt ?? 'Product image'}` (fix missing alt)
-  - `src/lib/hooks/useProducts.ts` — `useCart()` thêm `console.log('Fetching cart from:', url)` với full URL `${baseUrl}/cart?sessionId=...` (baseUrl = NEXT_PUBLIC_API_URL || localhost:3000)
-- `src/components/storefront/ErrorFallback.tsx` — Error boundary fallback UI
-- ProductGrid.tsx — loading skeleton, error state, empty state
-- ProductDetail.tsx — fetch product by slug server-side, null-safe render
-
-**Bước tiếp theo ngay:**
+**File 7 (Order Success) — components đã tạo:**
 ```
-File 5 (giỏ hàng) ✅ Đã xong. Chuyển sang File 6 (checkout) — thanh_to_n_locherbal_desktop/code.html
+src/app/(storefront)/order/success/page.tsx    (Server) — searchParams, SVG animation
+src/components/storefront/order/
+  OrderSuccessActions.tsx  (Client) — 2 CTA buttons, clearCart() on mount
+src/lib/store/cart.store.ts     — Zustand store với clearCart()
 ```
+
+**File 8 (Admin Dashboard) — components đã tạo:**
+```
+src/app/(admin)/admin/
+  layout.tsx    (Server) — sidebar wrapper (ml-64)
+  page.tsx      (Server) — KPI cards, RevenueChart, RecentOrdersTable, StockAlertCard, LeadCard
+src/components/admin/
+  AdminSidebar.tsx    (Client) — collapse/expand, nav groups, active menu highlight, logout
+  KPICard.tsx         (Server) — title, value, trend, trendValue, icon
+  RevenueChart.tsx    (Client) — Recharts LineChart 30 ngày mock data
+  RecentOrdersTable.tsx (Client) — sortable columns, clickable rows
+  StockAlertCard.tsx  (Server) — alerts array, critical/urgent styling
+  LeadCard.tsx        (Server) — leads array, contact button
+src/middleware.ts      — redirect /admin/* → /login nếu không có refresh_token cookie
+```
+
+**File 9 (Admin Products List) — components đã tạo:**
+```
+src/app/(admin)/admin/products/page.tsx   (Server) — page header, breadcrumb, "Thêm SP mới" button
+src/components/admin/products/
+  ProductsTable.tsx       (Client) — 8 mock products, sort columns, bulk select, floating bar, pagination
+  ProductStatusBadge.tsx  (Server) — published→green, draft→gray
+  ProductFilterBar.tsx    (Client) — search, category dropdown, status toggle, date
+```
+
+**File 10 (Admin Product Form) — components đã tạo:**
+```
+src/app/(admin)/admin/products/new/page.tsx     (Server) — renders ProductForm
+src/app/(admin)/admin/products/[id]/edit/page.tsx (Server) — dynamic route, renders ProductForm
+src/components/admin/products/
+  ProductForm.tsx       (Client) — 4-tab navigation (basic/variants/EAV/SEO), auto-slug, drop zone
+  VariantEditor.tsx    (Client) — inline editable table, add/remove rows
+  EAVAttributeForm.tsx (Client) — 6 mock attributes STRING/NUMBER/BOOLEAN/SELECT
+  PublishSidebar.tsx   (Client) — publish toggle, save/publish buttons, categories, tags, GACP badge
+```
+
+**Giai đoạn tiếp theo: PHASE D — Backend còn lại (2 module)**
+- Supplier module: Purchase order, nhà cung cấp
+- Shipping module: Tích hợp GHN/GHTK, tracking
+
+**PHASE E — End-to-end testing & VNPay sandbox**
+- Test thật VNPay sandbox (open item từ trước)
+- E2E test Playwright: luồng mua hàng đầu đến cuối
+- Load test k6: 500 concurrent users trên /products và checkout
+
+**PHASE F — Production readiness**
+- Đổi bitnamilegacy → managed DB (Azure/Supabase)
+- Redis permission cache cho JwtAuthGuard
+- CI/CD pipeline GitHub Actions
+- Deploy staging
+
+---
 
 ## 10. Nợ kỹ thuật đã biết
 
@@ -275,8 +289,9 @@ File 5 (giỏ hàng) ✅ Đã xong. Chuyển sang File 6 (checkout) — thanh_to
 |---|---|---|---|
 | 1 | bitnamilegacy chỉ dùng local dev | Cao | Trước khi deploy staging |
 | 2 | Redis permission cache cho JwtAuthGuard | Trung bình | Sau khi có Redis module |
-| 3 | Test thật VNPay sandbox | Cao | Sau khi Storefront tối thiểu xong |
+| 3 | Test thật VNPay sandbox | ✅ Đã xong | VNPay sandbox test PASS |
 | 4 | Prisma v6.x pin (chưa lên v7) | Thấp | Khi v7 ổn định hơn |
+| 5 | POST /customers/addresses chưa có endpoint | 🔴 Cao | Cần làm trước khi launch production |
 
 ---
 

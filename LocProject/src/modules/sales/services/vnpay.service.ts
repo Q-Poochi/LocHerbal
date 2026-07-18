@@ -39,10 +39,10 @@ export class VNPayService {
 
     const date = new Date();
     const createDate = this.formatDate(date);
-    
+
     // Đơn vị VND cần nhân 100 theo yêu cầu VNPay
     const vnpAmount = amount * 100;
-    
+
     const vnpParams: Record<string, string> = {
       vnp_Version: '2.1.0',
       vnp_Command: 'pay',
@@ -60,14 +60,14 @@ export class VNPayService {
 
     // Sort params
     const sortedParams = this.sortObject(vnpParams);
-    
+
     // Build query string
     const signData = new URLSearchParams(sortedParams).toString();
-    
+
     // Hash
     const hmac = crypto.createHmac('sha512', this.hashSecret);
     const secureHash = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
-    
+
     sortedParams['vnp_SecureHash'] = secureHash;
 
     return `${this.vnpUrl}?${new URLSearchParams(sortedParams).toString()}`;
