@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ProductService } from '../services/product.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -28,11 +29,21 @@ describe('ProductService', () => {
     $transaction: jest.fn(),
   };
 
+  const mockCacheManager = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    store: {
+      keys: jest.fn().mockResolvedValue([]),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CACHE_MANAGER, useValue: mockCacheManager },
       ],
     }).compile();
 

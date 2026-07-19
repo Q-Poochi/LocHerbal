@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 import { CreateAttributeDefinitionDto } from '../dto/attribute.dto';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: any,
+  ) { }
 
   async create(dto: CreateCategoryDto) {
     const existing = await this.prisma.category.findUnique({ where: { slug: dto.slug } });
@@ -32,12 +37,20 @@ export class CategoryService {
   }
 
   async findAll() {
-    return this.prisma.category.findMany({
+    const cached = await this.cacheManager.get('catalog:categories');
+    if (cached) {
+      return cached;
+    }
+
+    const categories = await this.prisma.category.findMany({
       include: {
         children: true,
         attributes: true,
       },
     });
+
+    await this.cacheManager.set('catalog:categories', categories, { ttl: 3600 });
+    return categories;
   }
 
   async findOne(id: string) {
@@ -78,15 +91,18 @@ export class CategoryService {
       }
     }
 
-    return this.prisma.category.update({
+    await this.prisma.category.update({
       where: { id },
       data: dto,
     });
+
+    await this.cacheManager.del('catalog:categories');
   }
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.category.delete({ where: { id } });
+    await this.prisma.category.delete({ where: { id } });
+    await this.cacheManager.del('catalog:categories');
   }
 
   // --- QUẢN LÝ THUỘC TÍNH ĐỘNG (Attribute Definitions) ---

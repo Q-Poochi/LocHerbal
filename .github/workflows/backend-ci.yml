@@ -1,0 +1,86 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['LOCPROJECT/**']
+  pull_request:
+    branches: [main]
+    paths: ['LOCPROJECT/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_password
+          POSTGRES_DB: ecommerce_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: LOCPROJECT/package-lock.json
+
+      - name: Install dependencies
+        working-directory: LOCPROJECT
+        run: npm ci
+
+      - name: Setup test environment
+        working-directory: LOCPROJECT
+        run: |
+          cp .env.example .env
+          echo "DATABASE_URL=postgresql://postgres:postgres_password@localhost:5432/ecommerce_test" >> .env
+          echo "DIRECT_URL=postgresql://postgres:postgres_password@localhost:5432/ecommerce_test" >> .env
+          echo "JWT_ACCESS_SECRET=ci_access_secret_not_for_production" >> .env
+          echo "JWT_REFRESH_SECRET=ci_refresh_secret_not_for_production" >> .env
+          echo "REDIS_HOST=localhost" >> .env
+          echo "REDIS_PORT=6379" >> .env
+
+      - name: Run migrations
+        working-directory: LOCPROJECT
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
+          DIRECT_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
+
+      - name: Run tests
+        working-directory: LOCPROJECT
+        run: npm test -- --forceExit
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
+          DIRECT_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
+          JWT_ACCESS_SECRET: ci_access_secret_not_for_production
+          JWT_REFRESH_SECRET: ci_refresh_secret_not_for_production
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Build
+        working-directory: LOCPROJECT
+        run: npm run build

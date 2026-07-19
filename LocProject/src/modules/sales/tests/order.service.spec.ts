@@ -15,6 +15,7 @@ describe('OrderService', () => {
     },
     productVariant: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
     },
     order: {
       findUnique: jest.fn(),
@@ -97,15 +98,18 @@ describe('OrderService', () => {
       mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
 
       // Giả lập variant trong DB có giá THẬT sự là 1500 (chênh lệch với priceSnapshot)
-      mockPrisma.productVariant.findUnique.mockResolvedValue({
-        id: 'variant-1',
-        sku: 'SKU-001',
-        name: 'Size L',
-        price: 1500,
-        product: {
-          name: 'Tra Herbal',
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        {
+          id: 'variant-1',
+          sku: 'SKU-001',
+          name: 'Size L',
+          price: 1500,
+          productId: 'product-1',
+          product: {
+            name: 'Tra Herbal',
+          },
         },
-      });
+      ]);
 
       const order = await service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1');
 

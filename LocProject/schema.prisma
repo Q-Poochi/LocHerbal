@@ -394,6 +394,9 @@ model Order {
   couponUsages  CouponUsage[]
 
   @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
   @@map("orders")
 }
 
@@ -458,6 +461,8 @@ model AgentCommission {
   agent Agent @relation(fields: [agentId], references: [id])
   order Order @relation(fields: [orderId], references: [id])
 
+  @@index([agentId])
+  @@index([isPaid])
   @@map("agent_commissions")
 }
 
@@ -642,6 +647,7 @@ model StockItem {
   movements StockMovement[]
 
   @@unique([warehouseId, productVariantId])
+  @@index([productVariantId])
   @@map("stock_items")
 }
 
@@ -767,5 +773,6 @@ model ShipmentTrackingEvent {
 
   shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
+  @@index([shipmentId])
   @@map("shipment_tracking_events")
 }

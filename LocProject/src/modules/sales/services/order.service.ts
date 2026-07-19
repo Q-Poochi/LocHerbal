@@ -10,7 +10,7 @@ export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   /**
    * Tạo đơn hàng từ giỏ hàng (Checkout)
@@ -42,30 +42,40 @@ export class OrderService {
 
     // 2. Truy vấn lại giá hiện tại từ ProductVariant để tránh price manipulation
     // Giá lấy từ ProductVariant tại thời điểm checkout, không tin giá từ CartItem để chống price manipulation.
-    const itemsWithCurrentPrice = await Promise.all(
-      cart.items.map(async (item) => {
-        const variant = await this.prisma.productVariant.findUnique({
-          where: { id: item.productVariantId },
-          include: { product: true },
-        });
+    const variantIds = cart.items.map((item) => item.productVariantId);
 
-        if (!variant) {
-          throw new NotFoundException(`Không tìm thấy biến thể sản phẩm với ID: ${item.productVariantId}`);
-        }
+    const variants = await this.prisma.productVariant.findMany({
+      where: { id: { in: variantIds } },
+      select: {
+        id: true,
+        price: true,
+        sku: true,
+        name: true,
+        productId: true,
+        product: { select: { name: true } },
+      },
+    });
 
-        const unitPrice = variant.price;
-        const subtotal = Number(unitPrice) * item.qty;
+    const variantMap = new Map(variants.map((v) => [v.id, v]));
 
-        return {
-          productVariantId: variant.id,
-          qty: item.qty,
-          unitPrice,
-          subtotal,
-          productNameSnapshot: variant.product.name + (variant.name ? ` (${variant.name})` : ''),
-          skuSnapshot: variant.sku,
-        };
-      })
-    );
+    const itemsWithCurrentPrice = cart.items.map((item) => {
+      const variant = variantMap.get(item.productVariantId);
+      if (!variant) {
+        throw new NotFoundException(`Không tìm thấy biến thể sản phẩm với ID: ${item.productVariantId}`);
+      }
+
+      const unitPrice = variant.price;
+      const subtotal = Number(unitPrice) * item.qty;
+
+      return {
+        productVariantId: variant.id,
+        qty: item.qty,
+        unitPrice,
+        subtotal,
+        productNameSnapshot: variant.product.name + (variant.name ? ` (${variant.name})` : ''),
+        skuSnapshot: variant.sku,
+      };
+    });
 
     // 3. Tính toán tổng tiền
     const subtotal = itemsWithCurrentPrice.reduce((sum, item) => sum + item.subtotal, 0);

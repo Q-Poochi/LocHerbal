@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto, UpsertProductAttributeValueDto } from '../dto/product.dto';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: any,
+  ) { }
 
   async create(dto: CreateProductDto) {
     const existing = await this.prisma.product.findUnique({ where: { slug: dto.slug } });
@@ -73,8 +78,90 @@ export class ProductService {
     });
   }
 
-  async findAll() {
-    return this.prisma.product.findMany({
+  async findAll(params?: {
+    categoryId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: 'popular' | 'price_asc' | 'price_desc' | 'newest';
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
+    const {
+      categoryId,
+      minPrice,
+      maxPrice,
+      sort = 'popular',
+      page = 1,
+      limit = 12,
+      search,
+    } = params || {};
+
+    // Build where clause for filtering
+    const where: any = {
+      isPublished: true,
+    };
+
+    // Support both UUID and slug for categoryId
+    if (categoryId) {
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidPattern.test(categoryId)) {
+        where.categoryId = categoryId;
+      } else {
+        // Treat as slug - lookup category first
+        const category = await this.prisma.category.findUnique({
+          where: { slug: categoryId },
+          select: { id: true },
+        });
+        if (category) {
+          where.categoryId = category.id;
+        } else {
+          // Category not found, return empty results
+          return [];
+        }
+      }
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { description: { contains: search } },
+        { slug: { contains: search } },
+      ];
+    }
+
+    // Build orderBy for sorting
+    let orderBy: any = { createdAt: 'desc' };
+    switch (sort) {
+      case 'price_asc':
+        orderBy = { variants: { _min: { price: 'asc' } } };
+        break;
+      case 'price_desc':
+        orderBy = { variants: { _min: { price: 'desc' } } };
+        break;
+      case 'newest':
+        orderBy = { createdAt: 'desc' };
+        break;
+      case 'popular':
+      default:
+        orderBy = { createdAt: 'desc' };
+    }
+
+    // Price filter via variants relation
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.variants = {
+        some: {
+          ...(minPrice !== undefined && { price: { gte: minPrice } }),
+          ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
+        },
+      };
+    }
+
+    const products = await this.prisma.product.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
       include: {
         images: true,
         variants: true,
@@ -86,6 +173,8 @@ export class ProductService {
         },
       },
     });
+
+    return products;
   }
 
   private transformProductDetail(product: any) {
@@ -122,6 +211,12 @@ export class ProductService {
   }
 
   async findBySlug(slug: string) {
+    const detailCacheKey = `catalog:product:${slug}`;
+    const cached = await this.cacheManager.get(detailCacheKey);
+    if (cached) {
+      return cached;
+    }
+
     const product = await this.prisma.product.findUnique({
       where: { slug },
       include: {
@@ -140,7 +235,9 @@ export class ProductService {
       },
     });
     if (!product) throw new NotFoundException('Không tìm thấy sản phẩm');
-    return this.transformProductDetail(product);
+    const result = this.transformProductDetail(product);
+    await this.cacheManager.set(detailCacheKey, result, { ttl: 900 });
+    return result;
   }
 
   async findOne(id: string) {
@@ -169,13 +266,13 @@ export class ProductService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
-    await this.findOne(id);
+    const existingProduct = await this.findOne(id);
 
     if (dto.slug) {
-      const existing = await this.prisma.product.findFirst({
+      const slugExists = await this.prisma.product.findFirst({
         where: { slug: dto.slug, NOT: { id } },
       });
-      if (existing) {
+      if (slugExists) {
         throw new BadRequestException('Slug sản phẩm đã tồn tại');
       }
     }
@@ -187,7 +284,7 @@ export class ProductService {
       }
     }
 
-    return this.prisma.product.update({
+    const updated = await this.prisma.product.update({
       where: { id },
       data: dto,
       include: {
@@ -195,11 +292,26 @@ export class ProductService {
         variants: true,
       },
     });
+
+    await this.cacheManager.del(`catalog:product:${existingProduct.slug}`);
+
+    const listKeys = await this.cacheManager.store.keys('catalog:products:*');
+    for (const key of listKeys) {
+      await this.cacheManager.del(key);
+    }
+
+    return updated;
   }
 
   async remove(id: string) {
-    await this.findOne(id);
-    return this.prisma.product.delete({ where: { id } });
+    const existingProduct = await this.findOne(id);
+    await this.prisma.product.delete({ where: { id } });
+    await this.cacheManager.del(`catalog:product:${existingProduct.slug}`);
+
+    const listKeys = await this.cacheManager.store.keys('catalog:products:*');
+    for (const key of listKeys) {
+      await this.cacheManager.del(key);
+    }
   }
 
   // --- QUẢN LÝ THUỘC TÍNH ĐỘNG EAV (Product Attribute Values) ---

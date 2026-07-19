@@ -49,6 +49,14 @@ export class OrderController {
             include: {
                 items: true,
                 paymentTransactions: {
+                    select: {
+                        id: true,
+                        provider: true,
+                        transactionCode: true,
+                        amount: true,
+                        status: true,
+                        createdAt: true,
+                    },
                     take: 1,
                     orderBy: { createdAt: 'desc' },
                 },
@@ -68,6 +76,14 @@ export class OrderController {
             include: {
                 items: true,
                 paymentTransactions: {
+                    select: {
+                        id: true,
+                        provider: true,
+                        transactionCode: true,
+                        amount: true,
+                        status: true,
+                        createdAt: true,
+                    },
                     orderBy: { createdAt: 'desc' },
                 },
                 statusHistory: {
