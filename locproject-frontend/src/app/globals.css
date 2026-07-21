@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F8F6F0;
+  --foreground: #1A1A1A;
+}
+
+@theme inline {
+  /* Colors */
+  --color-surface-container: #f0eee8;
+  --color-outline-variant: #c1c8c2;
+  --color-on-tertiary-container: #75b393;
+  --color-primary: #1B4332;
+  --color-inverse-surface: #30312d;
+  --color-error-container: #ffdad6;
+  --color-on-primary-fixed-variant: #274e3d;
+  --color-secondary-fixed-dim: #f6be39;
+  --color-tertiary: #002d1c;
+  --color-on-tertiary-fixed-variant: #0e5138;
+  --color-primary-fixed-dim: #a5d0b9;
+  --color-secondary-fixed: #ffdfa0;
+  --color-surface-container-high: #eae8e2;
+  --color-on-primary-container: #86af99;
+  --color-surface-white: #FFFFFF;
+  --color-tertiary-fixed: #b1f0ce;
+  --color-surface-dim: #dcdad4;
+  --color-on-secondary: #ffffff;
+  --color-surface-container-highest: #e4e2dd;
+  --color-tertiary-container: #00452e;
+  --color-on-primary: #ffffff;
+  --color-outline: #717973;
+  --color-surface: #fbf9f3;
+  --color-error-alert: #EF4444;
+  --color-success-leaf: #10B981;
+  --color-on-surface: #1b1c18;
+  --color-on-secondary-container: #715300;
+  --color-surface-container-low: #f5f3ed;
+  --color-background: #F8F6F0;
+  --color-text-main: #1A1A1A;
+  --color-on-error: #ffffff;
+  --color-on-secondary-fixed-variant: #5c4300;
+  --color-on-tertiary-fixed: #002114;
+  --color-primary-container: #2D6A4F;
+  --color-primary-fixed: #c1ecd4;
+  --color-tertiary-fixed-dim: #95d4b3;
+  --color-secondary-container: #ffc641;
+  --color-on-error-container: #93000a;
+  --color-surface-variant: #e4e2dd;
+  --color-on-background: #1b1c18;
+  --color-inverse-on-surface: #f3f1eb;
+  --color-on-tertiary: #ffffff;
+  --color-surface-tint: #3f6653;
+  --color-secondary: #795900;
+  --color-inverse-primary: #a5d0b9;
+  --color-on-secondary-fixed: #261a00;
+  --color-surface-bright: #fbf9f3;
+  --color-accent: #D4A017;
+  --color-custom-primary: #1B4332;
+  --color-custom-gold: #D4A017;
+
+  /* Border Radius */
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-stack-md: 1rem;
+  --spacing-stack-sm: 0.5rem;
+  --spacing-stack-lg: 2rem;
+  --spacing-margin-desktop: 2.5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-margin-mobile: 1rem;
+  --spacing-container-max: 1280px;
+
+  /* Typography / Font Families */
+  --font-headline-md: "Be Vietnam Pro", sans-serif;
+  --font-body-md: "Inter", sans-serif;
+  --font-display-lg: "Be Vietnam Pro", sans-serif;
+  --font-headline-lg: "Be Vietnam Pro", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-body-sm: "Inter", sans-serif;
+  --font-caption: "Inter", sans-serif;
+  --font-label-bold: "Inter", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body-md);
+  min-height: max(884px, 100dvh);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Login card shadow */
+.login-card-shadow {
+  box-shadow: 0 4px 20px rgba(27, 67, 50, 0.05);
+}
+
+/* Password strength indicator styles for register page */
+.strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.strength-bar-bg {
+  background-color: #E5E7EB;
+  height: 4px;
+  border-radius: 2px;
+  width: 100%;
+}
+
+/* Order Success - SVG Checkmark Animation */
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes circle {
+  0% {
+    stroke-dashoffset: 300;
+    transform: rotate(-90deg);
+    opacity: 0;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+    transform: rotate(-90deg);
+    opacity: 1;
+  }
+}
+
+.animate-check {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkmark 0.8s cubic-bezier(0.65, 0, 0.45, 1) forwards 0.5s;
+}
+
+.animate-circle {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  transform-origin: center;
+  animation: circle 1s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+/* Admin - Product Form Tab */
+.active-tab {
+  border-bottom: 2px solid #012d1d;
+  color: #012d1d;
+  font-weight: 600;
+}
+
+/* Admin - Table shadow */
+.table-shadow {
+  box-shadow: 0 4px 20px rgba(27, 67, 50, 0.05);
+}
+
+/* Admin - Sidebar scrollbar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
