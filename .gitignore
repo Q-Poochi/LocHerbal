@@ -65,3 +65,6 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Test results
+test-results/
