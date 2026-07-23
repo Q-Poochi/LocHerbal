@@ -2,9 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(cookieParser());
 
   app.enableCors({
     origin: ['http://localhost:3001', 'http://localhost:3000'],
@@ -25,6 +28,6 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(4000);
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

@@ -67,3 +67,19 @@ Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / 
 
 **Responsive rule:** Mobile class giữ nguyên, `md:` trở lên scale up 1 bậc nếu container hẹp. 
 Ví dụ: `text-body-lg md:text-headline-md` cho tên sản phẩm ở sidebar.
+
+## 8. Auth cookie fix ✅
+
+| Bug | Mô tả | File | Fix |
+|---|---|---|---|
+| BUG 1 | Backend listen sai port 4000, frontend gọi API vào 3000 | `src/main.ts` | Đổi `app.listen(4000)` → `app.listen(process.env.PORT ?? 3000)` |
+| BUG 2 | Thiếu cookie-parser middleware, `request.cookies` luôn undefined → refresh token flow fail | `src/main.ts` | Cài `cookie-parser`, thêm `app.use(cookieParser())` trước `app.enableCors()` |
+| BUG 3 | NODE_ENV chưa set → secure cookie trên localhost http bị browser từ chối | `.env` | Thêm `NODE_ENV=development` |
+
+**Port mapping sau fix:**
+- Backend NestJS: `localhost:3000`
+- Frontend Next.js: `localhost:3001` (vì 3000 đã bị backend chiếm)
+- Playwright baseURL: `http://localhost:3001`
+- `NEXT_PUBLIC_API_URL=http://localhost:3000`
+
+**Verify:** curl POST `/auth/login` trả về `Set-Cookie: refresh_token=...; Path=/auth/refresh; HttpOnly; SameSite=Strict` ✅

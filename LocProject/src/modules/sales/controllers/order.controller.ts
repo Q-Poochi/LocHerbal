@@ -48,7 +48,7 @@ export class OrderController {
             where: { customerId },
             include: {
                 items: true,
-                paymentTransactions: {
+                paymentTxns: {
                     select: {
                         id: true,
                         provider: true,
@@ -75,7 +75,7 @@ export class OrderController {
             where: { id },
             include: {
                 items: true,
-                paymentTransactions: {
+                paymentTxns: {
                     select: {
                         id: true,
                         provider: true,
@@ -86,6 +86,8 @@ export class OrderController {
                     },
                     orderBy: { createdAt: 'desc' },
                 },
+                address: true,
+                shipment: true,
                 statusHistory: {
                     orderBy: { createdAt: 'desc' },
                 },
@@ -96,8 +98,8 @@ export class OrderController {
             throw new NotFoundException('Không tìm thấy đơn hàng');
         }
 
-        // Kiểm tra quyền sở hữu: customer chỉ xem được đơn của mình
-        if (customerId && order.customerId !== customerId) {
+        // Kiểm tra quyền sở hữu: customer chỉ xem được đơn của mình (fail-closed)
+        if (!customerId || order.customerId !== customerId) {
             throw new NotFoundException('Không tìm thấy đơn hàng');
         }
 

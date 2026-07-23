@@ -27,6 +27,18 @@ describe('AuthService', () => {
     },
   };
 
+  function mockUser(overrides: Record<string, any> = {}) {
+    return {
+      id: 'user-1',
+      email: 'test@test.com',
+      passwordHash: '',
+      fullName: 'Test User',
+      phone: null,
+      roles: [],
+      ...overrides,
+    };
+  }
+
   const mockJwtService = {
     sign: jest.fn(),
     verify: jest.fn(),
@@ -65,11 +77,7 @@ describe('AuthService', () => {
 
     it('should throw same error message for wrong password as for user not found', async () => {
       const hash = await bcrypt.hash('correct_password', 10);
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        passwordHash: hash,
-      });
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
 
       await expect(service.login({ email: 'test@test.com', password: 'wrong_password' }))
         .rejects
@@ -78,11 +86,7 @@ describe('AuthService', () => {
 
     it('should return tokens if login success', async () => {
       const hash = await bcrypt.hash('password123', 10);
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        passwordHash: hash,
-      });
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
       mockJwtService.sign.mockReturnValue('token_string');
 
       const result = await service.login({ email: 'test@test.com', password: 'password123' });
@@ -94,11 +98,7 @@ describe('AuthService', () => {
 
     it('should store bcrypt-hashed token in UserSession, not raw token', async () => {
       const hash = await bcrypt.hash('password123', 10);
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        email: 'test@test.com',
-        passwordHash: hash,
-      });
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
       mockJwtService.sign
         .mockReturnValueOnce('access_token_val')
         .mockReturnValueOnce('refresh_token_val');
@@ -128,7 +128,7 @@ describe('AuthService', () => {
     it('should revoke all and throw error if token is already revoked (replay attack)', async () => {
       mockJwtService.verify.mockReturnValue({ sub: 'user-1', jti: 'jti-1' });
       const hashed = await bcrypt.hash('some_token', 10);
-      
+
       mockPrismaService.userSession.findUnique.mockResolvedValue({
         id: 'session-1',
         jti: 'jti-1',
@@ -150,7 +150,10 @@ describe('AuthService', () => {
     it('should rotate token successfully', async () => {
       mockJwtService.verify.mockReturnValue({ sub: 'user-1', jti: 'jti-1' });
       const hashed = await bcrypt.hash('valid_token', 10);
-      
+
+      // generateTokens now queries user for roles
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser());
+
       mockPrismaService.userSession.findUnique.mockResolvedValue({
         id: 'session-1',
         jti: 'jti-1',

@@ -17,6 +17,9 @@ describe('OrderService', () => {
       findUnique: jest.fn(),
       findMany: jest.fn(),
     },
+    customerAddress: {
+      findUnique: jest.fn(),
+    },
     order: {
       findUnique: jest.fn(),
       update: jest.fn(),
@@ -82,6 +85,42 @@ describe('OrderService', () => {
         service.checkout('cart-1', 'customer-1'),
       ).rejects.toThrow(BadRequestException);
     });
+    it('should throw BadRequestException if addressId does not belong to customer', async () => {
+      const mockCart = {
+        id: 'cart-1',
+        items: [{ productVariantId: 'variant-1', qty: 2, priceSnapshot: 1000 }],
+      };
+      mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        { id: 'variant-1', sku: 'SKU-001', name: 'Size L', price: 1500, productId: 'product-1', product: { name: 'Tra Herbal' } },
+      ]);
+
+      // Address tồn tại nhưng thuộc về customer KHÁC
+      mockPrisma.customerAddress.findUnique.mockResolvedValue({
+        id: 'address-999',
+        customerId: 'someone-else',
+      });
+
+      await expect(
+        service.checkout('cart-1', 'customer-1', 'address-999', 'agent-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if addressId does not exist', async () => {
+      const mockCart = {
+        id: 'cart-1',
+        items: [{ productVariantId: 'variant-1', qty: 2, priceSnapshot: 1000 }],
+      };
+      mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        { id: 'variant-1', sku: 'SKU-001', name: 'Size L', price: 1500, productId: 'product-1', product: { name: 'Tra Herbal' } },
+      ]);
+      mockPrisma.customerAddress.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.checkout('cart-1', 'customer-1', 'address-999', 'agent-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
 
     it('should checkout successfully, re-query prices and emit order.created', async () => {
       // Giả lập cart có item
@@ -110,6 +149,11 @@ describe('OrderService', () => {
           },
         },
       ]);
+
+      mockPrisma.customerAddress.findUnique.mockResolvedValue({
+        id: 'address-1',
+        customerId: 'customer-1',
+      });
 
       const order = await service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1');
 
@@ -141,6 +185,7 @@ describe('OrderService', () => {
     it('should cancel successfully and emit order.cancelled', async () => {
       const mockOrder = {
         id: 'order-1',
+        customerId: 'customer-1',
         status: OrderStatus.PENDING,
         items: [
           { productVariantId: 'variant-1', qty: 2 },
@@ -163,6 +208,7 @@ describe('OrderService', () => {
     it('should not emit order.cancelled if order is already CANCELLED (idempotent)', async () => {
       const mockOrder = {
         id: 'order-1',
+        customerId: 'customer-1',
         status: OrderStatus.CANCELLED,
         items: [
           { productVariantId: 'variant-1', qty: 2 },

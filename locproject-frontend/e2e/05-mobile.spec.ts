@@ -37,7 +37,7 @@ test.describe('Mobile Responsive', () => {
     await page.goto('/products')
 
     // Kiểm tra product card xuất hiện (dùng prefix match vì slug không cố định)
-    const productTitle = page.getByTestId('product-title-link-').first()
-    await expect(productTitle).toBeVisible()
+    const productCard = page.locator('[data-testid^="product-title-link-"]').first()
+    await expect(productCard).toBeVisible()
   })
 })

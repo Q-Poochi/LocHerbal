@@ -68,3 +68,12 @@ temp/
 
 # Test results
 test-results/
+
+# Redundant archives (handover/ folder already exists)
+handover.zip
+
+# Frontend build artifacts
+locproject-frontend/stitch-export/
+locproject-frontend/.next/
+locproject-frontend/node_modules/
+locproject-frontend/.playwright/

@@ -5,10 +5,7 @@ test.describe('Homepage', () => {
     await page.goto('/')
     
     // Hero section
-    await expect(
-      page.getByText(/chăm sóc sức khỏe/i)
-        .or(page.getByText(/phương thuốc cổ truyền/i))
-    ).toBeVisible()
+    await expect(page.getByTestId('hero-title')).toBeVisible()
     await expect(page.getByRole('link', { name: /khám phá sản phẩm/i }))
       .toBeVisible()
     

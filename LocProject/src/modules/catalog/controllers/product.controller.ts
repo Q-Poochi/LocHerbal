@@ -1,13 +1,17 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query, UseGuards } from '@nestjs/common';
 import { ProductService } from '../services/product.service';
 import { CreateProductDto, UpdateProductDto, UpsertProductAttributeValueDto } from '../dto/product.dto';
 import { Public } from '../../core/decorators/public.decorator';
+import { Roles } from '../../core/decorators/roles.decorator';
+import { RolesGuard } from '../../core/guards/roles.guard';
 
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   create(@Body() dto: CreateProductDto) {
     return this.productService.create(dto);
   }
@@ -47,11 +51,15 @@ export class ProductController {
   }
 
   @Put(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productService.update(id, dto);
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   remove(@Param('id') id: string) {
     return this.productService.remove(id);
   }
@@ -59,11 +67,15 @@ export class ProductController {
   // --- PRODUCT ATTRIBUTE VALUES (EAV) ---
 
   @Post(':id/attributes')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   upsertAttributeValue(@Param('id') id: string, @Body() dto: UpsertProductAttributeValueDto) {
     return this.productService.upsertAttributeValue(id, dto);
   }
 
   @Delete(':id/attributes/:attributeId')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   removeAttributeValue(@Param('id') id: string, @Param('attributeId') attributeId: string) {
     return this.productService.removeAttributeValue(id, attributeId);
   }

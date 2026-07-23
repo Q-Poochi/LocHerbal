@@ -40,7 +40,15 @@ export class OrderService {
       throw new BadRequestException('Giỏ hàng trống');
     }
 
-    // 2. Truy vấn lại giá hiện tại từ ProductVariant để tránh price manipulation
+    // 2. Xác minh quyền sở hữu địa chỉ giao hàng (chống IDOR)
+    if (addressId) {
+      const address = await this.prisma.customerAddress.findUnique({ where: { id: addressId } });
+      if (!address || address.customerId !== customerId) {
+        throw new BadRequestException('Địa chỉ giao hàng không hợp lệ');
+      }
+    }
+
+    // 3. Truy vấn lại giá hiện tại từ ProductVariant để tránh price manipulation
     // Giá lấy từ ProductVariant tại thời điểm checkout, không tin giá từ CartItem để chống price manipulation.
     const variantIds = cart.items.map((item) => item.productVariantId);
 
@@ -154,6 +162,11 @@ export class OrderService {
     });
 
     if (!order) {
+      throw new NotFoundException('Không tìm thấy đơn hàng');
+    }
+
+    // Kiểm tra quyền sở hữu: customer chỉ hủy được đơn của mình
+    if (order.customerId !== changedBy) {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 

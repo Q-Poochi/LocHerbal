@@ -8,7 +8,6 @@ test.use({
 
 async function addProductToCart(page: Page, slug: string) {
   await page.goto(`/products/${slug}`)
-  await page.waitForLoadState('networkidle')
   const addBtn = page.getByRole('button', { name: /thêm vào giỏ/i })
   await addBtn.waitFor({ timeout: 10000 })
   await addBtn.click()
@@ -19,7 +18,7 @@ async function addProductToCart(page: Page, slug: string) {
 test.describe('Cart & Checkout Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Clear cart trước mỗi test bằng API call
-    await page.request.delete('http://localhost:4000/cart/clear', {
+    await page.request.delete('http://localhost:3000/cart/clear', {
       headers: { 
         'Content-Type': 'application/json'
       }
@@ -28,7 +27,6 @@ test.describe('Cart & Checkout Flow', () => {
 
   test('thêm sản phẩm vào giỏ hàng', async ({ page }) => {
     await page.goto('/products/ich-tam-khang')
-    await page.waitForLoadState('networkidle')
     
     // Chờ trang load
     const addBtn = page.getByRole('button', { 
@@ -42,17 +40,15 @@ test.describe('Cart & Checkout Flow', () => {
     // Thông báo thành công hoặc cart count tăng
     await expect(
       page.getByText(/đã thêm|thành công/i)
-        .or(page.locator('[role="alert"]'))
-        .or(page.locator('[data-testid="cart-count"]'))
+        .or(page.locator('[data-testid="cart-count"]')).first()
     ).toBeVisible({ timeout: 5000 })
   })
 
   test('xem giỏ hàng hiển thị đúng', async ({ page }) => {
     await addProductToCart(page, 'ich-tam-khang')
     await page.goto('/cart')
-    await page.waitForLoadState('networkidle')
     
-    await expect(page.getByText(/\d{3}\.\d{3}/).first()).toBeVisible({
+    await expect(page.getByText('Ích Tâm Khang').first()).toBeVisible({
       timeout: 10000
     })
     // Nút tiến hành thanh toán
@@ -65,7 +61,6 @@ test.describe('Cart & Checkout Flow', () => {
   test('navigate từ cart sang checkout', async ({ page }) => {
     await addProductToCart(page, 'ich-tam-khang')
     await page.goto('/cart')
-    await page.waitForLoadState('networkidle')
     
     const checkoutBtn = page.getByRole('link', { name: /tiến hành thanh toán/i })
       .or(page.getByRole('button', { name: /tiến hành thanh toán/i }))

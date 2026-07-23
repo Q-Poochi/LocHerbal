@@ -12,7 +12,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
+import { JwtAuthGuard, OptionalJwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { CartService } from '../services/cart.service';
 import { OrderService } from '../services/order.service';
 import { AddCartItemDto, UpdateCartItemDto } from '../dto/cart.dto';
@@ -32,6 +32,7 @@ export class CartController {
      * Logged-in: JWT tự động gắn, dùng customerId từ JWT claims
      */
     @Get()
+    @UseGuards(OptionalJwtAuthGuard)
     async getCart(
         @Query('sessionId') sessionId: string | undefined,
         @Req() req: Request,
@@ -44,6 +45,7 @@ export class CartController {
      * Thêm item vào giỏ hàng. Tự động tạo cart nếu chưa có.
      */
     @Post('items')
+    @UseGuards(OptionalJwtAuthGuard)
     async addItem(
         @Body() body: AddCartItemDto,
         @Query('sessionId') sessionId: string | undefined,
@@ -59,6 +61,7 @@ export class CartController {
      * Xoá item cũ, thêm lại với qty mới (vì CartService.addToCart cộng dồn).
      */
     @Patch('items/:variantId')
+    @UseGuards(OptionalJwtAuthGuard)
     async updateItem(
         @Param('variantId') variantId: string,
         @Body() body: UpdateCartItemDto,
@@ -75,6 +78,7 @@ export class CartController {
      * Xóa item khỏi giỏ.
      */
     @Delete('items/:variantId')
+    @UseGuards(OptionalJwtAuthGuard)
     async removeItem(
         @Param('variantId') variantId: string,
         @Query('sessionId') sessionId: string | undefined,

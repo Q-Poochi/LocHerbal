@@ -8,7 +8,7 @@ test.describe('Public pages (no auth)', () => {
     // Tìm link/button dẫn đến login
     await expect(
       page.getByRole('link', { name: /tài khoản|đăng nhập/i })
-        .or(page.locator('[href="/login"]'))
+        .or(page.locator('[href="/login"]')).first()
     ).toBeVisible()
   })
 

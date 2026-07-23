@@ -32,13 +32,27 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        passwordHash,
-        fullName: dto.fullName,
-        phone: dto.phone,
-      },
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          email: dto.email,
+          passwordHash,
+          fullName: dto.fullName,
+          phone: dto.phone,
+        },
+      });
+
+      await tx.customer.create({
+        data: {
+          userId: newUser.id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          phone: newUser.phone,
+        },
+      });
+
+      return newUser;
     });
 
     return { id: user.id, email: user.email, fullName: user.fullName };
@@ -151,8 +165,16 @@ export class AuthService {
   }
 
   private async generateTokens(userId: string) {
-    const jti = crypto.randomUUID(); // Dùng built-in crypto để tạo jti an toàn
-    const payload = { sub: userId, jti };
+    const jti = crypto.randomUUID();
+
+    // Query user kèm roles để đưa vào JWT payload
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: { include: { role: true } } },
+    });
+    const roleNames = user?.roles.map(ur => ur.role.name) ?? [];
+
+    const payload = { sub: userId, jti, roles: roleNames };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: requireEnv('JWT_ACCESS_SECRET'),

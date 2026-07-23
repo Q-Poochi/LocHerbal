@@ -20,7 +20,7 @@ test.describe('Product Catalog', () => {
   test('có thể xem chi tiết sản phẩm', async ({ page }) => {
     await page.goto('/products')
     // Click sản phẩm đầu tiên
-    const firstProduct = page.locator('[href*="/products/"]').first()
+    const firstProduct = page.locator('[data-testid^="product-title-link-"]').first()
     if (await firstProduct.isVisible()) {
       await firstProduct.click()
       await expect(page).toHaveURL(/\/products\/.+/)
@@ -37,7 +37,7 @@ test.describe('Product Catalog', () => {
     await expect(page.getByRole('button', { 
       name: /thêm vào giỏ/i 
     })).toBeVisible({ timeout: 10000 })
-    // Giá hiển thị: 450.000đ
-    await expect(page.getByText(/450\.000/)).toBeVisible()
+    // Giá hiển thị: 450000 đ
+    await expect(page.getByText(/450\s*000/)).toBeVisible()
   })
 })

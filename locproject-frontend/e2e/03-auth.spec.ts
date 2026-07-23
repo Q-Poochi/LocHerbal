@@ -17,10 +17,10 @@ test.describe('Authentication', () => {
     await page.getByRole('button', { name: /đăng nhập/i }).click()
     // Phải hiện thông báo lỗi, không redirect
     await expect(
-      page.locator('[role="alert"]')
+      page.locator('.text-error-alert')
         .or(page.locator('.toast'))
         .or(page.locator('[class*="error"]'))
-        .or(page.getByText(/không chính xác|sai|lỗi|invalid/i))
+        .or(page.getByText(/không chính xác|sai|lỗi|invalid/i)).first()
     ).toBeVisible({ timeout: 5000 })
     await expect(page).toHaveURL(/\/login/)
   })
@@ -31,10 +31,10 @@ test.describe('Authentication', () => {
     await page.getByLabel(/mật khẩu/i).fill('Test@123456')
     await page.getByRole('button', { name: /đăng nhập/i }).click()
     await expect(
-      page.locator('[role="alert"]')
+      page.locator('.text-error-alert')
         .or(page.locator('.toast'))
         .or(page.locator('[class*="error"]'))
-        .or(page.getByText(/không chính xác|sai|lỗi|invalid/i))
+        .or(page.getByText(/không chính xác|sai|lỗi|invalid/i)).first()
     ).toBeVisible({ timeout: 5000 })
   })
 
