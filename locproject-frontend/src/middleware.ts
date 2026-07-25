@@ -6,9 +6,11 @@ export function middleware(request: NextRequest) {
 
     // Các route public sẽ KHÔNG đi qua đây vì đã bị filter bởi matcher ở dưới.
     // Nên nếu đã vào được hàm này, nghĩa là đang ở route protected.
-    // Nếu không có token -> Redirect về /login
+    // Nếu không có token -> Redirect về /login, kèm redirect để sau login quay lại
     if (!token) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+        return NextResponse.redirect(loginUrl);
     }
 
     return NextResponse.next();

@@ -64,7 +64,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/',
     });
 
     return { message: 'Đăng xuất thành công' };
@@ -75,7 +75,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }

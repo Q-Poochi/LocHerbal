@@ -129,7 +129,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                             if (selectedVariantId && quantity > 0) {
                                 try {
                                     await addToCartMutation.mutateAsync({ productVariantId: selectedVariantId, qty: quantity });
-                                    router.push('/checkout');
+                                    toast.success('Đã thêm vào giỏ hàng');
+                                    router.push('/cart');
                                 } catch (err: any) {
                                     const msg = err?.response?.data?.message || 'Thêm vào giỏ thất bại';
                                     toast.error(msg);

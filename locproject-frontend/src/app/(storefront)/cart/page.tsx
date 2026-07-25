@@ -6,15 +6,25 @@ import { useRouter } from 'next/navigation';
 import CartItem from '@/components/storefront/cart/CartItem';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { useToast } from '@/lib/providers/toast-provider';
+import { useEffect, useState } from 'react';
 
 export default function CartPage() {
     const { data: cart, isLoading, error } = useCart();
-    console.log('Cart data:', JSON.stringify(cart, null, 2));
     const updateQuantityMutation = useUpdateCartItem();
     const removeItemMutation = useRemoveFromCart();
     const router = useRouter();
     const { user } = useAuthStore();
     const toast = useToast();
+
+    const [forcedError, setForcedError] = useState(false);
+
+    useEffect(() => {
+        if (isLoading) {
+            const timer = setTimeout(() => setForcedError(true), 8000);
+            return () => clearTimeout(timer);
+        }
+        setForcedError(false);
+    }, [isLoading]);
 
     const updateQuantity = (variantId: string, qty: number) => {
         updateQuantityMutation.mutate({ variantId, qty });
@@ -28,11 +38,41 @@ export default function CartPage() {
         if (!user) {
             e.preventDefault();
             toast.error('Vui lòng đăng nhập để thanh toán');
-            router.push('/login?redirect=/checkout');
+            router.push('/login?redirect=/cart');
         }
     };
 
-    if (isLoading) {
+    /* ─── Login gate ─────────────────────────────────── */
+    if (!user && !isLoading) {
+        return (
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg min-h-[716px] flex items-center justify-center">
+                <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-12 text-center max-w-lg w-full">
+                    <span className="material-symbols-outlined text-6xl text-outline mb-4 block">lock</span>
+                    <h2 className="font-headline-md text-headline-md text-primary mb-2">Vui lòng đăng nhập</h2>
+                    <p className="text-body-md text-on-surface-variant mb-8">
+                        Bạn cần đăng nhập để xem giỏ hàng và thực hiện mua hàng.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link
+                            href="/login?redirect=/cart"
+                            className="bg-primary text-on-primary px-8 py-3 rounded-xl font-label-bold hover:opacity-90 transition-all"
+                        >
+                            Đăng nhập
+                        </Link>
+                        <Link
+                            href="/register"
+                            className="border border-outline-variant text-on-surface-variant px-8 py-3 rounded-xl font-label-bold hover:bg-surface-container-low transition-all"
+                        >
+                            Tạo tài khoản
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    /* ─── Loading ─────────────────────────────────────── */
+    if (isLoading && !forcedError) {
         return (
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
                 <h1 className="font-headline-lg text-headline-lg text-primary mb-stack-lg">
@@ -59,53 +99,66 @@ export default function CartPage() {
         );
     }
 
-    if (error) {
+    /* ─── Error ───────────────────────────────────────── */
+    if (error || forcedError) {
         return (
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
                 <h1 className="font-headline-lg text-headline-lg text-primary mb-stack-lg">
                     Giỏ hàng của bạn
                 </h1>
-                <div className="bg-error-container/10 border border-error-container/30 rounded-lg p-6 text-center">
-                    <p className="text-error font-body-md">Không thể tải giỏ hàng. Vui lòng thử lại.</p>
+                <div className="bg-error-container/10 border border-error-container/30 rounded-lg p-12 text-center">
+                    <span className="material-symbols-outlined text-5xl text-error mb-4 block">cloud_off</span>
+                    <p className="text-body-lg text-error mb-6">Không thể tải giỏ hàng. Vui lòng thử lại.</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-label-bold hover:opacity-90 transition-all"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">refresh</span>
+                        Tải lại trang
+                    </button>
                 </div>
             </div>
         );
     }
 
-    if (!cart || !cart.items || cart.items.length === 0) {
+    /* ─── Empty cart ──────────────────────────────────── */
+    const items = Array.isArray(cart?.items) ? cart.items : [];
+
+    if (items.length === 0) {
         return (
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
                 <h1 className="font-headline-lg text-headline-lg text-primary mb-stack-lg">
                     Giỏ hàng của bạn
                 </h1>
-                <div className="text-center py-12">
+                <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 py-20 text-center">
                     <span className="material-symbols-outlined text-6xl text-outline mb-4 block">
                         shopping_cart
                     </span>
-                    <p className="text-body-lg text-on-surface-variant mb-6">
+                    <p className="text-headline-md text-headline-md text-primary mb-2">
                         Giỏ hàng trống
+                    </p>
+                    <p className="text-body-md text-on-surface-variant mb-8">
+                        Giỏ hàng chưa có mặt hàng nào
                     </p>
                     <Link
                         href="/products"
                         className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-label-bold hover:bg-primary-container transition-colors"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
-                        Tiếp tục mua sắm
+                        Tiếp tục mua hàng
                     </Link>
                 </div>
             </div>
         );
     }
 
-    const subtotal = cart.items.reduce(
+    /* ─── Cart with items ─────────────────────────────── */
+    const subtotal = items.reduce(
         (sum: number, item: any) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
         0
     );
     const shippingFee = 0;
     const total = subtotal + shippingFee;
-
-    // Log raw values for debugging
-    console.log('Raw unitPrice values:', cart.items?.map((item: any) => ({ id: item.id, unitPrice: item.unitPrice, qty: item.qty })));
 
     return (
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg min-h-[716px]">
@@ -115,23 +168,20 @@ export default function CartPage() {
             <div className="flex flex-col lg:flex-row gap-gutter">
                 {/* Left Column: Product List (65%) */}
                 <section className="w-full lg:w-[65%] space-y-stack-md">
-                    {cart.items.map((item: any) => {
-                        console.log('Cart item:', item);
-                        return (
-                            <CartItem
-                                key={item.id}
-                                id={item.id}
-                                name={item.productNameSnapshot}
-                                variant={item.skuSnapshot}
-                                price={Number(item.priceSnapshot ?? item.unitPrice ?? 0)}
-                                quantity={item.qty}
-                                thumbnail={item.product?.product?.images?.[0] || '/placeholder.png'}
-                                inStock={true}
-                                onQuantityChange={(qty) => updateQuantity(item.productVariantId, qty)}
-                                onRemove={() => removeItem(item.productVariantId)}
-                            />
-                        );
-                    })}
+                    {items.map((item: any) => (
+                        <CartItem
+                            key={item.id ?? item.productVariantId}
+                            id={item.id}
+                            name={item.productNameSnapshot}
+                            variant={item.skuSnapshot}
+                            price={Number(item.priceSnapshot ?? item.unitPrice ?? 0)}
+                            quantity={item.qty}
+                            thumbnail={item.product?.product?.images?.[0] || '/placeholder.png'}
+                            inStock={true}
+                            onQuantityChange={(qty) => updateQuantity(item.productVariantId, qty)}
+                            onRemove={() => removeItem(item.productVariantId)}
+                        />
+                    ))}
 
                     <div className="pt-stack-md">
                         <Link
@@ -180,6 +230,9 @@ export default function CartPage() {
                                 {(isNaN(total) ? 0 : total).toLocaleString('vi-VN')}đ
                             </span>
                         </div>
+                        <p className="text-center text-body-sm text-on-surface-variant mb-6 italic">
+                            * Giá đã bao gồm thuế GTGT
+                        </p>
                         <Link
                             href="/checkout"
                             onClick={handleCheckoutClick}

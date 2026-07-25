@@ -5,43 +5,39 @@ import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { usePathname } from 'next/navigation';
 
-interface NavGroup {
-    label: string;
-    items: { label: string; icon: string; href: string }[];
-}
-
-const navGroups: NavGroup[] = [
+const menuGroups = [
     {
-        label: 'Tổng quan',
-        items: [{ label: 'Dashboard', icon: 'dashboard', href: '/admin' }],
-    },
-    {
-        label: 'Kinh doanh',
+        label: 'TỔNG QUAN',
         items: [
-            { label: 'Đơn hàng', icon: 'shopping_cart', href: '/admin/orders' },
-            { label: 'Khách hàng', icon: 'group', href: '#' },
-            { label: 'Đại lý/CTV', icon: 'badge', href: '#' },
+            { href: '/admin', icon: 'dashboard', label: 'Dashboard' },
         ],
     },
     {
-        label: 'Sản phẩm',
+        label: 'BÁN HÀNG',
         items: [
-            { label: 'Danh mục', icon: 'category', href: '#' },
-            { label: 'Sản phẩm', icon: 'inventory_2', href: '/admin/products' },
-            { label: 'Tồn kho', icon: 'warehouse', href: '#' },
+            { href: '/admin/orders', icon: 'receipt_long', label: 'Đơn hàng' },
+            { href: '/admin/customers', icon: 'group', label: 'Khách hàng' },
         ],
     },
     {
-        label: 'Kế toán',
+        label: 'SẢN PHẨM',
         items: [
-            { label: 'Doanh thu', icon: 'payments', href: '#' },
-            { label: 'Hóa đơn', icon: 'receipt_long', href: '#' },
+            { href: '/admin/products', icon: 'inventory_2', label: 'Sản phẩm' },
+            { href: '/admin/categories', icon: 'category', label: 'Danh mục' },
+            { href: '/admin/warehouse', icon: 'warehouse', label: 'Tồn kho' },
         ],
     },
     {
-        label: 'Hệ thống',
+        label: 'TÀI CHÍNH',
         items: [
-            { label: 'Hỗ trợ', icon: 'help', href: '#' },
+            { href: '/admin/accounting', icon: 'bar_chart', label: 'Doanh thu' },
+            { href: '/admin/invoices', icon: 'description', label: 'Hóa đơn' },
+        ],
+    },
+    {
+        label: 'VẬN HÀNH',
+        items: [
+            { href: '/admin/support', icon: 'support_agent', label: 'Hỗ trợ' },
         ],
     },
 ];
@@ -61,10 +57,9 @@ export default function AdminSidebar() {
 
     return (
         <aside
-            className={`fixed left-0 top-0 h-screen bg-primary-container text-on-primary-container shadow-md flex flex-col py-6 overflow-y-auto transition-all ${collapsed ? 'w-16' : 'w-64'
+            className={`fixed left-0 top-0 h-screen bg-primary-container text-on-primary-container shadow-md flex flex-col py-6 overflow-y-auto transition-all z-50 ${collapsed ? 'w-16' : 'w-64'
                 }`}
         >
-            {/* Logo Section */}
             <div className={`px-6 mb-8 ${collapsed ? 'text-center' : ''}`}>
                 {collapsed ? (
                     <h1 className="font-headline-md text-headline-md font-bold text-on-primary">LA</h1>
@@ -88,7 +83,6 @@ export default function AdminSidebar() {
                 </button>
             </div>
 
-            {/* User Profile Section */}
             {!collapsed && (
                 <div className="px-4 mb-8">
                     <div className="flex items-center gap-3 p-3 bg-on-primary-fixed-variant/10 rounded-xl">
@@ -107,9 +101,8 @@ export default function AdminSidebar() {
                 </div>
             )}
 
-            {/* Navigation Groups */}
             <nav className="flex-1 px-2 space-y-6">
-                {navGroups.map((group) => (
+                {menuGroups.map((group) => (
                     <div key={group.label}>
                         {!collapsed && (
                             <span className="px-4 text-[11px] font-bold uppercase tracking-widest text-on-primary-container opacity-40">
@@ -119,7 +112,7 @@ export default function AdminSidebar() {
                         <div className="mt-2 space-y-1">
                             {group.items.map((item) => (
                                 <Link
-                                    key={item.label}
+                                    key={item.href}
                                     href={item.href}
                                     className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${isActive(item.href)
                                             ? 'bg-secondary-container/20 text-on-primary active-nav-border'
@@ -146,7 +139,6 @@ export default function AdminSidebar() {
                 ))}
             </nav>
 
-            {/* Footer Actions */}
             <div className="mt-auto px-2 space-y-1 border-t border-on-primary-fixed-variant/20 pt-6">
                 {!collapsed && (
                     <button

@@ -24,7 +24,7 @@ export default function OrderSummary({ items, subtotal, shippingFee = 0 }: Order
             <h3 className="font-headline-md text-headline-md text-primary mb-6">Tóm tắt đơn hàng</h3>
 
             {/* Product List */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4">
                 {items.map((item) => (
                     <div key={item.id} className="flex gap-4">
                         <div className="w-16 h-16 bg-surface-container-low rounded-lg overflow-hidden flex-shrink-0">
@@ -44,6 +44,18 @@ export default function OrderSummary({ items, subtotal, shippingFee = 0 }: Order
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* Discount Code */}
+            <div className="flex gap-2 mb-6">
+                <input
+                    className="flex-1 px-4 py-2 border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                    placeholder="Mã giảm giá"
+                    type="text"
+                />
+                <button className="bg-primary-container text-on-primary px-4 py-2 rounded-lg font-label-bold hover:opacity-90 transition-all">
+                    Áp dụng
+                </button>
             </div>
 
             {/* Price Details */}

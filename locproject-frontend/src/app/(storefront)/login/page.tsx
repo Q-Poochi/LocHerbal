@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '../../../lib/api/client';
 import { useAuthStore } from '../../../lib/store/auth.store';
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get('redirect') || '/';
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +26,16 @@ export default function LoginPage() {
             console.log('[Login] backend response:', data);
             const { accessToken, user } = data;
             useAuthStore.getState().setAuth(accessToken, user);
-            router.push('/');
+
+            // Decode JWT payload để kiểm tra role
+            let isAdmin = false;
+            try {
+                const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                isAdmin = payload.roles?.includes('admin');
+            } catch {}
+
+            // Admin → /admin, còn lại → redirectTo (mặc định /)
+            router.push(isAdmin ? '/admin' : redirectTo);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
         } finally {
@@ -155,5 +166,13 @@ export default function LoginPage() {
                 </p>
             </main>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Đang tải...</div>}>
+            <LoginForm />
+        </Suspense>
     );
 }

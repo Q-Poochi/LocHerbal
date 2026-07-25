@@ -75,20 +75,25 @@ export default function CheckoutClient() {
 
     if (completed) {
         return (
-            <div className="bg-surface-white p-12 rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] text-center">
+            <div className="bg-surface-white p-12 rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] text-center max-w-2xl mx-auto">
                 <div className="w-20 h-20 bg-success-leaf/10 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="material-symbols-outlined text-success-leaf text-5xl">check_circle</span>
                 </div>
                 <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Đặt hàng thành công</h2>
-                <p className="font-body-md text-on-surface-variant max-w-md mx-auto mb-8">
-                    Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng và liên hệ sớm nhất.
+                <p className="font-body-md text-on-surface-variant max-w-md mx-auto mb-2">
+                    Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đang được xử lý.
                 </p>
-                <Link
-                    href="/products"
-                    className="px-6 py-3 border border-primary text-primary rounded-lg font-label-bold hover:bg-surface-container-low transition-colors"
-                >
-                    Tiếp tục mua sắm
-                </Link>
+                <p className="text-body-sm text-on-surface-variant max-w-md mx-auto mb-8">
+                    Chúng tôi sẽ gửi email xác nhận chi tiết đến địa chỉ của bạn.
+                </p>
+                <div className="flex justify-center gap-4">
+                    <Link
+                        href="/products"
+                        className="px-6 py-3 border border-primary text-primary rounded-lg font-label-bold hover:bg-surface-container-low transition-colors"
+                    >
+                        Tiếp tục mua sắm
+                    </Link>
+                </div>
             </div>
         );
     }

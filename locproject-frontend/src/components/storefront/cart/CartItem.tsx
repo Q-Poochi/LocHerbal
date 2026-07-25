@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { useState } from 'react';
 
 interface CartItemProps {
     id: string;
@@ -26,19 +26,26 @@ export default function CartItem({
     onRemove,
 }: CartItemProps) {
     const subtotal = Number(price ?? 0) * quantity;
+    const [imgError, setImgError] = useState(false);
+
+    const showPlaceholder = !thumbnail || thumbnail === '/placeholder.png' || imgError;
 
     return (
         <div
             className={`bg-surface-white p-4 rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] flex flex-col sm:flex-row items-center gap-4 border border-outline-variant/30 ${!inStock ? 'opacity-90' : ''
                 }`}
         >
-            <div className="w-24 h-24 flex-shrink-0 bg-surface-container rounded-lg overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    className="w-full h-full object-cover"
-                    src={thumbnail}
-                    alt={name}
-                />
+            <div className="w-24 h-24 flex-shrink-0 bg-surface-container rounded-lg overflow-hidden flex items-center justify-center">
+                {showPlaceholder ? (
+                    <span className="material-symbols-outlined text-3xl text-outline">image</span>
+                ) : (
+                    <img
+                        className="w-full h-full object-cover"
+                        src={thumbnail}
+                        alt={name}
+                        onError={() => setImgError(true)}
+                    />
+                )}
             </div>
 
             <div className="flex-grow flex flex-col md:flex-row md:items-center justify-between w-full">

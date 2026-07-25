@@ -89,16 +89,18 @@ export function useRemoveFromCart() {
 export function useCart() {
     return useQuery({
         queryKey: ['cart'],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
             const params = guestParams();
             const query = new URLSearchParams(params as Record<string, string>).toString();
             const url = `${baseUrl}/cart${query ? `?${query}` : ''}`;
             console.log('Cart API URL:', url);
-            const { data } = await apiClient.get('/cart', { params });
+            const { data } = await apiClient.get('/cart', { params, signal, timeout: 15000 });
             console.log('RAW cart response:', JSON.stringify(data, null, 2));
             return data;
         },
+        retry: 1,
+        staleTime: 30000,
     });
 }
 
