@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '../../../types/api.types';
 import AddToCartButton from '../product/AddToCartButton';
@@ -10,41 +9,32 @@ interface FeaturedProductsProps {
   products: Product[];
 }
 
+const PLACEHOLDER = (text: string) =>
+  `https://placehold.co/400x400/1b4332/ffffff?text=${encodeURIComponent(text)}`;
+
 const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: '1', name: 'Viên Uống Hoạt Huyết Dưỡng Não Thiên Sâm', slug: 'vien-uong-hoat-huyet-duong-nao-thien-sam',
-    thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD-dK3dtBHf14BTHwAy8zLukDgPWiO8bKFfmcmyXR0FOlWUA-uwfK3kh1qdFaL-tvKpmKrRItf6MV5v0rFT4RNEMp6XReYS6kMJ05A2U0ECDJpBPnUGFggBAA2d_X-uPAwa5HrLShbsZ1Uqr8Vlv8dF7YqbhChkJ1nB2k5thQpg-T5taGjQb3jk1mgwYS9E429HsPc-mTM_ZrYvwb7VedTKiLO3ACBU0-ky1VFcHasGH6FfukbWSA',
-    category: { name: 'Hệ Thần Kinh' },
+  { id: '1', name: 'Viên Uống Hoạt Huyết Dưỡng Não Thiên Sâm', slug: 'vien-uong-hoat-huyet-duong-nao-thien-sam',
+    thumbnailUrl: PLACEHOLDER('Hoạt Huyết'), category: { name: 'Hệ Thần Kinh' },
     variants: [{ price: 295000, compareAtPrice: 350000 }],
   },
-  {
-    id: '2', name: 'Kem Thảo Dược Làm Dịu Da Chiết Xuất Khổ Qua', slug: 'kem-thao-duoc-lam-diu-da-chiet-xuat-kho-qua',
-    thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCLzgM26_NNIpIj0xEpvvAgx7Nh_G-OCWBKnARUxd_XBKZCQBXdrOGtoiHA2ygxW0YkophLDxI3U4SDviJqRWrAWHxjVwINjLjOpTf7L7K7ptYq-X_eD-5rddTYCeEJjajriKz8_QkW10_bUH5BUr0AUCBu0vbcAIK2wR9EGH3fx9hWbUdzD033ADGmidl87TOkbqfAhRdirAggIz-UI9UOk7k-tcsZMQr5kdb7HUeGezIIMnYybQ',
-    category: { name: 'Da Liễu' },
+  { id: '2', name: 'Kem Thảo Dược Làm Dịu Da Chiết Xuất Khổ Qua', slug: 'kem-thao-duoc-lam-diu-da-chiet-xuat-kho-qua',
+    thumbnailUrl: PLACEHOLDER('Kem Dịu Da'), category: { name: 'Da Liễu' },
     variants: [{ price: 185000 }],
   },
-  {
-    id: '3', name: 'Trà Thảo Mộc Thanh Nhiệt Giải Độc Gan', slug: 'tra-thao-moc-thanh-nhiet-giai-doc-gan',
-    thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCq8eNOJpk_zNcvyS80DmlX5_zKA9TEVvNxaMLKY2cBa6GoCl0b_vnZJtU8I2nVHsECn-DX3txrdO5i1dtF_O1sTiGNtlruMkJCXTClCJL74chUSOkOp8IBMkAhgnVZoT4g2qSk4bJbrMMH_3QugJuvSpm0Zqh3-EDYGdbl_MCrgg4zvZj3ZyAr1F3b5le__kw4Vqanan9OS827YpiK5w4h-l8arj7g0Qn2zp48ylcjW_dAhz5fBw',
-    category: { name: 'Tiêu Hóa' },
+  { id: '3', name: 'Trà Thảo Mộc Thanh Nhiệt Giải Độc Gan', slug: 'tra-thao-moc-thanh-nhiet-giai-doc-gan',
+    thumbnailUrl: PLACEHOLDER('Trà Giải Độc'), category: { name: 'Tiêu Hóa' },
     variants: [{ price: 120000 }],
   },
-  {
-    id: '4', name: 'Dầu Xoa Bóp Thảo Dược Cốt Toái Bổ', slug: 'dau-xoa-bop-thao-duoc-cot-toai-bo',
-    thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAhKAi96N07I816oqJkDFmAPHgOjHNej2a1CTUsmK0Zr9a9tOuTadzGjvKR7l0OwXs3fvGdhaP4GtRYWAwGnV5U6IdpjKXVJznFtkZFq8BXltwOhK9_T-7Y4CRYz7cdzkqTwgI_3hwH1Zti-nz3j39aD2Y924K6km8J4ePP51E6RaZxHe9uAAv0Zx7frSs4pQW1bA3j-zg0ENlnLhOqoE84TWthNkoinhNYLYAA7wEcbx1WqwEAtA',
-    category: { name: 'Xương Khớp' },
+  { id: '4', name: 'Dầu Xoa Bóp Thảo Dược Cốt Toái Bổ', slug: 'dau-xoa-bop-thao-duoc-cot-toai-bo',
+    thumbnailUrl: PLACEHOLDER('Dầu Xoa Bóp'), category: { name: 'Xương Khớp' },
     variants: [{ price: 210000, compareAtPrice: 265000 }],
   },
-  {
-    id: '5', name: 'Thuốc Giảm Cân Thảo Dược Tốt', slug: 'thuoc-giam-can-thao-duoc-tot',
-    thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD-dK3dtBHf14BTHwAy8zLukDgPWiO8bKFfmcmyXR0FOlWUA-uwfK3kh1qdFaL-tvKpmKrRItf6MV5v0rFT4RNEMp6XReYS6kMJ05A2U0ECDJpBPnUGFggBAA2d_X-uPAwa5HrLShbsZ1Uqr8Vlv8dF7YqbhChkJ1nB2k5thQpg-T5taGjQb3jk1mgwYS9E429HsPc-mTM_ZrYvwb7VedTKiLO3ACBU0-ky1VFcHasGH6FfukbWSA',
-    category: { name: 'Giảm Cân' },
+  { id: '5', name: 'Thuốc Giảm Cân Thảo Dược Tốt', slug: 'thuoc-giam-can-thao-duoc-tot',
+    thumbnailUrl: PLACEHOLDER('Giảm Cân'), category: { name: 'Giảm Cân' },
     variants: [{ price: 320000 }],
   },
-  {
-    id: '6', name: 'Bột Sắn Dây Thải Độc Cao Cấp', slug: 'bot-san-day-thai-doc-cao-cap',
-    thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCLzgM26_NNIpIj0xEpvvAgx7Nh_G-OCWBKnARUxd_XBKZCQBXdrOGtoiHA2ygxW0YkophLDxI3U4SDviJqRWrAWHxjVwINjLjOpTf7L7K7ptYq-X_eD-5rddTYCeEJjajriKz8_QkW10_bUH5BUr0AUCBu0vbcAIK2wR9EGH3fx9hWbUdzD033ADGmidl87TOkbqfAhRdirAggIz-UI9UOk7k-tcsZMQr5kdb7HUeGezIIMnYybQ',
-    category: { name: 'Thải Độc' },
+  { id: '6', name: 'Bột Sắn Dây Thải Độc Cao Cấp', slug: 'bot-san-day-thai-doc-cao-cap',
+    thumbnailUrl: PLACEHOLDER('Thải Độc'), category: { name: 'Thải Độc' },
     variants: [{ price: 285000, compareAtPrice: 340000 }],
   },
 ];
@@ -150,14 +140,18 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                         ))}
                       </div>
 
-                      <Link href={`/products/${product.slug}`} className="relative mb-4 overflow-hidden rounded-md bg-surface-container h-64 block">
-                        {product.thumbnailUrl && (
-                          <Image
+                      <Link href={`/products/${product.slug}`} className="relative mb-4 overflow-hidden rounded-md bg-[#f0eee8] h-64 block">
+                        {product.thumbnailUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             src={product.thumbnailUrl}
                             alt={product.name}
-                            fill
                           />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="material-symbols-outlined text-5xl text-[#c1c8c2]">image</span>
+                          </div>
                         )}
                         <AddToCartButton variantId={product.id} productName={product.name} />
                       </Link>
@@ -168,9 +162,11 @@ export default function FeaturedProducts({ products }: FeaturedProductsProps) {
                       <div className="flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
                           <span className="text-primary font-bold">
-                            {(mainVariant?.price ?? 0).toLocaleString('vi-VN')}đ
+                            {mainVariant?.price
+                              ? mainVariant.price.toLocaleString('vi-VN') + 'đ'
+                              : 'Liên hệ'}
                           </span>
-                          {mainVariant?.compareAtPrice && (
+                          {mainVariant?.compareAtPrice && mainVariant?.price && (
                             <span className="text-caption text-on-surface-variant line-through">
                               {mainVariant.compareAtPrice.toLocaleString('vi-VN')}đ
                             </span>

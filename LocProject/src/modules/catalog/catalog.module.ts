@@ -4,10 +4,11 @@ import { CategoryService } from './services/category.service';
 import { ProductService } from './services/product.service';
 import { CategoryController } from './controllers/category.controller';
 import { ProductController } from './controllers/product.controller';
+import { UploadController } from './controllers/upload.controller';
 import * as redisStore from 'cache-manager-redis-yet';
 
 @Module({
-  controllers: [CategoryController, ProductController],
+  controllers: [CategoryController, ProductController, UploadController],
   providers: [CategoryService, ProductService],
   exports: [ProductService, CategoryService],
   imports: [

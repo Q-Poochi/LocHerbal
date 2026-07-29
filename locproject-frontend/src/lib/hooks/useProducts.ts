@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
-import { Product, ProductDetail } from '../../types/api.types';
+import { Product, ProductDetail, Category } from '../../types/api.types';
 import { useAuthStore } from '../store/auth.store';
 import { getSessionId } from '../session';
 
@@ -20,6 +20,17 @@ export function useProducts(params: ProductsParams = {}) {
             const { data } = await apiClient.get<any>('/products', { params });
             return data;
         },
+    });
+}
+
+export function useCategories() {
+    return useQuery({
+        queryKey: ['categories'],
+        queryFn: async () => {
+            const { data } = await apiClient.get<Category[]>('/categories');
+            return data;
+        },
+        staleTime: 60000,
     });
 }
 
@@ -109,6 +120,49 @@ export function useCartCount(): number {
     const { data: cart } = useCart();
     if (!cart || !cart.items) return 0;
     return cart.items.reduce((sum: number, item: any) => sum + item.qty, 0);
+}
+
+export interface CreateProductPayload {
+    categoryId: string;
+    name: string;
+    slug: string;
+    description?: string;
+    thumbnailUrl?: string;
+    isPublished?: boolean;
+    images?: string[];
+    variants?: {
+        sku: string;
+        name?: string;
+        price: number;
+        compareAtPrice?: number;
+    }[];
+}
+
+export function useCreateProduct() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: CreateProductPayload) => {
+            const { data } = await apiClient.post('/products', payload);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+        },
+    });
+}
+
+export function useUpdateProduct(id: string) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: Partial<CreateProductPayload>) => {
+            const { data } = await apiClient.put(`/products/${id}`, payload);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['product'] });
+        },
+    });
 }
 
 export interface CheckoutResult {

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '../../types/api.types';
 import { useAddToCart } from '../../lib/hooks/useProducts';
@@ -56,13 +55,17 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
                 return (
                     <div key={product.id} className="product-card group relative bg-surface-white rounded-xl shadow-soft overflow-hidden transition-all duration-300 hover:shadow-lg border border-transparent hover:border-outline-variant">
                         <div className="relative aspect-square overflow-hidden bg-surface-container-low">
-                            {product.thumbnailUrl && (
-                                <Image
+                            {product.thumbnailUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     src={product.thumbnailUrl}
                                     alt={product.name}
-                                    fill
                                 />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-4xl text-[#c1c8c2]">image</span>
+                                </div>
                             )}
 
                             <div className="absolute top-3 left-3 bg-secondary-container text-on-secondary-container text-body-sm font-bold px-2 py-1 rounded uppercase">

@@ -1,10 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+interface PublishSidebarProps {
+    isPublished: boolean;
+    isPending: boolean;
+    onTogglePublished: () => void;
+    onSaveDraft: () => void;
+    onPublish: () => void;
+}
 
-export default function PublishSidebar() {
-    const [isPublished, setIsPublished] = useState(false);
-
+export default function PublishSidebar({
+    isPublished,
+    isPending,
+    onTogglePublished,
+    onSaveDraft,
+    onPublish,
+}: PublishSidebarProps) {
     return (
         <div className="flex flex-col gap-6">
             {/* Status Card */}
@@ -20,7 +30,7 @@ export default function PublishSidebar() {
                                 type="checkbox"
                                 className="sr-only peer"
                                 checked={isPublished}
-                                onChange={() => setIsPublished((p) => !p)}
+                                onChange={onTogglePublished}
                             />
                             <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-success-leaf" />
                         </label>
@@ -36,11 +46,19 @@ export default function PublishSidebar() {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3 pt-2">
-                        <button className="bg-surface-container-low text-primary border border-primary px-4 py-2.5 rounded-lg font-label-bold text-label-bold hover:bg-surface-container transition-colors">
-                            Lưu nháp
+                        <button
+                            onClick={onSaveDraft}
+                            disabled={isPending}
+                            className="bg-surface-container-low text-primary border border-primary px-4 py-2.5 rounded-lg font-label-bold text-label-bold hover:bg-surface-container transition-colors disabled:opacity-50"
+                        >
+                            {isPending ? 'Đang lưu...' : 'Lưu nháp'}
                         </button>
-                        <button className="bg-primary text-on-primary px-4 py-2.5 rounded-lg font-label-bold text-label-bold shadow-md shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
-                            Xuất bản
+                        <button
+                            onClick={onPublish}
+                            disabled={isPending}
+                            className="bg-primary text-on-primary px-4 py-2.5 rounded-lg font-label-bold text-label-bold shadow-md shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                            {isPending ? 'Đang xử lý...' : 'Xuất bản'}
                         </button>
                     </div>
                 </div>

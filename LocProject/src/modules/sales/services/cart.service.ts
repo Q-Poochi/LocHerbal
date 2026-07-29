@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
 @Injectable()
@@ -7,7 +7,7 @@ export class CartService {
 
   async getOrCreateCart(customerId?: string, sessionId?: string) {
     if (!customerId && !sessionId) {
-      throw new Error('Yêu cầu customerId hoặc sessionId để lấy giỏ hàng');
+      throw new BadRequestException('Yêu cầu customerId hoặc sessionId để lấy giỏ hàng');
     }
 
     if (customerId) {

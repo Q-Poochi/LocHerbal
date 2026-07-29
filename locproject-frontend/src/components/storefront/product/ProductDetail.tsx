@@ -56,7 +56,7 @@ export default async function ProductDetail({ slug }: { slug: string }) {
             {/* Product Hero Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
                 {/* Left Column: Gallery */}
-                <ProductGallery images={product.images} categoryName={product.category.name} />
+                <ProductGallery images={product.images} categoryName={product.category.name} thumbnailUrl={product.thumbnailUrl} />
 
                 {/* Right Column: Info & Actions */}
                 <ProductInfo product={product} />

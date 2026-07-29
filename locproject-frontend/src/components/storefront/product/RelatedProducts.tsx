@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
 interface RelatedProduct {
@@ -73,11 +72,11 @@ export default function RelatedProducts() {
                         className="bg-surface-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant/30 hover:-translate-y-1 transition-all block group"
                     >
                         <div className="aspect-square relative overflow-hidden">
-                            <Image
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 src={product.thumbnailUrl}
                                 alt={product.name}
-                                fill
                             />
                             <div className="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-outline hover:text-error transition-colors shadow-sm">
                                 <span className="material-symbols-outlined text-[20px]">favorite</span>

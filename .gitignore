@@ -72,6 +72,9 @@ test-results/
 # Redundant archives (handover/ folder already exists)
 handover.zip
 
+# User-uploaded files (created at runtime)
+uploads/
+
 # Frontend build artifacts
 locproject-frontend/stitch-export/
 locproject-frontend/.next/

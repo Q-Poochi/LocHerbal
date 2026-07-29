@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useCategories, useCreateProduct, useUpdateProduct } from '@/lib/hooks/useProducts';
+import { useToast } from '@/lib/providers/toast-provider';
 import Link from 'next/link';
 import VariantEditor from './VariantEditor';
 import EAVAttributeForm from './EAVAttributeForm';
 import PublishSidebar from './PublishSidebar';
+import ImageUploader from './image-uploader/ImageUploader';
 
 type TabId = 'basic' | 'variants' | 'eav' | 'seo';
 
@@ -16,9 +20,24 @@ const tabs: { id: TabId; label: string }[] = [
 ];
 
 export default function ProductForm() {
+    const params = useParams();
+    const productId = params?.id as string | undefined;
+    const isEdit = !!productId;
+
+    const { data: categories } = useCategories();
+    const createMutation = useCreateProduct();
+    const updateMutation = useUpdateProduct(productId ?? '');
+    const toast = useToast();
+
     const [activeTab, setActiveTab] = useState<TabId>('basic');
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
+    const [description, setDescription] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [isPublished, setIsPublished] = useState(false);
+    const [images, setImages] = useState<{ url: string; file?: File; uploading?: boolean }[]>([]);
+
+    const isPending = createMutation.isPending || updateMutation.isPending;
 
     const handleNameChange = (value: string) => {
         setName(value);
@@ -28,6 +47,40 @@ export default function ProductForm() {
                 .replace(/\s+/g, '-')
                 .replace(/[^\w-]+/g, ''),
         );
+    };
+
+    const buildPayload = (publish: boolean) => {
+        const thumbnailUrl = images.length > 0 ? images[0].url : undefined;
+        return {
+            categoryId: categoryId || undefined,
+            name: name || undefined,
+            slug: slug || undefined,
+            description: description || undefined,
+            thumbnailUrl,
+            isPublished: publish,
+            images: images.filter((i) => !i.uploading).map((i) => i.url),
+        } as any;
+    };
+
+    const handleSave = async (publish: boolean) => {
+        const payload = buildPayload(publish);
+
+        if (!payload.name || !payload.slug) {
+            toast.error('Vui lòng nhập tên sản phẩm và đường dẫn');
+            return;
+        }
+
+        try {
+            if (isEdit) {
+                await updateMutation.mutateAsync(payload);
+            } else {
+                await createMutation.mutateAsync(payload);
+            }
+            toast.success(publish ? 'Đã xuất bản sản phẩm thành công!' : 'Đã lưu nháp thành công!');
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại';
+            toast.error(msg);
+        }
     };
 
     return (
@@ -89,6 +142,8 @@ export default function ProductForm() {
                                     placeholder="Tóm tắt đặc điểm nổi bật..."
                                     rows={3}
                                     maxLength={160}
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
                                 />
                             </div>
                             <div className="flex flex-col gap-1.5">
@@ -125,42 +180,21 @@ export default function ProductForm() {
                                     <label className="font-label-bold text-label-bold text-on-surface-variant">
                                         Danh mục gốc
                                     </label>
-                                    <select className="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary/10 transition-all p-3 appearance-none">
-                                        <option>Chọn danh mục...</option>
-                                        <option>-- Trà Thảo Mộc</option>
-                                        <option>-- Cao Dược Liệu</option>
-                                        <option>-- Thực Phẩm Chức Năng</option>
+                                    <select
+                                        className="w-full rounded-lg border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary/10 transition-all p-3 appearance-none"
+                                        value={categoryId}
+                                        onChange={(e) => setCategoryId(e.target.value)}
+                                    >
+                                        <option value="">Chọn danh mục...</option>
+                                        {(categories ?? []).map((cat) => (
+                                            <option key={cat.id} value={cat.id}>
+                                                -- {cat.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="font-label-bold text-label-bold text-on-surface-variant">
-                                    Hình ảnh sản phẩm
-                                </label>
-                                <div className="border-2 border-dashed border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer">
-                                    <div className="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-primary">
-                                            cloud_upload
-                                        </span>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="font-label-bold text-label-bold text-primary">
-                                            Nhấp để tải lên hoặc kéo thả
-                                        </p>
-                                        <p className="font-caption text-caption text-on-surface-variant">
-                                            PNG, JPG, WEBP (Tối đa 10MB/ảnh)
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-5 gap-4 mt-4">
-                                    <div className="relative group aspect-square rounded-lg border border-outline-variant overflow-hidden bg-surface-container-low" />
-                                    <div className="aspect-square rounded-lg border border-outline-variant border-dashed flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-on-surface-variant/40">
-                                            add
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                            <ImageUploader images={images} onChange={setImages} />
                         </div>
                     )}
 
@@ -242,7 +276,13 @@ export default function ProductForm() {
 
             {/* Right Column: Sidebar (30%) */}
             <div className="lg:col-span-3">
-                <PublishSidebar />
+                <PublishSidebar
+                    isPublished={isPublished}
+                    isPending={isPending}
+                    onTogglePublished={() => setIsPublished((p) => !p)}
+                    onSaveDraft={() => handleSave(false)}
+                    onPublish={() => handleSave(true)}
+                />
             </div>
         </div>
     );

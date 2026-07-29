@@ -26,8 +26,9 @@ export default function HomePage() {
         console.log('Featured products response:', productsRes.data);
         setProducts(productsRes.data?.data ?? productsRes.data ?? []);
         setCategories(categoriesRes.data?.data ?? categoriesRes.data ?? []);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
+      } catch (error: any) {
+        console.error('Failed to fetch homepage data:', error?.message || error);
+        console.debug('Error details:', error?.response?.status, error?.response?.data);
         setProducts([]);
         setCategories([]);
       } finally {

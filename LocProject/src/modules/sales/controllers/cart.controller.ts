@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard, OptionalJwtAuthGuard } from '../../core/guards/jwt-auth.guard';
+import { Public } from '../../core/decorators/public.decorator';
 import { CartService } from '../services/cart.service';
 import { OrderService } from '../services/order.service';
 import { AddCartItemDto, UpdateCartItemDto } from '../dto/cart.dto';
@@ -32,6 +33,7 @@ export class CartController {
      * Logged-in: JWT tự động gắn, dùng customerId từ JWT claims
      */
     @Get()
+    @Public()
     @UseGuards(OptionalJwtAuthGuard)
     async getCart(
         @Query('sessionId') sessionId: string | undefined,
@@ -45,6 +47,7 @@ export class CartController {
      * Thêm item vào giỏ hàng. Tự động tạo cart nếu chưa có.
      */
     @Post('items')
+    @Public()
     @UseGuards(OptionalJwtAuthGuard)
     async addItem(
         @Body() body: AddCartItemDto,
@@ -61,6 +64,7 @@ export class CartController {
      * Xoá item cũ, thêm lại với qty mới (vì CartService.addToCart cộng dồn).
      */
     @Patch('items/:variantId')
+    @Public()
     @UseGuards(OptionalJwtAuthGuard)
     async updateItem(
         @Param('variantId') variantId: string,
@@ -78,6 +82,7 @@ export class CartController {
      * Xóa item khỏi giỏ.
      */
     @Delete('items/:variantId')
+    @Public()
     @UseGuards(OptionalJwtAuthGuard)
     async removeItem(
         @Param('variantId') variantId: string,
@@ -111,14 +116,28 @@ export class CartController {
      * JWT strategy set (req as any).user = { userId: payload.sub } (payload.sub = User.id).
      * Cart.customerId / Order.customerId là FK tới Customer.id, không phải User.id,
      * nên phải resolve qua bảng Customer (userId -> id).
+     * Tự động tạo Customer record nếu user chưa có (tránh lỗi 500 khi getOrCreateCart nhận undefined).
      */
     private async getCustomerId(req: Request): Promise<string | undefined> {
         const userId = (req as any).user?.userId;
         if (!userId) return undefined;
-        const customer = await this.prisma.customer.findUnique({
+
+        let customer = await this.prisma.customer.findUnique({
             where: { userId },
             select: { id: true },
         });
-        return customer?.id;
+
+        if (!customer) {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: { fullName: true, email: true },
+            });
+            customer = await this.prisma.customer.create({
+                data: { userId, fullName: user?.fullName || user?.email || 'User' },
+                select: { id: true },
+            });
+        }
+
+        return customer.id;
     }
 }

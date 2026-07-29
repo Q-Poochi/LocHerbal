@@ -46,59 +46,74 @@ async function main() {
         })
     }
 
+    const productImages = [
+        '/tim-mach/ich-tam-khang.png',
+        '/tim-mach/hanh-phuc-huyet-ap.png',
+        '/tim-mach/hoat-huyet-duong-nao.png',
+        '/xuong-khop/cot-thoai-vuong.png',
+        '/xuong-khop/khop-tam-binh.png',
+        '/xuong-khop/xuong-khop-vang.png',
+        '/tieu-hoa/trang-phuc-linh.png',
+        '/tieu-hoa/tieu-hoa-khang.png',
+        '/tieu-hoa/binh-vi-thai.png',
+        '/an-than/ngu-ngon-thao-moc.png',
+        '/an-than/an-than-tam-binh.png',
+        '/an-than/duong-tam-an-than.png',
+    ];
+
     // Products cho từng category
     const products = [
         // Tim Mạch
         {
             name: 'Ích Tâm Khang', slug: 'ich-tam-khang',
-            categoryIdx: 0, price: 450000, compareAt: 517500
+            categoryIdx: 0, price: 450000, compareAt: 517500, imgIdx: 0
         },
         {
             name: 'Hạnh Phúc Huyết Áp', slug: 'hanh-phuc-huyet-ap',
-            categoryIdx: 0, price: 320000, compareAt: 368000
+            categoryIdx: 0, price: 320000, compareAt: 368000, imgIdx: 1
         },
         {
             name: 'Hoạt Huyết Dưỡng Não', slug: 'hoat-huyet-duong-nao',
-            categoryIdx: 0, price: 380000, compareAt: 437000
+            categoryIdx: 0, price: 380000, compareAt: 437000, imgIdx: 2
         },
         // Xương Khớp
         {
             name: 'Cốt Thoái Vương', slug: 'cot-thoai-vuong',
-            categoryIdx: 1, price: 350000, compareAt: 402500
+            categoryIdx: 1, price: 350000, compareAt: 402500, imgIdx: 3
         },
         {
             name: 'Khớp Tâm Bình', slug: 'khop-tam-binh',
-            categoryIdx: 1, price: 280000, compareAt: 322000
+            categoryIdx: 1, price: 280000, compareAt: 322000, imgIdx: 4
         },
         {
             name: 'Xương Khớp Vàng', slug: 'xuong-khop-vang',
-            categoryIdx: 1, price: 420000, compareAt: 483000
+            categoryIdx: 1, price: 420000, compareAt: 483000, imgIdx: 5
         },
         // Tiêu Hóa
         {
             name: 'Tràng Phục Linh', slug: 'trang-phuc-linh',
-            categoryIdx: 2, price: 260000, compareAt: 299000
+            categoryIdx: 2, price: 260000, compareAt: 299000, imgIdx: 6
         },
         {
             name: 'Tiêu Hóa Khang', slug: 'tieu-hoa-khang',
-            categoryIdx: 2, price: 180000, compareAt: 207000
+            categoryIdx: 2, price: 180000, compareAt: 207000, imgIdx: 7
         },
         {
             name: 'Bình Vị Thái', slug: 'binh-vi-thai',
-            categoryIdx: 2, price: 220000, compareAt: 253000
+            categoryIdx: 2, price: 220000, compareAt: 253000, imgIdx: 8
         },
         // An Thần
         {
             name: 'Ngủ Ngon Thảo Mộc', slug: 'ngu-ngon-thao-moc',
-            categoryIdx: 3, price: 290000, compareAt: 333500
+            categoryIdx: 3, price: 290000, compareAt: 333500, imgIdx: 9
         },
         {
             name: 'An Thần Tâm Bình', slug: 'an-than-tam-binh',
-            categoryIdx: 3, price: 310000, compareAt: 356500
+            categoryIdx: 3, price: 310000, compareAt: 356500, imgIdx: 10
         },
         {
             name: 'Dưỡng Tâm An Thần', slug: 'duong-tam-an-than',
-            categoryIdx: 3, price: 340000, compareAt: 391000
+            categoryIdx: 3, price: 340000, compareAt: 391000, imgIdx: 11
         },
     ]
 
@@ -109,6 +124,7 @@ async function main() {
                 slug: p.slug,
                 categoryId: categories[p.categoryIdx].id,
                 description: `Sản phẩm thảo dược thiên nhiên ${p.name}, được nghiên cứu bởi các chuyên gia y học cổ truyền.`,
+                thumbnailUrl: `https://placehold.co/400x400/1b4332/ffffff?text=${encodeURIComponent(p.name)}`,
                 isPublished: true,
             }
         })
@@ -147,6 +163,17 @@ async function main() {
                 }
             })
         }
+
+        // Image cho product (dùng ảnh placehold)
+        const imgUrl = `https://placehold.co/600x600/1b4332/ffffff?text=${encodeURIComponent(p.name)}`;
+        await prisma.productImage.create({
+            data: {
+                productId: product.id,
+                url: imgUrl,
+                sortOrder: 0,
+                alt: p.name,
+            }
+        })
     }
 
     console.log('✅ Seed hoàn tất: 4 categories, 12 products, 24 variants, 24 stock items')
