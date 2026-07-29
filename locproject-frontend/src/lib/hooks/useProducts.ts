@@ -18,7 +18,7 @@ export function useProducts(params: ProductsParams = {}) {
         queryKey: ['products', params],
         queryFn: async () => {
             const { data } = await apiClient.get<any>('/products', { params });
-            return data.data ?? data;
+            return data;
         },
     });
 }

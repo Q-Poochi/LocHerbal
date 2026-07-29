@@ -174,7 +174,15 @@ export class ProductService {
       },
     });
 
-    return products;
+    const totalCount = await this.prisma.product.count({ where });
+
+    return {
+      data: products,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      page,
+      limit,
+    };
   }
 
   private transformProductDetail(product: any) {

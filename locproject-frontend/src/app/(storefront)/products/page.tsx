@@ -5,8 +5,9 @@ import Footer from '../../../components/storefront/layout/Footer';
 import FilterSidebar from '../../../components/storefront/FilterSidebar';
 import SortBar from '../../../components/storefront/SortBar';
 import ProductGrid from '../../../components/storefront/ProductGrid';
-import Pagination from '../../../components/storefront/Pagination';
 import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useProducts } from '../../../lib/hooks/useProducts';
 
 export default function ProductsPage() {
   return (
@@ -50,14 +51,9 @@ export default function ProductsPage() {
                 <SortBar />
               </Suspense>
 
-              {/* Product Grid */}
+              {/* Product Grid + Pagination */}
               <Suspense fallback={<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-12 h-96 bg-surface-container-low animate-pulse rounded-lg" />}>
                 <ProductGrid />
-              </Suspense>
-
-              {/* Pagination */}
-              <Suspense fallback={null}>
-                <Pagination />
               </Suspense>
             </div>
           </div>
@@ -69,8 +65,18 @@ export default function ProductsPage() {
   );
 }
 
-// Component con để hiển thị số lượng sản phẩm
 function ProductCount() {
-  // Sẽ được cập nhật bởi ProductGrid qua context hoặc props
-  return <span className="text-body-sm text-outline pb-1">(0 sản phẩm)</span>;
+  const searchParams = useSearchParams();
+  const params = {
+    categoryId: searchParams.get('categoryId') || undefined,
+    minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
+    maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+    sort: (searchParams.get('sort') as 'popular' | 'price_asc' | 'price_desc' | 'newest') || 'popular',
+    page: 1,
+    limit: 12,
+    search: searchParams.get('search') || undefined,
+  };
+  const { data } = useProducts(params);
+  const count = (data as any)?.totalCount ?? 0;
+  return <span className="text-body-sm text-outline pb-1">({count.toLocaleString('vi-VN')} sản phẩm)</span>;
 }

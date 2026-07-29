@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '../../lib/hooks/useProducts';
 import ProductGridDisplay from './ProductGridDisplay';
+import Pagination from './Pagination';
 
 export default function ProductGrid() {
   const searchParams = useSearchParams();
@@ -17,8 +18,9 @@ export default function ProductGrid() {
     search: searchParams.get('search') || undefined,
   };
 
-  console.log('[ProductGrid] Current filters:', { categoryId: params.categoryId, minPrice: params.minPrice, maxPrice: params.maxPrice });
-  const { data: products = [], isLoading, error } = useProducts(params);
+  const { data: response, isLoading, error } = useProducts(params);
+  const products = response?.data ?? [];
+  const totalPages = response?.totalPages ?? 1;
 
   if (isLoading) {
     return (
@@ -49,5 +51,10 @@ export default function ProductGrid() {
     );
   }
 
-  return <ProductGridDisplay products={products} />;
+  return (
+    <>
+      <ProductGridDisplay products={products} />
+      <Pagination totalPages={totalPages} />
+    </>
+  );
 }
