@@ -61,7 +61,7 @@ export class ProductService {
               name: variant.name || dto.name,
               price: variant.price,
               compareAtPrice: variant.compareAtPrice,
-              optionValues: variant.optionValues || {},
+              optionValues: variant.optionValues || { size: variant.name || dto.name },
             },
           });
         }

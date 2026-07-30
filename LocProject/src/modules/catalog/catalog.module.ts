@@ -2,14 +2,16 @@ import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CategoryService } from './services/category.service';
 import { ProductService } from './services/product.service';
+import { ReviewService } from './services/review.service';
 import { CategoryController } from './controllers/category.controller';
 import { ProductController } from './controllers/product.controller';
 import { UploadController } from './controllers/upload.controller';
+import { ReviewController } from './controllers/review.controller';
 import * as redisStore from 'cache-manager-redis-yet';
 
 @Module({
-  controllers: [CategoryController, ProductController, UploadController],
-  providers: [CategoryService, ProductService],
+  controllers: [CategoryController, ProductController, UploadController, ReviewController],
+  providers: [CategoryService, ProductService, ReviewService],
   exports: [ProductService, CategoryService],
   imports: [
     CacheModule.register({

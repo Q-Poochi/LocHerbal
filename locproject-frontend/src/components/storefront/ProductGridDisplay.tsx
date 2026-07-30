@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Product } from '../../types/api.types';
 import { useAddToCart } from '../../lib/hooks/useProducts';
 import { useToast } from '../../lib/providers/toast-provider';
+import EmptyState from './EmptyState';
 
 interface ProductGridDisplayProps {
     products: Product[];
@@ -37,11 +38,16 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
     };
     if (!products.length) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
-                <span className="material-symbols-outlined text-[48px] text-outline mb-4">inventory_2</span>
-                <h3 className="font-headline-md text-headline-md text-primary mb-2">Chưa có sản phẩm</h3>
-                <p className="text-body-sm text-on-surface-variant">Danh mục này đang được cập nhật.</p>
-            </div>
+            <EmptyState
+                icon="inventory_2"
+                title="Chưa có sản phẩm"
+                description="Danh mục này đang được cập nhật. Hãy xem các danh mục khác nhé!"
+                action={
+                    <Link href="/products" className="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold hover:opacity-90 transition-all">
+                        Xem tất cả sản phẩm
+                    </Link>
+                }
+            />
         );
     }
 

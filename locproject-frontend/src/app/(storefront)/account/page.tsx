@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useToast } from '@/lib/providers/toast-provider';
 
 type Tab = 'profile' | 'orders' | 'addresses' | 'password';
 
@@ -74,6 +75,12 @@ export default function AccountPage() {
     const [ordersLoading, setOrdersLoading] = useState(false);
     const [addressesLoading, setAddressesLoading] = useState(false);
     const [showAddressModal, setShowAddressModal] = useState(false);
+    const [profileFullName, setProfileFullName] = useState('');
+    const [profilePhone, setProfilePhone] = useState('');
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [profileMsg, setProfileMsg] = useState('');
+    const [profileError, setProfileError] = useState('');
+    const toast = useToast();
     const [passwordMsg, setPasswordMsg] = useState('');
     const [passwordError, setPasswordError] = useState('');
 
@@ -93,6 +100,14 @@ export default function AccountPage() {
     const passwordForm = useForm<PasswordForm>({
         resolver: zodResolver(passwordSchema),
     });
+
+    /* ── Sync profile fields when user loads ── */
+    useEffect(() => {
+        if (user) {
+            setProfileFullName(user.fullName || '');
+            setProfilePhone(user.phone || '');
+        }
+    }, [user]);
 
     /* ── Redirect if not logged in ── */
     useEffect(() => {
@@ -145,22 +160,23 @@ export default function AccountPage() {
 
     const handleSaveAddress = async () => {
         if (!addrName || !addrPhone || !addrLine || !addrProvince || !addrDistrict) return;
-        setSavingAddress(true);
-        try {
-            const provinceName = provinces.find((p) => String(p.code) === addrProvince)?.name || '';
-            const districtName = districts.find((d) => String(d.code) === addrDistrict)?.name || '';
-            await apiClient.post('/customers/addresses', {
-                recipientName: addrName,
-                phone: addrPhone,
-                addressLine: addrLine,
-                province: provinceName,
-                district: districtName,
-                isDefault: addrDefault,
-            });
-            setShowAddressModal(false);
-            const { data } = await apiClient.get('/customers/addresses');
-            setAddresses(data.data || data || []);
-        } catch { } finally { setSavingAddress(false); }
+            setSavingAddress(true);
+            try {
+                const provinceName = provinces.find((p) => String(p.code) === addrProvince)?.name || '';
+                const districtName = districts.find((d) => String(d.code) === addrDistrict)?.name || '';
+                await apiClient.post('/customers/addresses', {
+                    recipientName: addrName,
+                    phone: addrPhone,
+                    addressLine: addrLine,
+                    province: provinceName,
+                    district: districtName,
+                    isDefault: addrDefault,
+                });
+                toast.success('Đã lưu địa chỉ mới');
+                setShowAddressModal(false);
+                const { data } = await apiClient.get('/customers/addresses');
+                setAddresses(data.data || data || []);
+            } catch { toast.error('Lưu địa chỉ thất bại'); } finally { setSavingAddress(false); }
     };
 
     const handleSetDefault = async (id: string) => {
@@ -174,8 +190,23 @@ export default function AccountPage() {
     const handleDeleteAddress = async (id: string) => {
         try {
             await apiClient.delete(`/customers/addresses/${id}`);
+            toast.success('Đã xóa địa chỉ');
             setAddresses((prev) => prev.filter((a) => a.id !== id));
-        } catch { }
+        } catch { toast.error('Xóa địa chỉ thất bại'); }
+    };
+
+    const handleSaveProfile = async () => {
+        setProfileMsg('');
+        setProfileError('');
+        setSavingProfile(true);
+        try {
+            await apiClient.patch('/auth/profile', { fullName: profileFullName, phone: profilePhone });
+            setProfileMsg('Cập nhật thông tin thành công');
+        } catch (err: any) {
+            setProfileError(err?.response?.data?.message || 'Cập nhật thông tin thất bại');
+        } finally {
+            setSavingProfile(false);
+        }
     };
 
     const handlePasswordSubmit = passwordForm.handleSubmit(async (data) => {
@@ -210,9 +241,31 @@ export default function AccountPage() {
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
             <h1 className="font-headline-lg text-headline-lg text-primary mb-6">Tài khoản của tôi</h1>
 
+            {/* ── Mobile tabs (horizontal scroll) ── */}
+            <div className="md:hidden -mx-margin-mobile px-margin-mobile overflow-x-auto mb-4">
+                <div className="flex gap-2 min-w-max pb-2">
+                    {menu.map((item) => (
+                        <button
+                            key={item.key}
+                            onClick={() => {
+                                if (item.key === 'logout') handleLogout();
+                                else setActiveTab(item.key as Tab);
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-body-sm font-label-bold whitespace-nowrap transition-all ${activeTab === item.key
+                                    ? 'bg-primary text-on-primary shadow-sm'
+                                    : 'bg-surface-white text-on-surface-variant border border-outline-variant/30 hover:bg-surface-container-low'
+                                }`}
+                        >
+                            <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="flex flex-col md:flex-row gap-gutter items-start">
-                {/* ── Sidebar ── */}
-                <aside className="w-full md:w-[240px] flex-shrink-0 md:sticky md:top-24">
+                {/* ── Sidebar (desktop only) ── */}
+                <aside className="hidden md:block w-[240px] flex-shrink-0 md:sticky md:top-24">
                     <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-6">
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[24px] mb-3">
@@ -267,7 +320,7 @@ export default function AccountPage() {
                                 <div className="flex-1 w-full space-y-5">
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Họ và tên *</label>
-                                        <input className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" defaultValue={user.fullName} placeholder="Nguyễn Văn A" />
+                                        <input value={profileFullName} onChange={(e) => setProfileFullName(e.target.value)} className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" placeholder="Nguyễn Văn A" />
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Email</label>
@@ -278,7 +331,7 @@ export default function AccountPage() {
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Số điện thoại</label>
-                                        <input className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" defaultValue={user.phone || ''} placeholder="0901234567" />
+                                        <input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" placeholder="0901234567" />
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Giới tính</label>
@@ -297,10 +350,15 @@ export default function AccountPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex justify-end pt-6 border-t border-outline-variant/20">
-                                <button className="bg-primary text-on-primary px-8 py-3 rounded-xl font-label-bold hover:opacity-90 transition-all shadow-sm shadow-primary/20">
-                                    Lưu thay đổi
-                                </button>
+                            <div className="flex flex-col gap-3 pt-6 border-t border-outline-variant/20">
+                                {profileMsg && <p className="text-success-leaf text-body-sm font-bold text-right">{profileMsg}</p>}
+                                {profileError && <p className="text-error text-body-sm text-right">{profileError}</p>}
+                                <div className="flex justify-end">
+                                    <button onClick={handleSaveProfile} disabled={savingProfile}
+                                        className="bg-primary text-on-primary px-8 py-3 rounded-xl font-label-bold hover:opacity-90 transition-all shadow-sm shadow-primary/20 disabled:opacity-50">
+                                        {savingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -357,7 +415,7 @@ export default function AccountPage() {
                                                 <span className="font-label-bold text-primary">
                                                     {order.totalAmount?.toLocaleString('vi-VN')}₫
                                                 </span>
-                                                <button className="text-primary font-bold text-caption hover:underline">Xem chi tiết →</button>
+                                                <button onClick={() => router.push(`/orders/${order.id}`)} className="text-primary font-bold text-caption hover:underline">Xem chi tiết →</button>
                                             </div>
                                         </div>
                                     ))}

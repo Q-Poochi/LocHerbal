@@ -3,7 +3,7 @@ import { TEST_DATA } from './data.js'
 
 export function login() {
   const res = http.post(
-    'http://localhost:3000/auth/login',
+    'http://localhost:4000/auth/login',
     JSON.stringify({ email: TEST_DATA.testEmail, password: TEST_DATA.testPassword }),
     { headers: { 'Content-Type': 'application/json' } }
   )

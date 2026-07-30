@@ -12,6 +12,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard, OptionalJwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { Public } from '../../core/decorators/public.decorator';
 import { CartService } from '../services/cart.service';
@@ -19,6 +20,7 @@ import { OrderService } from '../services/order.service';
 import { AddCartItemDto, UpdateCartItemDto } from '../dto/cart.dto';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
+@ApiTags('Cart')
 @Controller('cart')
 export class CartController {
     constructor(

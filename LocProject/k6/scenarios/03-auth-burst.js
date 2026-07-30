@@ -23,7 +23,7 @@ export const options = {
 
 export default function () {
   const res = http.post(
-    'http://localhost:3000/auth/login',
+    'http://localhost:4000/auth/login',
     JSON.stringify({
       email: 'test2@locherbal.com',
       password: 'Test@123456'

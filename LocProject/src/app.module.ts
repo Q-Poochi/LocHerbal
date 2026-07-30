@@ -1,22 +1,28 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CoreModule } from './modules/core/core.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { SalesModule } from './modules/sales/sales.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { WarehouseModule } from './modules/warehouse/warehouse.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { SupplierModule } from './modules/supplier/supplier.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
+import { AuditService } from './shared/services/audit.service';
 
 @Module({
   imports: [
     PrismaModule,
     EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     CoreModule,
     CatalogModule,
     SalesModule,
+    AdminModule,
     WarehouseModule,
     AccountingModule,
     MarketingModule,
@@ -24,7 +30,10 @@ import { PrismaModule } from './shared/prisma/prisma.module';
     SupplierModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    AuditService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}
 

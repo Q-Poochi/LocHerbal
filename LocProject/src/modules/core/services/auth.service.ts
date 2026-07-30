@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 
 /**
  * Helper: lấy biến môi trường bắt buộc, throw ngay nếu thiếu.
@@ -74,6 +75,52 @@ export class AuthService {
       refreshToken,
       user: this.toUserDto(user),
     };
+  }
+
+  async updateProfile(userId: string, data: { fullName?: string; phone?: string }) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User không tồn tại');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.fullName !== undefined && { fullName: data.fullName }),
+        ...(data.phone !== undefined && { phone: data.phone }),
+      },
+    });
+
+    // Cập nhật Customer tương ứng
+    await this.prisma.customer.updateMany({
+      where: { userId },
+      data: {
+        ...(data.fullName !== undefined && { fullName: data.fullName }),
+        ...(data.phone !== undefined && { phone: data.phone }),
+      },
+    });
+
+    return this.toUserDto(updated);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User không tồn tại');
+    }
+
+    const isMatch = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new UnauthorizedException('Mật khẩu hiện tại không chính xác');
+    }
+
+    const newHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newHash },
+    });
+
+    return { message: 'Đổi mật khẩu thành công' };
   }
 
   async getProfile(userId: string) {

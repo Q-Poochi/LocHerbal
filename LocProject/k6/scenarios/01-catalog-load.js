@@ -21,7 +21,7 @@ export const options = {
 
 export default function () {
   // GET categories
-  let res = http.get('http://localhost:3000/categories')
+  let res = http.get('http://localhost:4000/categories')
   catalogLatency.add(res.timings.duration)
   errorRate.add(res.status !== 200)
   check(res, { 'categories 200': (r) => r.status === 200 })
@@ -29,7 +29,7 @@ export default function () {
   sleep(0.5)
 
   // GET products list
-  res = http.get('http://localhost:3000/products?page=1&limit=12')
+  res = http.get('http://localhost:4000/products?page=1&limit=12')
   catalogLatency.add(res.timings.duration)
   errorRate.add(res.status !== 200)
   check(res, { 'products list 200': (r) => r.status === 200 })
@@ -37,7 +37,7 @@ export default function () {
   sleep(0.5)
 
   // GET product detail (cached sau fix Redis)
-  res = http.get(`http://localhost:3000/products/slug/${TEST_DATA.existingSlug}`)
+  res = http.get(`http://localhost:4000/products/slug/${TEST_DATA.existingSlug}`)
   catalogLatency.add(res.timings.duration)
   check(res, { 'product detail 200': (r) => r.status === 200 })
 

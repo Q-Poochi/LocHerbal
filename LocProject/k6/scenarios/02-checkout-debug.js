@@ -20,7 +20,7 @@ export const options = {
 
 export function setup() {
   const res = http.post(
-    'http://localhost:3000/auth/login',
+    'http://localhost:4000/auth/login',
     JSON.stringify({ email: TEST_DATA.testEmail, password: TEST_DATA.testPassword }),
     { headers: { 'Content-Type': 'application/json' } }
   )
@@ -39,7 +39,7 @@ export default function (data) {
 
   // Thêm vào giỏ
   let res = http.post(
-    'http://localhost:3000/cart/items',
+    'http://localhost:4000/cart/items',
     JSON.stringify({ productVariantId: TEST_DATA.variantId, qty: 1 }),
     { headers }
   )
@@ -50,7 +50,7 @@ export default function (data) {
 
   // Checkout
   res = http.post(
-    'http://localhost:3000/cart/checkout',
+    'http://localhost:4000/cart/checkout',
     JSON.stringify({
       addressId: TEST_DATA.addressId,
       paymentMethod: 'COD'

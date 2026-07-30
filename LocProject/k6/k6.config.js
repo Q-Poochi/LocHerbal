@@ -3,7 +3,7 @@
  * Import vào scenario nếu muốn dùng config chung
  */
 
-export const BASE_URL = 'http://localhost:3000'
+export const BASE_URL = 'http://localhost:4000'
 
 export const COMMON_THRESHOLDS = {
   'http_req_duration': ['p(95)<500'],

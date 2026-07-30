@@ -186,7 +186,7 @@ export default function ProductForm() {
                                         onChange={(e) => setCategoryId(e.target.value)}
                                     >
                                         <option value="">Chọn danh mục...</option>
-                                        {(categories ?? []).map((cat) => (
+                                        {(categories ?? []).map((cat: any) => (
                                             <option key={cat.id} value={cat.id}>
                                                 -- {cat.name}
                                             </option>
@@ -201,7 +201,7 @@ export default function ProductForm() {
                     {/* Tab 2: Variants */}
                     {activeTab === 'variants' && (
                         <div className="p-6">
-                            <VariantEditor />
+                            <VariantEditor productName={name} />
                         </div>
                     )}
 

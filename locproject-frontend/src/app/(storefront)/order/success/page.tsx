@@ -10,11 +10,11 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
     const orderCode = params.orderCode || '';
 
     return (
-        <main className="flex-grow flex items-center justify-center py-stack-lg px-margin-mobile">
-            <div className="max-w-2xl w-full flex flex-col items-center">
+        <main className="flex-grow flex items-center justify-center py-16 px-4 bg-surface-bg min-h-[80vh]">
+            <div className="max-w-xl w-full bg-white rounded-3xl shadow-card border border-border p-8 md:p-12 flex flex-col items-center">
                 {/* Success Animation Section */}
-                <div className="mb-stack-lg relative">
-                    <svg className="w-32 h-32 md:w-40 md:h-40" viewBox="0 0 100 100">
+                <div className="mb-8 relative">
+                    <svg className="w-24 h-24 md:w-32 md:h-32" viewBox="0 0 100 100">
                         {/* Circle */}
                         <circle
                             className="animate-circle"
@@ -39,58 +39,39 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
                 </div>
 
                 {/* Title & Order Info */}
-                <div className="text-center mb-stack-lg space-y-2">
-                    <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">
+                <div className="text-center mb-8 space-y-3">
+                    <h1 className="font-display font-bold text-2xl md:text-3xl text-text-primary">
                         Đặt hàng thành công! 🎉
                     </h1>
-                    <p className="text-on-surface-variant font-body-md text-body-md">
-                        Cảm ơn bạn đã tin tưởng lựa chọn thảo dược từ Thảo Mộc Việt.
+                    <p className="text-text-secondary text-sm md:text-base max-w-sm mx-auto">
+                        Cảm ơn bạn đã tin tưởng lựa chọn thảo dược chất lượng cao từ Lộc Herbal.
                     </p>
                     {orderCode && (
-                        <div className="mt-4 inline-block bg-surface-container px-4 py-2 rounded-lg">
-                            <span className="text-on-surface-variant font-label-bold text-label-bold">
+                        <div className="mt-4 inline-block bg-primary-50 border border-primary-100 px-5 py-2.5 rounded-2xl">
+                            <span className="text-text-secondary text-xs font-semibold">
                                 Mã đơn hàng:
                             </span>
-                            <span className="text-primary font-bold ml-1">#{orderCode}</span>
+                            <span className="text-primary-700 font-bold ml-1.5 font-display text-sm">#{orderCode}</span>
                         </div>
                     )}
-                    <p className="text-caption text-on-surface-variant italic mt-2">
+                    <p className="text-xs text-text-tertiary italic mt-2">
                         Chúng tôi đã gửi email xác nhận chi tiết đến địa chỉ của bạn.
                     </p>
                 </div>
-
-                {/* Order Summary Card (Minimalist - always render if we have at least orderId) */}
-                {orderCode && (
-                    <div className="w-full bg-surface-white rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] overflow-hidden border border-outline-variant mb-stack-lg">
-                        <div className="p-stack-md border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
-                            <h3 className="font-label-bold text-label-bold text-primary">
-                                Tóm tắt đơn hàng
-                            </h3>
-                            <span className="bg-success-leaf/10 text-success-leaf px-2 py-0.5 rounded-full text-caption">
-                                Đang xử lý
-                            </span>
-                        </div>
-                        <div className="p-stack-md">
-                            <p className="text-center text-on-surface-variant font-body-md py-4">
-                                Chi tiết đơn hàng #{orderCode} đã được ghi nhận.
-                            </p>
-                        </div>
-                    </div>
-                )}
 
                 {/* Actions */}
                 <OrderSuccessActions orderId={orderId || orderCode} />
 
                 {/* Trust Badge */}
-                <div className="mt-stack-lg flex items-center gap-2 text-on-surface-variant/60">
+                <div className="mt-8 flex items-center gap-1.5 text-text-tertiary">
                     <span
-                        className="material-symbols-outlined text-[18px]"
+                        className="material-symbols-outlined text-[16px] text-green-600"
                         style={{ fontVariationSettings: "'FILL' 1" }}
                     >
                         verified_user
                     </span>
-                    <span className="text-caption">
-                        Thanh toán bảo mật bởi LocHerbal Trust Network
+                    <span className="text-xs">
+                        Thanh toán bảo mật chuẩn SSL 256-bit
                     </span>
                 </div>
             </div>

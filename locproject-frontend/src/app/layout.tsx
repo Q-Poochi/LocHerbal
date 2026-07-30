@@ -4,17 +4,19 @@ import './globals.css';
 import { ReactQueryProvider } from '../lib/providers/query-provider';
 import { ToastProvider } from '../lib/providers/toast-provider';
 import { AuthBootstrap } from '../lib/providers/auth-bootstrap';
+import CartDrawer from '../components/storefront/CartDrawer';
+import MobileBottomNav from '@/components/storefront/layout/MobileBottomNav';
 import type { ReactNode } from 'react';
 
 const beVietnamPro = Be_Vietnam_Pro({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['vietnamese', 'latin'],
-  variable: '--font-be-vietnam-pro',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-display',
 });
 
 const inter = Inter({
-  subsets: ['vietnamese', 'latin'],
-  variable: '--font-inter',
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-body',
 });
 
 export const metadata: Metadata = {
@@ -35,11 +37,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans pb-[60px] md:pb-0">
         <ReactQueryProvider>
           <ToastProvider>
             <AuthBootstrap />
             {children}
+            <CartDrawer />
+            <MobileBottomNav />
           </ToastProvider>
         </ReactQueryProvider>
       </body>

@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './services/auth.service';
+import { HealthService } from './services/health.service';
 import { AuthController } from './controllers/auth.controller';
+import { HealthController } from './controllers/health.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -23,6 +25,7 @@ import { RolesGuard } from './guards/roles.guard';
   ],
   providers: [
     AuthService,
+    HealthService,
     JwtStrategy,
     {
       provide: APP_GUARD,
@@ -33,7 +36,7 @@ import { RolesGuard } from './guards/roles.guard';
       useClass: RolesGuard,
     },
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, HealthController],
   exports: [AuthService],
 })
 export class CoreModule {}

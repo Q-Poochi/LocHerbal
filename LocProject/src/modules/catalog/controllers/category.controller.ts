@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Query, UseGuards } from '@nestjs/common';
 import { CategoryService } from '../services/category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 import { CreateAttributeDefinitionDto } from '../dto/attribute.dto';
 import { Public } from '../../core/decorators/public.decorator';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { RolesGuard } from '../../core/guards/roles.guard';
+import { PaginationDto } from '../../../shared/dto/pagination.dto';
 
 @Controller('categories')
 export class CategoryController {
@@ -19,8 +20,8 @@ export class CategoryController {
 
   @Public()
   @Get()
-  findAll() {
-    return this.categoryService.findAll();
+  findAll(@Query() pagination?: PaginationDto) {
+    return this.categoryService.findAll(pagination);
   }
 
   @Public()

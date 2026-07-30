@@ -1,40 +1,78 @@
-import Image from 'next/image';
+'use client';
+
+import Link from 'next/link';
 
 export default function PromoBanner() {
   return (
-    <section className="py-stack-lg px-margin-mobile md:px-margin-desktop">
-      <div className="max-w-container-max mx-auto">
-        <div className="relative rounded-2xl overflow-hidden bg-primary-container text-white p-10 md:p-16 flex flex-col md:flex-row items-center gap-10">
-          <div className="relative z-10 flex-1">
-            <span className="text-secondary-fixed font-bold uppercase tracking-widest text-sm mb-4 block">HỢP TÁC PHÁT TRIỂN</span>
-            <h2 className="font-headline-lg text-headline-lg mb-6">Chương Trình Đại Lý &amp; CTV LocHerbal</h2>
-            <p className="text-body-lg mb-8 opacity-90 max-w-xl">
-              Trở thành đối tác tin cậy của chúng tôi để cùng lan tỏa giá trị thảo dược Việt. Hưởng mức chiết khấu hấp dẫn lên tới <span className="text-secondary-fixed font-bold text-2xl">25%</span> trên mỗi đơn hàng.
+    <section className="w-full py-16 md:py-20 bg-surface-alt">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-10">
+        <div className="rounded-3xl bg-gradient-to-br from-primary-700 to-primary-900 overflow-hidden
+                        flex flex-col md:flex-row items-center shadow-xl">
+
+          {/* Left — visual */}
+          <div className="w-full md:w-2/5 min-h-[200px] md:min-h-[280px] relative
+                          bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-10">
+            <div className="text-center">
+              <span
+                className="material-symbols-outlined text-white/30"
+                style={{ fontSize: '100px', fontVariationSettings: "'FILL' 1" }}
+              >
+                groups
+              </span>
+            </div>
+            {/* Decorative circles */}
+            <div className="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="absolute -bottom-10 -right-10 w-60 h-60 rounded-full bg-white/5" />
+          </div>
+
+          {/* Right — text */}
+          <div className="flex-1 p-8 md:p-12 text-white">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 text-sm font-medium mb-6">
+              <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+                handshake
+              </span>
+              Cơ hội hợp tác
+            </div>
+
+            <h2 className="font-display font-bold text-2xl md:text-3xl mb-4 leading-tight">
+              Chương Trình Đại Lý &amp; Cộng Tác Viên
+            </h2>
+
+            <p className="text-white/80 text-base leading-relaxed mb-8 max-w-lg">
+              Trở thành đối tác của LocHerbal — cùng chúng tôi mang sản phẩm thảo dược cao cấp đến tay hàng triệu người Việt. Hoa hồng hấp dẫn, hỗ trợ đào tạo toàn diện.
             </p>
-            <button className="bg-white text-primary font-bold py-4 px-10 rounded-lg hover:bg-secondary-fixed transition-colors text-label-bold">
-              {/* TODO: connect API /marketing/partner-registration */}
-              Đăng ký ngay
-            </button>
-          </div>
 
-          <div className="relative z-10 w-full md:w-1/3">
-            <Image
-              className="rounded-xl shadow-2xl border-4 border-white/10"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuACg4-WlN0KSUhfy1sGkTpxLfEpymwhlnFSxrrtCZ2-5IRL9oT_0KnwvPBGIvi6XNqQ3TQJca-mBLRiq19kv7nDv6mvHOrkq6wZ_AW-PL_GLLqaIDEhYEgjbip-kAlxKPh6ic9jCOI64HJbWpmmzBuyRrTyOeu4FiIWqpxTv8kt-W9tOiYNtpEdISCJCcLkasAz7NguK-oLBRvLPP6sz7n5rLM35W5Bu4Fu0bdeW0NHz_5Uithm-Q"
-              alt="Chương trình đại lý LocHerbal"
-              width={400}
-              height={300}
-            />
-          </div>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-primary-700
+                           font-semibold text-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+              >
+                Tìm hiểu thêm
+                <span className="material-symbols-outlined text-base">chevron_right</span>
+              </Link>
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/50
+                           text-white font-semibold text-sm hover:bg-white/10 transition-all duration-200"
+              >
+                Xem sản phẩm
+              </Link>
+            </div>
 
-          {/* Background Graphics */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <svg className="w-full h-full" fill="currentColor">
-              <pattern height="40" id="pattern-circles" patternUnits="userSpaceOnUse" width="40" x="0" y="0">
-                <circle cx="20" cy="20" r="1.5"></circle>
-              </pattern>
-              <rect fill="url(#pattern-circles)" height="100%" width="100%"></rect>
-            </svg>
+            {/* Stats */}
+            <div className="flex gap-8 mt-10 pt-8 border-t border-white/20">
+              {[
+                { val: '500+', label: 'Đại lý' },
+                { val: '50K+', label: 'Khách hàng' },
+                { val: '20%+', label: 'Hoa hồng' },
+              ].map(s => (
+                <div key={s.label}>
+                  <p className="font-display font-bold text-2xl">{s.val}</p>
+                  <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

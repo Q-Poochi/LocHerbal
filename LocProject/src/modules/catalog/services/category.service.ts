@@ -4,6 +4,7 @@ import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 import { CreateAttributeDefinitionDto } from '../dto/attribute.dto';
+import { PaginationDto, PaginatedResponse } from '../../../shared/dto/pagination.dto';
 
 @Injectable()
 export class CategoryService {
@@ -36,21 +37,31 @@ export class CategoryService {
     });
   }
 
-  async findAll() {
-    const cached = await this.cacheManager.get('catalog:categories');
+  async findAll(pagination?: PaginationDto): Promise<PaginatedResponse<any>> {
+    const page = pagination?.page || 1;
+    const limit = pagination?.limit || 20;
+
+    const cacheKey = `catalog:categories:page=${page}:limit=${limit}`;
+    const cached = await this.cacheManager.get(cacheKey);
     if (cached) {
       return cached;
     }
 
-    const categories = await this.prisma.category.findMany({
-      include: {
-        children: true,
-        attributes: true,
-      },
-    });
+    const [data, total] = await Promise.all([
+      this.prisma.category.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          children: true,
+          attributes: true,
+        },
+      }),
+      this.prisma.category.count(),
+    ]);
 
-    await this.cacheManager.set('catalog:categories', categories, { ttl: 3600 });
-    return categories;
+    const result = { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    await this.cacheManager.set(cacheKey, result, { ttl: 3600 });
+    return result;
   }
 
   async findOne(id: string) {

@@ -27,8 +27,9 @@ export function useCategories() {
     return useQuery({
         queryKey: ['categories'],
         queryFn: async () => {
-            const { data } = await apiClient.get<Category[]>('/categories');
-            return data;
+            const { data } = await apiClient.get<any>('/categories');
+            // Response có thể là array cũ (no pagination) hoặc { data, total } (có pagination)
+            return Array.isArray(data) ? data : (data?.data ?? []);
         },
         staleTime: 60000,
     });

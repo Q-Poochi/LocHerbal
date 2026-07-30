@@ -250,6 +250,7 @@ model Product {
   images          ProductImage[]
   attributeValues ProductAttributeValue[]
   variants        ProductVariant[]
+  reviews         ProductReview[]
 
   @@index([categoryId])
   @@map("products")
@@ -264,6 +265,21 @@ model ProductImage {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("product_images")
+}
+
+model ProductReview {
+  id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  customerId String  @map("customer_id")
+  rating    Int      @default(5)
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([productId, customerId])
+  @@map("product_reviews")
 }
 
 model ProductAttributeValue {
@@ -296,6 +312,7 @@ model ProductVariant {
   orderItems         OrderItem[]
   cartItems          CartItem[]
   purchaseOrderItems PurchaseOrderItem[]
+  wishlistItems      WishlistItem[]
 
   @@index([productId])
   @@map("product_variants")
@@ -319,8 +336,34 @@ model Customer {
   orders       Order[]
   couponUsages CouponUsage[]
   leads        ConsultationLead[]
+  reviews      ProductReview[]
+  wishlist     Wishlist?
 
   @@map("customers")
+}
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  customerId String   @unique @map("customer_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  customer Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items    WishlistItem[]
+
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id               String   @id @default(uuid())
+  wishlistId       String   @map("wishlist_id")
+  productVariantId String   @map("product_variant_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  wishlist Wishlist       @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  variant  ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  @@unique([wishlistId, productVariantId])
+  @@map("wishlist_items")
 }
 
 model CustomerAddress {
@@ -775,4 +818,16 @@ model ShipmentTrackingEvent {
 
   @@index([shipmentId])
   @@map("shipment_tracking_events")
+}
+
+model ReferencePrice {
+  id          String   @id @default(uuid())
+  productName String   @unique @map("product_name")
+  minPrice    Decimal  @db.Decimal(12, 2) @map("min_price")
+  maxPrice    Decimal  @db.Decimal(12, 2) @map("max_price")
+  source      String?
+  category    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("reference_prices")
 }

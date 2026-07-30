@@ -36,12 +36,12 @@ export default function CheckoutClient() {
 
     if (cartLoading) {
         return (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-8">
-                    <div className="animate-pulse h-96 bg-surface-container rounded-lg" />
+                    <div className="animate-pulse h-96 bg-primary-50 rounded-3xl border border-border" />
                 </div>
                 <div className="lg:col-span-4">
-                    <div className="animate-pulse h-64 bg-surface-container rounded-lg" />
+                    <div className="animate-pulse h-64 bg-primary-50 rounded-3xl border border-border" />
                 </div>
             </div>
         );
@@ -49,18 +49,18 @@ export default function CheckoutClient() {
 
     if (!cart || !cart.items || cart.items.length === 0) {
         return (
-            <div className="text-center py-12">
-                <span className="material-symbols-outlined text-6xl text-outline mb-4 block">
-                    shopping_cart
-                </span>
-                <p className="text-body-lg text-on-surface-variant mb-6">
-                    Giỏ hàng trống
-                </p>
+            <div className="text-center py-16">
+                <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="material-symbols-outlined text-5xl text-primary-300"
+                        style={{ fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
+                </div>
+                <p className="font-display font-bold text-xl text-text-primary mb-2">Giỏ hàng trống</p>
+                <p className="text-sm text-text-secondary mb-8">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
                 <Link
                     href="/products"
-                    className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-label-bold hover:bg-primary-container transition-colors"
+                    className="inline-flex items-center gap-2 bg-primary-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-800 transition-all text-sm"
                 >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                     Tiếp tục mua sắm
                 </Link>
             </div>
@@ -75,21 +75,28 @@ export default function CheckoutClient() {
 
     if (completed) {
         return (
-            <div className="bg-surface-white p-12 rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] text-center max-w-2xl mx-auto">
-                <div className="w-20 h-20 bg-success-leaf/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="material-symbols-outlined text-success-leaf text-5xl">check_circle</span>
+            <div className="bg-white p-12 rounded-3xl shadow-card border border-border text-center max-w-2xl mx-auto">
+                <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="material-symbols-outlined text-primary-700 text-5xl"
+                        style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                 </div>
-                <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Đặt hàng thành công</h2>
-                <p className="font-body-md text-on-surface-variant max-w-md mx-auto mb-2">
+                <h2 className="font-display font-bold text-3xl text-text-primary mb-2">Đặt hàng thành công!</h2>
+                <p className="text-text-secondary mb-2 max-w-md mx-auto">
                     Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đang được xử lý.
                 </p>
-                <p className="text-body-sm text-on-surface-variant max-w-md mx-auto mb-8">
+                <p className="text-sm text-text-tertiary max-w-md mx-auto mb-8">
                     Chúng tôi sẽ gửi email xác nhận chi tiết đến địa chỉ của bạn.
                 </p>
                 <div className="flex justify-center gap-4">
                     <Link
+                        href="/orders"
+                        className="px-6 py-3 bg-primary-700 text-white rounded-xl font-semibold hover:bg-primary-800 transition-all"
+                    >
+                        Xem đơn hàng
+                    </Link>
+                    <Link
                         href="/products"
-                        className="px-6 py-3 border border-primary text-primary rounded-lg font-label-bold hover:bg-surface-container-low transition-colors"
+                        className="px-6 py-3 border border-border text-text-secondary rounded-xl font-semibold hover:bg-surface-bg transition-all"
                     >
                         Tiếp tục mua sắm
                     </Link>
@@ -99,7 +106,7 @@ export default function CheckoutClient() {
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <CheckoutForm
                 defaultValues={{ fullName: user?.fullName || '', email: user?.email || '' }}
                 isPending={checkoutMutation.isPending}
@@ -107,7 +114,7 @@ export default function CheckoutClient() {
             />
 
             {/* Right Column: Order Summary (Sticky) */}
-            <div className="lg:col-span-4 lg:sticky lg:top-24">
+            <div className="lg:col-span-4 lg:sticky lg:top-28">
                 <OrderSummary items={cart.items} subtotal={subtotal} shippingFee={shippingFee} />
             </div>
         </div>

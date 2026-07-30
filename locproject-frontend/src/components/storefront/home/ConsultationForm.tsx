@@ -2,92 +2,165 @@
 
 import { useState } from 'react';
 
-type FormState = 'idle' | 'submitting' | 'success';
+const HEALTH_TOPICS = [
+  'Tim mạch / Huyết áp',
+  'Xương khớp / Đau lưng',
+  'Tiêu hóa / Dạ dày',
+  'Mất ngủ / Căng thẳng',
+  'Suy nhược / Mệt mỏi',
+  'Khác',
+];
+
+type FormState = 'idle' | 'loading' | 'success';
 
 export default function ConsultationForm() {
-  const [formState, setFormState] = useState<FormState>('idle');
+  const [form, setForm] = useState({ name: '', phone: '', topic: '' });
+  const [state, setState] = useState<FormState>('idle');
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormState('submitting');
-    // TODO: connect API /marketing/consultation-requests
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setFormState('success');
-    setTimeout(() => setFormState('idle'), 3000);
+    if (!form.name || !form.phone) return;
+    setState('loading');
+    // Simulate API call
+    await new Promise(r => setTimeout(r, 1200));
+    setState('success');
   };
 
   return (
-    <section className="w-full py-stack-lg">
-      <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
-          <div className="md:w-1/2 p-10 md:p-16 bg-primary-container text-white">
-            <h3 className="font-headline-lg text-headline-lg mb-6">Nhận Tư Vấn Miễn Phí <br />Từ Chuyên Gia</h3>
-            <p className="text-body-lg opacity-80 mb-10">
-              Đội ngũ bác sĩ và chuyên gia y học cổ truyền của chúng tôi luôn sẵn sàng lắng nghe và tư vấn giải pháp sức khỏe phù hợp nhất cho bạn.
-            </p>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <span className="material-symbols-outlined text-secondary-fixed">check_circle</span>
-                <div>
-                  <h5 className="font-bold">Bảo mật thông tin</h5>
-                  <p className="text-caption opacity-70">Cam kết không chia sẻ dữ liệu cho bên thứ ba.</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="material-symbols-outlined text-secondary-fixed">history</span>
-                <div>
-                  <h5 className="font-bold">Phản hồi nhanh chóng</h5>
-                  <p className="text-caption opacity-70">Chúng tôi sẽ gọi lại cho bạn trong vòng 30 phút.</p>
-                </div>
-              </div>
+    <section className="w-full py-16 md:py-20 bg-primary-50">
+      <div className="max-w-[1280px] mx-auto px-4 md:px-10">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-4">
+              <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+                support_agent
+              </span>
+              Hoàn toàn miễn phí
             </div>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight mb-4">
+              Đặt Lịch Tư Vấn Sức Khỏe
+            </h2>
+            <p className="text-text-secondary text-base leading-relaxed">
+              Chuyên gia của chúng tôi sẽ liên hệ với bạn trong vòng <strong>15 phút</strong> để tư vấn giải pháp phù hợp nhất.
+            </p>
           </div>
 
-          <div className="md:w-1/2 p-10 md:p-16">
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
-                <label className="block font-label-bold text-label-bold text-on-surface mb-2" htmlFor="consultation-name">Họ và tên *</label>
-                <input
-                  id="consultation-name"
-                  className="w-full border-outline-variant rounded-lg p-3 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="Nhập họ và tên của bạn"
-                  type="text"
-                  required
-                />
+          {/* Form card */}
+          <div className="bg-white rounded-3xl shadow-lg border border-border p-8">
+            {state === 'success' ? (
+              /* Success state */
+              <div className="text-center py-8 animate-scale-in">
+                <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center mx-auto mb-4">
+                  <span
+                    className="material-symbols-outlined text-primary-700"
+                    style={{ fontSize: '40px', fontVariationSettings: "'FILL' 1" }}
+                  >
+                    check_circle
+                  </span>
+                </div>
+                <h3 className="font-display font-bold text-xl text-text-primary mb-2">
+                  Đã nhận đăng ký!
+                </h3>
+                <p className="text-text-secondary">
+                  Chuyên gia sẽ gọi điện cho bạn trong <strong>15 phút</strong>.
+                  <br />
+                  Cảm ơn bạn đã tin tưởng LocHerbal!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setState('idle'); setForm({ name: '', phone: '', topic: '' }); }}
+                  className="mt-6 px-6 py-2.5 rounded-full border border-primary-700 text-primary-700
+                             text-sm font-medium hover:bg-primary-50 transition-colors"
+                >
+                  Đăng ký thêm
+                </button>
               </div>
-              <div>
-                <label className="block font-label-bold text-label-bold text-on-surface mb-2" htmlFor="consultation-phone">Số điện thoại *</label>
-                <input
-                  id="consultation-phone"
-                  className="w-full border-outline-variant rounded-lg p-3 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="Nhập số điện thoại"
-                  type="tel"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-label-bold text-label-bold text-on-surface mb-2" htmlFor="consultation-specialty">Vấn đề sức khỏe cần tư vấn</label>
-                <select id="consultation-specialty" className="w-full border-outline-variant rounded-lg p-3 focus:ring-primary focus:border-primary transition-all">
-                  <option>Chọn chuyên khoa</option>
-                  <option>Hệ thần kinh</option>
-                  <option>Hệ tiêu hóa</option>
-                  <option>Xương khớp</option>
-                  <option>Khác...</option>
-                </select>
-              </div>
-              <button
-                className={`w-full font-bold py-4 rounded-lg shadow-lg active:scale-95 transition-all text-label-bold ${
-                  formState === 'success'
-                    ? 'bg-success-leaf text-white'
-                    : 'bg-secondary hover:bg-secondary-container text-white hover:text-on-secondary-container'
-                }`}
-                type="submit"
-                disabled={formState === 'submitting'}
-              >
-                {formState === 'submitting' ? 'Đang gửi...' : formState === 'success' ? 'Gửi thành công!' : 'Gửi thông tin tư vấn'}
-              </button>
-              <p className="text-[10px] text-center text-on-surface-variant">Bằng cách nhấn gửi, bạn đồng ý với Chính sách bảo mật của LocHerbal.</p>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1.5">
+                    Họ và tên <span className="text-error">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Nguyễn Văn A"
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-surface-alt
+                               focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+                               transition-all duration-150 text-text-primary placeholder:text-text-tertiary"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1.5">
+                    Số điện thoại <span className="text-error">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="0901 234 567"
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-surface-alt
+                               focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+                               transition-all duration-150 text-text-primary placeholder:text-text-tertiary"
+                  />
+                </div>
+
+                {/* Topic */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1.5">
+                    Vấn đề sức khỏe cần tư vấn
+                  </label>
+                  <select
+                    value={form.topic}
+                    onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
+                    className="w-full px-4 py-3.5 md:py-3 rounded-xl border border-border bg-surface-alt
+                               focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+                               transition-all duration-150 text-text-primary appearance-none cursor-pointer"
+                  >
+                    <option value="">Chọn vấn đề sức khỏe...</option>
+                    {HEALTH_TOPICS.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={state === 'loading'}
+                  className="w-full py-4 rounded-xl bg-primary-700 text-white font-semibold text-base
+                             hover:bg-primary-800 hover:shadow-lg transition-all duration-200
+                             disabled:opacity-70 disabled:cursor-not-allowed
+                             flex items-center justify-center gap-2"
+                >
+                  {state === 'loading' ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Đang gửi...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-xl">send</span>
+                      Đặt lịch tư vấn miễn phí
+                    </>
+                  )}
+                </button>
+
+                <p className="text-center text-xs text-text-tertiary">
+                  🔒 Thông tin của bạn được bảo mật hoàn toàn
+                </p>
+              </form>
+            )}
           </div>
         </div>
       </div>

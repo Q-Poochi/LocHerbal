@@ -4,16 +4,24 @@ import {
     Post,
     Body,
     Param,
+    Query,
     Req,
+    Res,
     UseGuards,
     NotFoundException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
+import { RolesGuard } from '../../core/guards/roles.guard';
+import { Roles } from '../../core/decorators/roles.decorator';
 import { OrderService } from '../services/order.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CancelOrderDto } from '../dto/order.dto';
+import { PaginationDto } from '../../../shared/dto/pagination.dto';
 
+@ApiTags('Orders')
+@ApiBearerAuth()
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
 export class OrderController {
@@ -36,33 +44,43 @@ export class OrderController {
     }
 
     /**
-     * Danh sách đơn hàng của customer hiện tại.
+     * Danh sách đơn hàng của customer hiện tại (có phân trang).
      */
     @Get()
-    async listOrders(@Req() req: Request) {
+    async listOrders(@Query() pagination: PaginationDto, @Req() req: Request) {
         const customerId = await this.getCustomerId(req);
         if (!customerId) {
             throw new NotFoundException('Không tìm thấy thông tin khách hàng');
         }
-        return this.prisma.order.findMany({
-            where: { customerId },
-            include: {
-                items: true,
-                paymentTxns: {
-                    select: {
-                        id: true,
-                        provider: true,
-                        transactionCode: true,
-                        amount: true,
-                        status: true,
-                        createdAt: true,
+        const page = pagination?.page || 1;
+        const limit = pagination?.limit || 20;
+
+        const [data, total] = await Promise.all([
+            this.prisma.order.findMany({
+                where: { customerId },
+                skip: (page - 1) * limit,
+                take: limit,
+                include: {
+                    items: true,
+                    paymentTxns: {
+                        select: {
+                            id: true,
+                            provider: true,
+                            transactionCode: true,
+                            amount: true,
+                            status: true,
+                            createdAt: true,
+                        },
+                        take: 1,
+                        orderBy: { createdAt: 'desc' },
                     },
-                    take: 1,
-                    orderBy: { createdAt: 'desc' },
                 },
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+                orderBy: { createdAt: 'desc' },
+            }),
+            this.prisma.order.count({ where: { customerId } }),
+        ]);
+
+        return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
 
     /**
@@ -120,5 +138,55 @@ export class OrderController {
             throw new NotFoundException('Không tìm thấy thông tin khách hàng');
         }
         return this.orderService.cancelOrder(id, customerId, body.note);
+    }
+
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin', 'staff')
+    @Get('export/csv')
+    @ApiOperation({ summary: 'Xuất danh sách đơn hàng dạng CSV' })
+    @ApiQuery({ name: 'from', required: false })
+    @ApiQuery({ name: 'to', required: false })
+    async exportCsv(
+        @Query('from') from?: string,
+        @Query('to') to?: string,
+        @Res() res?: Response,
+    ) {
+        const where: any = {};
+        if (from || to) {
+            where.createdAt = {};
+            if (from) where.createdAt.gte = new Date(from);
+            if (to) where.createdAt.lte = new Date(to);
+        }
+
+        const orders = await this.prisma.order.findMany({
+            where,
+            include: {
+                customer: { select: { fullName: true, phone: true, email: true } },
+                items: { include: { variant: { select: { sku: true, name: true } } } },
+                address: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        const header = 'Mã ĐH,Khách hàng,SĐT,Email,Tổng tiền,Trạng thái,Thanh toán,Ngày tạo\n';
+        const rows = orders.map(o => {
+            const line = [
+                o.orderCode,
+                o.customer?.fullName || '',
+                o.customer?.phone || '',
+                o.customer?.email || '',
+                o.subtotal.toString(),
+                o.status,
+                o.paymentStatus,
+                o.createdAt.toISOString(),
+            ].map(v => `"${v}"`).join(',');
+            return line;
+        }).join('\n');
+
+        res.set({
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': 'attachment; filename="orders.csv"',
+        });
+        res.send('\uFEFF' + header + rows);
     }
 }

@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '../../../lib/api/client';
 import { useAuthStore } from '../../../lib/store/auth.store';
+import { useToast } from '../../../lib/providers/toast-provider';
 
 function LoginForm() {
     const router = useRouter();
@@ -14,6 +15,7 @@ function LoginForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const toast = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,6 +28,8 @@ function LoginForm() {
             console.log('[Login] backend response:', data);
             const { accessToken, user } = data;
             useAuthStore.getState().setAuth(accessToken, user);
+
+            toast.success(`Chào mừng trở lại, ${user?.fullName || user?.email}!`);
 
             // Decode JWT payload để kiểm tra role
             let isAdmin = false;

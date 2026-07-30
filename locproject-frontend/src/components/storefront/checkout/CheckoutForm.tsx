@@ -107,49 +107,49 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
     const goToStep = (step: number) => setCurrentStep(step);
 
     return (
-        <div className="lg:col-span-8 space-y-gutter">
+        <div className="lg:col-span-8 space-y-6">
             <form onSubmit={handleSubmit(onSubmit)}>
                 {/* Step 1: Shipping Information */}
                 <section
-                    className={`bg-surface-white p-6 md:p-8 rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] transition-all ${currentStep === 1 ? '' : 'hidden'
+                    className={`bg-white p-6 md:p-8 rounded-3xl shadow-card border border-border transition-all ${currentStep === 1 ? '' : 'hidden'
                         }`}
                 >
-                    <h2 className="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2">
+                    <h2 className="font-display font-bold text-xl text-primary-700 mb-6 flex items-center gap-2">
                         <span className="material-symbols-outlined">local_shipping</span>
                         Thông tin giao hàng
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                 Họ và tên *
                             </label>
                             <input
                                 {...register('fullName')}
                                 data-testid="checkout-fullName"
-                                className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all bg-surface-bg text-text-primary placeholder:text-text-tertiary"
                                 placeholder="Nguyễn Văn A"
                             />
                             {errors.fullName && <p className="text-error text-sm mt-1">{errors.fullName.message}</p>}
                         </div>
                         <div>
-                            <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                 Số điện thoại *
                             </label>
                             <input
                                 {...register('phone')}
                                 data-testid="checkout-phone"
-                                className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all bg-surface-bg text-text-primary placeholder:text-text-tertiary"
                                 placeholder="0901234567"
                             />
                             {errors.phone && <p className="text-error text-sm mt-1">{errors.phone.message}</p>}
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                 Email (Không bắt buộc)
                             </label>
                             <input
                                 {...register('email')}
-                                className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all bg-surface-bg text-text-primary placeholder:text-text-tertiary"
                                 placeholder="example@gmail.com"
                                 type="email"
                             />
@@ -157,12 +157,12 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
                         </div>
                         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                     Tỉnh / Thành phố *
                                 </label>
                                 <select
                                     {...register('province')}
-                                    className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md bg-white focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="w-full px-4 py-3.5 md:py-3 border border-border rounded-xl text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-text-primary disabled:opacity-50 disabled:bg-surface-bg"
                                 >
                                     <option value="">Chọn Tỉnh/Thành</option>
                                     {provinces.map((p) => (
@@ -174,13 +174,13 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
                                 {errors.province && <p className="text-error text-sm mt-1">{errors.province.message}</p>}
                             </div>
                             <div>
-                                <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                     Quận / Huyện *
                                 </label>
                                 <select
                                     {...register('district')}
                                     disabled={!provinceCode}
-                                    className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md bg-white focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all disabled:opacity-50"
+                            className="w-full px-4 py-3.5 md:py-3 border border-border rounded-xl text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-text-primary disabled:opacity-50 disabled:bg-surface-bg"
                                 >
                                     <option value="">{provinceCode ? 'Chọn Quận/Huyện' : 'Chọn Tỉnh trước'}</option>
                                     {districts.map((d) => (
@@ -192,13 +192,13 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
                                 {errors.district && <p className="text-error text-sm mt-1">{errors.district.message}</p>}
                             </div>
                             <div>
-                                <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                     Phường / Xã *
                                 </label>
                                 <select
                                     {...register('ward')}
                                     disabled={!districtCode}
-                                    className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md bg-white focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all disabled:opacity-50"
+                            className="w-full px-4 py-3.5 md:py-3 border border-border rounded-xl text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all text-text-primary disabled:opacity-50 disabled:bg-surface-bg"
                                 >
                                     <option value="">{districtCode ? 'Chọn Phường/Xã' : 'Chọn Quận trước'}</option>
                                     {wards.map((w) => (
@@ -211,24 +211,24 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
                             </div>
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                 Địa chỉ cụ thể *
                             </label>
                             <input
                                 {...register('address')}
                                 data-testid="checkout-address"
-                                className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all bg-surface-bg text-text-primary placeholder:text-text-tertiary"
                                 placeholder="Số nhà, tên đường..."
                             />
                             {errors.address && <p className="text-error text-sm mt-1">{errors.address.message}</p>}
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1">
+                            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
                                 Ghi chú đơn hàng
                             </label>
                             <textarea
                                 {...register('note')}
-                                className="w-full px-4 py-3 border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-1 focus:ring-primary/10 outline-none transition-all"
+                            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all bg-surface-bg text-text-primary placeholder:text-text-tertiary"
                                 placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi đến..."
                                 rows={3}
                             />
@@ -241,7 +241,7 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
                                 // Validate step 1 fields before proceeding
                                 handleSubmit(() => goToStep(2))();
                             }}
-                            className="bg-primary text-on-primary px-8 py-3 rounded-lg font-label-bold hover:opacity-90 active:scale-95 transition-all flex items-center gap-2"
+                            className="bg-primary-700 text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-800 active:scale-95 transition-all flex items-center gap-2 shadow-md"
                         >
                             Tiếp tục thanh toán
                             <span className="material-symbols-outlined">arrow_forward</span>
@@ -251,19 +251,20 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
 
                 {/* Step 2: Payment Method */}
                 <section
-                    className={`bg-surface-white p-6 md:p-8 rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] transition-all ${currentStep === 2 ? '' : 'hidden'
+                    className={`bg-white p-6 md:p-8 rounded-3xl shadow-card border border-border transition-all ${currentStep === 2 ? '' : 'hidden'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="font-headline-md text-headline-md text-primary flex items-center gap-2">
+                        <h2 className="font-display font-bold text-xl text-primary-700 flex items-center gap-2">
                             <span className="material-symbols-outlined">payments</span>
                             Phương thức thanh toán
                         </h2>
                         <button
                             type="button"
-                            className="text-primary font-label-bold hover:underline"
+                            className="text-primary-700 font-semibold text-sm hover:underline flex items-center gap-1"
                             onClick={() => goToStep(1)}
                         >
+                            <span className="material-symbols-outlined text-base">arrow_back</span>
                             Quay lại
                         </button>
                     </div>
@@ -281,8 +282,9 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
                         <button
                             type="submit"
                             disabled={isPending}
-                            className="bg-secondary-container text-on-secondary-container px-10 py-4 rounded-lg font-label-bold hover:opacity-90 active:scale-95 transition-all shadow-md disabled:opacity-50"
+                            className="bg-accent-gold hover:bg-yellow-400 text-gray-900 px-10 py-4 rounded-2xl font-display font-bold hover:shadow-lg active:scale-95 transition-all shadow-md disabled:opacity-50 flex items-center gap-2"
                         >
+                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>payment</span>
                             {isPending ? 'Đang xử lý...' : 'Đặt hàng & Thanh toán'}
                         </button>
                     </div>

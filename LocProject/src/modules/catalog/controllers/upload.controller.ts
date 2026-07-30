@@ -1,8 +1,10 @@
-import { Controller, Post, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFiles, BadRequestException, UseGuards } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { randomUUID } from 'crypto';
+import { Roles } from '../../core/decorators/roles.decorator';
+import { RolesGuard } from '../../core/guards/roles.guard';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -10,6 +12,8 @@ const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 @Controller('upload')
 export class UploadController {
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('admin', 'staff')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: diskStorage({
@@ -34,7 +38,7 @@ export class UploadController {
       throw new BadRequestException('Không có file nào được tải lên');
     }
 
-    const baseUrl = process.env.API_URL || 'http://localhost:3000';
+    const baseUrl = process.env.API_URL || 'http://localhost:4000';
     return files.map((f) => ({
       url: `${baseUrl}/uploads/products/${f.filename}`,
       filename: f.filename,

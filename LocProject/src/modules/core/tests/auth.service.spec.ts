@@ -18,6 +18,7 @@ describe('AuthService', () => {
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
     userSession: {
       create: jest.fn(),
@@ -171,6 +172,39 @@ describe('AuthService', () => {
         where: { id: 'session-1' },
         data: { isRevoked: true },
       });
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should throw Unauthorized if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      await expect(
+        service.changePassword('user-1', { currentPassword: 'old', newPassword: 'new12345' }),
+      ).rejects.toThrow('User không tồn tại');
+    });
+
+    it('should throw Unauthorized if current password is wrong', async () => {
+      const hash = await bcrypt.hash('correct_old', 10);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
+
+      await expect(
+        service.changePassword('user-1', { currentPassword: 'wrong_old', newPassword: 'new12345' }),
+      ).rejects.toThrow('Mật khẩu hiện tại không chính xác');
+    });
+
+    it('should change password successfully', async () => {
+      const hash = await bcrypt.hash('correct_old', 10);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
+      mockPrismaService.user.update.mockResolvedValue(mockUser());
+
+      const result = await service.changePassword('user-1', { currentPassword: 'correct_old', newPassword: 'new12345' });
+      expect(result).toEqual({ message: 'Đổi mật khẩu thành công' });
+
+      const updateCall = mockPrismaService.user.update.mock.calls[0][0];
+      const newHash = updateCall.data.passwordHash;
+      expect(newHash).not.toBe(hash);
+      const isMatch = await bcrypt.compare('new12345', newHash);
+      expect(isMatch).toBe(true);
     });
   });
 

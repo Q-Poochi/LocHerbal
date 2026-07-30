@@ -1,113 +1,147 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8F6F0;
-  --foreground: #1A1A1A;
+  --background: #fafaf8;
+  --foreground: #1a1a17;
 }
 
 @theme inline {
-  /* Colors */
-  --color-surface-container: #f0eee8;
-  --color-outline-variant: #c1c8c2;
-  --color-on-tertiary-container: #75b393;
-  --color-primary: #1B4332;
-  --color-inverse-surface: #30312d;
-  --color-error-container: #ffdad6;
-  --color-on-primary-fixed-variant: #274e3d;
-  --color-secondary-fixed-dim: #f6be39;
-  --color-tertiary: #002d1c;
-  --color-on-tertiary-fixed-variant: #0e5138;
-  --color-primary-fixed-dim: #a5d0b9;
-  --color-secondary-fixed: #ffdfa0;
-  --color-surface-container-high: #eae8e2;
-  --color-on-primary-container: #86af99;
-  --color-surface-white: #FFFFFF;
-  --color-tertiary-fixed: #b1f0ce;
-  --color-surface-dim: #dcdad4;
-  --color-on-secondary: #ffffff;
-  --color-surface-container-highest: #e4e2dd;
-  --color-tertiary-container: #00452e;
-  --color-on-primary: #ffffff;
-  --color-outline: #717973;
-  --color-surface: #fbf9f3;
-  --color-error-alert: #EF4444;
-  --color-success-leaf: #10B981;
-  --color-on-surface: #1b1c18;
-  --color-on-secondary-container: #715300;
-  --color-surface-container-low: #f5f3ed;
-  --color-background: #F8F6F0;
-  --color-text-main: #1A1A1A;
-  --color-on-error: #ffffff;
-  --color-on-secondary-fixed-variant: #5c4300;
-  --color-on-tertiary-fixed: #002114;
-  --color-primary-container: #2D6A4F;
-  --color-primary-fixed: #c1ecd4;
-  --color-tertiary-fixed-dim: #95d4b3;
-  --color-secondary-container: #ffc641;
-  --color-on-error-container: #93000a;
-  --color-surface-variant: #e4e2dd;
-  --color-on-background: #1b1c18;
-  --color-inverse-on-surface: #f3f1eb;
-  --color-on-tertiary: #ffffff;
-  --color-surface-tint: #3f6653;
-  --color-secondary: #795900;
-  --color-inverse-primary: #a5d0b9;
-  --color-on-secondary-fixed: #261a00;
-  --color-surface-bright: #fbf9f3;
-  --color-accent: #D4A017;
-  --color-custom-primary: #1B4332;
-  --color-custom-gold: #D4A017;
+  /* ═══ MÀU SẮC CHÍNH — Dược phẩm xanh lá cao cấp ═══ */
 
-  /* Border Radius */
-  --radius-DEFAULT: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-full: 9999px;
+  /* Primary — Xanh y tế chuyên nghiệp */
+  --color-primary-50:  #f0faf4;
+  --color-primary-100: #dcf5e6;
+  --color-primary-200: #baecd0;
+  --color-primary-300: #86ddb1;
+  --color-primary-400: #4dc78a;
+  --color-primary-500: #28a96a;  /* Main brand green */
+  --color-primary-600: #1a8a54;
+  --color-primary-700: #166b42;  /* Dark — buttons, headers */
+  --color-primary-800: #145535;
+  --color-primary-900: #11452b;  /* Darkest */
+  --color-primary:     #1a8a54;
 
-  /* Spacing */
-  --spacing-stack-md: 1rem;
-  --spacing-stack-sm: 0.5rem;
-  --spacing-stack-lg: 2rem;
-  --spacing-margin-desktop: 2.5rem;
-  --spacing-gutter: 1.5rem;
-  --spacing-margin-mobile: 1rem;
-  --spacing-container-max: 1280px;
+  /* Secondary — Vàng đất ấm áp (trust, traditional medicine) */
+  --color-accent-gold: #c8973a;
+  --color-accent-gold-light: #f0d99a;
+  --color-accent-gold-pale: #fdf6e3;
 
-  /* Typography / Font Families */
-  --font-headline-md: "Be Vietnam Pro", sans-serif;
-  --font-body-md: "Inter", sans-serif;
-  --font-display-lg: "Be Vietnam Pro", sans-serif;
-  --font-headline-lg: "Be Vietnam Pro", sans-serif;
-  --font-body-lg: "Inter", sans-serif;
-  --font-body-sm: "Inter", sans-serif;
-  --font-caption: "Inter", sans-serif;
-  --font-label-bold: "Inter", sans-serif;
+  /* Neutral — Warm whites (không lạnh như #fff thuần) */
+  --color-background:  #fafaf8;  /* Page background — ấm, không chói */
+  --color-surface:     #ffffff;
+  --color-surface-alt: #f4f4f0;  /* Card backgrounds */
+  --color-border:      #e8e8e2;  /* Subtle borders */
+  --color-border-focus: #1a8a54;
+
+  /* Text */
+  --color-text-primary:   #1a1a17;  /* Near-black, warm */
+  --color-text-secondary: #5a5a52;  /* Muted text */
+  --color-text-tertiary:  #9a9a90;  /* Placeholder, disabled */
+  --color-text-inverse:   #ffffff;
+
+  /* Semantic */
+  --color-success: #1a8a54;
+  --color-error:   #c0392b;
+  --color-warning: #d4830a;
+  --color-info:    #2471a3;
+
+  /* ═══ TYPOGRAPHY ═══ */
+  --font-display:   var(--font-display), sans-serif;
+  --font-body:      var(--font-body), sans-serif;
+
+  /* Type scale */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px */
+  --text-6xl:  3.75rem;   /* 60px */
+
+  /* ═══ SPACING — 8px base unit ═══ */
+  --space-1:  0.25rem;   /* 4px */
+  --space-2:  0.5rem;    /* 8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+
+  /* ═══ BORDER RADIUS ═══ */
+  --radius-sm:   0.375rem;  /* 6px */
+  --radius-md:   0.75rem;   /* 12px */
+  --radius-lg:   1rem;      /* 16px */
+  --radius-xl:   1.5rem;    /* 24px */
+  --radius-full: 9999px;    /* pill */
+
+  /* ═══ SHADOWS ═══ */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+  --shadow-xl:  0 24px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
+
+  /* ═══ TRANSITIONS ═══ */
+  --transition-fast:    150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal:  250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:    400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring:  500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #fafaf8;
+    --foreground: #1a1a17;
   }
+}
+
+/* Global smooth scrolling & typography defaults */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body-md);
+  font-family: var(--font-body), sans-serif;
   min-height: max(884px, 100dvh);
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Smooth focus rings */
+*:focus-visible {
+  outline: 2px solid #1a8a54;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Disable transitions on page load (tránh flash) */
+.no-transition * {
+  transition: none !important;
+}
+
+/* Icons & custom utility components styles */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Login card shadow */
 .login-card-shadow {
   box-shadow: 0 4px 20px rgba(27, 67, 50, 0.05);
 }
 
-/* Password strength indicator styles for register page */
 .strength-bar {
   height: 4px;
   border-radius: 2px;
@@ -121,13 +155,12 @@ body {
   width: 100%;
 }
 
-/* Order Success - SVG Checkmark Animation */
+/* SVG Checkmark Animation */
 @keyframes checkmark {
   0% {
     stroke-dashoffset: 100;
     opacity: 0;
   }
-
   100% {
     stroke-dashoffset: 0;
     opacity: 1;
@@ -140,7 +173,6 @@ body {
     transform: rotate(-90deg);
     opacity: 0;
   }
-
   100% {
     stroke-dashoffset: 0;
     transform: rotate(-90deg);
@@ -161,19 +193,16 @@ body {
   animation: circle 1s cubic-bezier(0.65, 0, 0.45, 1) forwards;
 }
 
-/* Admin - Product Form Tab */
 .active-tab {
-  border-bottom: 2px solid #012d1d;
-  color: #012d1d;
+  border-bottom: 2px solid #166b42;
+  color: #166b42;
   font-weight: 600;
 }
 
-/* Admin - Table shadow */
 .table-shadow {
   box-shadow: 0 4px 20px rgba(27, 67, 50, 0.05);
 }
 
-/* Admin - Sidebar scrollbar */
 .sidebar-scroll::-webkit-scrollbar {
   width: 4px;
 }
@@ -181,4 +210,75 @@ body {
 .sidebar-scroll::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
+}
+
+/* ═══ ANIMATIONS & MICRO-INTERACTIONS ═══ */
+
+/* Page transitions */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+.animate-fade-in-up   { animation: fadeInUp 400ms ease-out both; }
+.animate-fade-in      { animation: fadeIn 250ms ease-out both; }
+.animate-scale-in     { animation: scaleIn 250ms ease-out both; }
+.animate-slide-right  { animation: slideInRight 300ms ease-out both; }
+.animate-slide-left   { animation: slideInLeft 300ms ease-out both; }
+.animate-bounce-in    { animation: bounceIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  animation: fadeInUp 400ms ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+
+/* Fallback for prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-"] { animation: none !important; }
+  * { transition: none !important; }
 }
