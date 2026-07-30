@@ -20,22 +20,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
-          cache-dependency-path: LOCPROJECT/package-lock.json
+          cache-dependency-path: LocProject/package-lock.json
 
       - name: Install dependencies
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npm ci --production
 
       - name: Build
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npm run build
         env:
           NODE_ENV: production
 
       - name: Run migrations (staging DB)
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
@@ -61,7 +61,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: locproject-frontend/package-lock.json
 
