@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { useToast } from '@/lib/providers/toast-provider';
 import { useEffect, useState } from 'react';
+import { resolveCartItemImage } from '@/lib/utils/imageUrl';
+import type { CartItem } from '@/types/api.types';
 
 export default function CartPage() {
     const { data: cart, isLoading, error } = useCart();
@@ -178,7 +180,7 @@ export default function CartPage() {
 
     /* ─── Cart with items ─────────────────────────────── */
     const subtotal = items.reduce(
-        (sum: number, item: any) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
+        (sum: number, item: CartItem) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
         0,
     );
 
@@ -201,18 +203,19 @@ export default function CartPage() {
                     {/* ── Left: Cart Items ── */}
                     <div className="space-y-4">
                         <div className="bg-white rounded-3xl shadow-card border border-border overflow-hidden">
-                            {items.map((item: any, idx: number) => {
+                            {items.map((item: CartItem, idx: number) => {
                                 const isRemoving = removingId === item.productVariantId;
                                 return (
                                     <div
                                         key={item.id ?? item.productVariantId ?? idx}
+                                        data-testid={`cart-item-${item.productVariantId ?? idx}`}
                                         className={`flex items-center gap-5 p-5 border-b border-border last:border-0 transition-all duration-300 ${isRemoving ? 'opacity-40 scale-95' : ''}`}
                                     >
                                         {/* Image */}
                                         <div className="w-24 h-24 rounded-2xl bg-primary-50 flex-shrink-0 overflow-hidden border border-primary-100">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
-                                                src={item.thumbnailUrl || item.product?.product?.images?.[0] || '/placeholder.png'}
+                                                src={resolveCartItemImage(item) || '/placeholder.png'}
                                                 className="w-full h-full object-cover"
                                                 alt={item.productNameSnapshot ?? 'Sản phẩm'}
                                             />
@@ -291,12 +294,12 @@ export default function CartPage() {
 
                             {/* Line items preview */}
                             <div className="space-y-2">
-                                {items.slice(0, 3).map((item: any, idx: number) => (
+                                {items.slice(0, 3).map((item: CartItem, idx: number) => (
                                     <div key={idx} className="flex items-center gap-3 text-sm">
                                         <div className="w-8 h-8 rounded-lg bg-primary-50 flex-shrink-0 overflow-hidden border border-primary-100">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
-                                                src={item.thumbnailUrl || '/placeholder.png'}
+                                                src={resolveCartItemImage(item) || '/placeholder.png'}
                                                 className="w-full h-full object-cover"
                                                 alt=""
                                             />

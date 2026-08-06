@@ -6,6 +6,6 @@ interface ProductGalleryProps {
     thumbnailUrl?: string;
 }
 
-export default function ProductGallery({ images, thumbnailUrl }: ProductGalleryProps) {
-    return <GalleryThumbnails images={images} fallbackUrl={thumbnailUrl} />;
+export default function ProductGallery({ images, thumbnailUrl, categoryName }: ProductGalleryProps) {
+    return <GalleryThumbnails images={images} fallbackUrl={thumbnailUrl} productName={categoryName} />;
 }

@@ -3,15 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProductDetail } from '../../../types/api.types';
-import { useAddToCart } from '../../../lib/hooks/useProducts';
+import { useAddToCart, AuthRequiredError } from '../../../lib/hooks/useProducts';
 import { useToast } from '../../../lib/providers/toast-provider';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface ProductDetailClientProps {
     product: ProductDetail;
-}
-
-function formatPrice(price: number): string {
-    return price.toLocaleString('vi-VN') + ' đ';
 }
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
@@ -100,7 +97,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     <button
                         type="button"
                         data-testid="product-detail-add-to-cart"
-                        className="flex-1 h-14 bg-primary text-on-primary rounded-xl font-headline-md text-label-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95"
+                        className="flex-1 h-14 bg-[#166b42] text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#0f4f30] hover:shadow-[0_8px_20px_rgba(22,107,66,0.15)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
                         onClick={() => {
                             if (selectedVariantId && quantity > 0) {
                                 addToCartMutation.mutate(
@@ -109,9 +106,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                                         onSuccess: () => {
                                             toast.success('Đã thêm vào giỏ hàng');
                                         },
-                                        onError: (err: any) => {
-                                            const msg = err?.response?.data?.message || 'Thêm vào giỏ thất bại';
-                                            toast.error(msg);
+                                        onError: (err: unknown) => {
+                                            if (err instanceof AuthRequiredError) return;
+                                            toast.error(getErrorMessage(err, 'Thêm vào giỏ thất bại'));
                                         },
                                     },
                                 );
@@ -119,21 +116,21 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                         }}
                         disabled={addToCartMutation.isPending}
                     >
-                        <span className="material-symbols-outlined">shopping_bag</span>
+                        <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
                         Thêm vào giỏ hàng
                     </button>
                     <button
                         type="button"
-                        className="flex-1 h-14 bg-secondary-container text-on-secondary-container rounded-xl font-headline-md text-label-bold flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                        className="flex-1 h-14 bg-[#c8973a] text-white rounded-xl font-bold flex items-center justify-center hover:bg-[#b0822d] hover:shadow-[0_8px_20px_rgba(200,151,58,0.15)] active:scale-[0.98] transition-all duration-200 cursor-pointer"
                         onClick={async () => {
                             if (selectedVariantId && quantity > 0) {
                                 try {
                                     await addToCartMutation.mutateAsync({ productVariantId: selectedVariantId, qty: quantity });
                                     toast.success('Đã thêm vào giỏ hàng');
                                     router.push('/cart');
-                                } catch (err: any) {
-                                    const msg = err?.response?.data?.message || 'Thêm vào giỏ thất bại';
-                                    toast.error(msg);
+                                } catch (err: unknown) {
+                                    if (err instanceof AuthRequiredError) return;
+                                    toast.error(getErrorMessage(err, 'Thêm vào giỏ thất bại'));
                                 }
                             }
                         }}

@@ -1,4 +1,5 @@
 import { ProductDetail as ProductDetailType } from '../../../types/api.types';
+import Link from 'next/link';
 import ProductGallery from './ProductGallery';
 import ProductInfo from './ProductInfo';
 import ProductTabs from './ProductTabs';
@@ -7,7 +8,7 @@ import RelatedProducts from './RelatedProducts';
 
 async function getProduct(slug: string): Promise<ProductDetailType | null> {
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const res = await fetch(`${baseUrl}/products/slug/${slug}`, {
             next: { revalidate: 60 },
         });
@@ -39,16 +40,16 @@ export default async function ProductDetail({ slug }: { slug: string }) {
     }
 
     return (
-        <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8">
+        <main className="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 mb-6 text-outline font-label-bold text-label-bold">
-                <a href="/" className="hover:text-primary transition-colors">
+                <Link href="/" className="hover:text-primary transition-colors">
                     Trang chủ
-                </a>
+                </Link>
                 <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                <a href="/products" className="hover:text-primary transition-colors">
+                <Link href="/products" className="hover:text-primary transition-colors">
                     Sản phẩm
-                </a>
+                </Link>
                 <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                 <span className="text-on-surface">{product.category.name}</span>
             </nav>
@@ -66,10 +67,10 @@ export default async function ProductDetail({ slug }: { slug: string }) {
             <ProductTabs product={product} />
 
             {/* Review Section */}
-            <ProductReviews />
+            <ProductReviews product={product} />
 
             {/* Related Products */}
-            <RelatedProducts />
+            <RelatedProducts product={product} />
         </main>
     );
 }

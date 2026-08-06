@@ -1,78 +1,94 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { resolveImageUrl } from '../../../lib/utils/imageUrl';
 
 interface GalleryThumbnailsProps {
     images: { url: string; alt: string }[];
     fallbackUrl?: string;
+    productName?: string;
 }
 
-export default function GalleryThumbnails({ images, fallbackUrl }: GalleryThumbnailsProps) {
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const hasImages = images.length > 0;
-    const displayUrl = hasImages ? images[selectedIndex].url : fallbackUrl;
-    const displayAlt = hasImages ? images[selectedIndex].alt : 'Hình ảnh sản phẩm';
+export default function GalleryThumbnails({ images, fallbackUrl, productName = 'Sản phẩm' }: GalleryThumbnailsProps) {
+    const [mainImage, setMainImage] = useState<string>('');
+    const [hasValidImage, setHasValidImage] = useState(true);
+
+    const imageUrls = images.map(img => resolveImageUrl(img.url)).filter(Boolean);
+    if (imageUrls.length === 0 && resolveImageUrl(fallbackUrl)) {
+        imageUrls.push(resolveImageUrl(fallbackUrl));
+    }
+
+    useEffect(() => {
+        if (imageUrls.length > 0) {
+            setMainImage((prev) => prev || imageUrls[0]);
+            setHasValidImage(true);
+        } else {
+            setHasValidImage(false);
+        }
+    }, [imageUrls]);
 
     return (
-        <div className="space-y-6">
-            {/* Main Image */}
-            <div className="relative group aspect-square bg-[#f0eee8] rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant/30">
-                {displayUrl ? (
+        <div className="space-y-4">
+            {/* Main Image Container */}
+            <div className="relative w-full aspect-square bg-[#f4f4f0] rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant/30">
+                {hasValidImage && mainImage ? (
                     <Image
-                        className="w-full h-full object-contain p-8"
-                        src={displayUrl}
-                        alt={displayAlt}
+                        src={mainImage}
+                        alt={productName}
                         fill
+                        className="object-cover hover:scale-102 transition-transform duration-500"
+                        onError={() => setHasValidImage(false)}
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-6xl text-[#c1c8c2]">image</span>
+                    /* Placeholder đẹp khi không có ảnh */
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-[#9a9a90]">
+                        <span className="material-symbols-outlined text-6xl opacity-30">
+                            medication
+                        </span>
+                        <span className="text-sm">Chưa có hình ảnh</span>
                     </div>
                 )}
-                <div className="absolute top-4 left-4 bg-primary text-on-primary px-4 py-1.5 rounded-full font-label-bold text-label-bold flex items-center gap-1 shadow-lg">
+                <div className="absolute top-4 left-4 bg-primary text-on-primary px-4 py-1.5 rounded-full font-label-bold text-label-bold flex items-center gap-1 shadow-lg z-10">
                     <span className="material-symbols-outlined text-[18px] filled-icon">workspace_premium</span>
                     Bán chạy #1
                 </div>
-                {/* TODO: implement image zoom — cần thiết kế UI trước */}
             </div>
 
-            {/* Thumbnail Row — only if there are multiple images */}
-            {hasImages && images.length > 1 && (
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide">
-                    {images.map((image, index) => (
+            {/* Thumbnails Row */}
+            {imageUrls.length > 0 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
+                    {imageUrls.slice(0, 5).map((img, i) => (
                         <button
-                            key={index}
+                            key={i}
                             type="button"
-                            className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-surface-white transition-colors ${
-                                index === selectedIndex
-                                    ? 'border-2 border-primary'
-                                    : 'border border-outline-variant hover:border-primary'
-                            }`}
-                            onClick={() => setSelectedIndex(index)}
+                            onClick={() => {
+                                setMainImage(img);
+                                setHasValidImage(true);
+                            }}
+                            className={`flex-shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border-2 transition-colors
+                                ${mainImage === img
+                                    ? 'border-[#1a8a54]'
+                                    : 'border-transparent hover:border-gray-300'
+                                }`}
                         >
-                            <Image className="w-full h-full object-cover" src={image.url} alt={image.alt || 'Hình ảnh sản phẩm'} width={80} height={80} />
+                            <div className="w-full h-full bg-[#f4f4f0] flex items-center justify-center relative">
+                                {img ? (
+                                    <Image
+                                        src={img}
+                                        alt=""
+                                        width={72}
+                                        height={72}
+                                        className="object-cover w-full h-full"
+                                    />
+                                ) : (
+                                    <span className="material-symbols-outlined text-2xl text-gray-300">medication</span>
+                                )}
+                            </div>
                         </button>
                     ))}
                 </div>
             )}
-
-            {/* Thumbnail Row */}
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide">
-                {images.map((image, index) => (
-                    <button
-                        key={index}
-                        type="button"
-                        className={`w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-surface-white transition-colors ${index === selectedIndex
-                            ? 'border-2 border-primary'
-                            : 'border border-outline-variant hover:border-primary'
-                            }`}
-                        onClick={() => setSelectedIndex(index)}
-                    >
-                        <Image className="w-full h-full object-cover" src={image.url} alt={image.alt || 'Hình ảnh sản phẩm'} width={80} height={80} />
-                    </button>
-                ))}
-            </div>
         </div>
     );
 }

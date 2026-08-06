@@ -6,7 +6,7 @@ interface ProductInfoProps {
 }
 
 function formatPrice(price: number): string {
-    return price.toLocaleString('vi-VN') + ' đ';
+    return price.toLocaleString('vi-VN') + 'đ';
 }
 
 export default function ProductInfo({ product }: ProductInfoProps) {
@@ -46,26 +46,26 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 </div>
             </div>
 
-            {/* Price Box (static) */}
-            <div className="p-6 bg-surface-container-low rounded-xl flex flex-col gap-2">
-                <div className="flex items-center gap-4">
-                    <span className="text-primary font-bold text-[32px]">
+            {/* Price Box */}
+            <div>
+                <div className="flex items-center gap-3 mt-2">
+                    <span className="text-3xl font-bold text-[#1a8a54]">
                         {formatPrice(firstVariant?.price || 0)}
                     </span>
                     {firstVariant?.compareAtPrice && (
                         <>
-                            <span className="text-outline line-through text-body-lg">
+                            <span className="text-lg text-gray-400 line-through">
                                 {formatPrice(firstVariant.compareAtPrice)}
                             </span>
-                            <span className="bg-error-container text-on-error-container px-2 py-0.5 rounded font-bold text-body-sm">
+                            <span className="px-2 py-0.5 bg-red-100 text-red-600 text-sm font-medium rounded-full">
                                 -{discountPercent}%
                             </span>
                         </>
                     )}
                 </div>
                 {savings > 0 && (
-                    <p className="text-success-leaf font-label-bold text-label-bold flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[18px]">bolt</span>
+                    <p className="text-sm text-[#1a8a54] mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-base">bolt</span>
                         Tiết kiệm {formatPrice(savings)} cho mỗi sản phẩm
                     </p>
                 )}

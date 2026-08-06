@@ -8,6 +8,7 @@ import { useAuthStore } from '../../../lib/store/auth.store';
 import { useCartStore } from '../../../lib/store/cart.store';
 import { apiClient } from '../../../lib/api/client';
 import { useToast } from '../../../lib/providers/toast-provider';
+import type { Product } from '@/types/api.types';
 
 /* ─── Mega-dropdown data (static — hardcoded từ DB categories) ─── */
 const MEGA_CATEGORIES = [
@@ -66,7 +67,7 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -196,7 +197,7 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
         {/* Results */}
         {query.length >= 1 && !isLoading && results.length > 0 && (
           <ul className="mt-6 divide-y divide-gray-100 animate-fade-in">
-            {results.slice(0, 6).map((product: any) => (
+            {results.slice(0, 6).map((product: Product) => (
               <li key={product.id}>
                 <button
                   onClick={() => goToProduct(product.slug)}
@@ -464,6 +465,7 @@ export default function Navbar() {
             {/* Cart */}
             <Link
               href="/cart"
+              data-testid="navbar-cart-icon"
               onClick={(e) => {
                 if (window.innerWidth >= 768) {
                   e.preventDefault();
@@ -490,6 +492,7 @@ export default function Navbar() {
               <div ref={accountRef} className="relative hidden md:block">
                 <button
                   type="button"
+                  data-testid="navbar-account-btn"
                   onClick={() => setAccountOpen(v => !v)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border
                              hover:border-primary-300 hover:bg-primary-50 transition-all duration-150"

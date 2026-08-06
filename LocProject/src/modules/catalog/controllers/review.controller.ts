@@ -4,6 +4,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../../core/decorators/user.decorator';
+import { Public } from '../../core/decorators/public.decorator';
 import { ReviewService } from '../services/review.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
@@ -30,6 +31,7 @@ export class ReviewController {
   }
 
   @Get(':productId')
+  @Public()
   @ApiOperation({ summary: 'Lấy danh sách đánh giá theo sản phẩm' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })

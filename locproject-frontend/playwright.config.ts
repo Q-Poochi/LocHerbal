@@ -43,7 +43,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npx next dev --port 3001',
+    command: 'npx next start -p 3001',
     url: 'http://localhost:3001',
     reuseExistingServer: true,
     timeout: 60000,

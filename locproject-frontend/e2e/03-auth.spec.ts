@@ -3,11 +3,14 @@ import { test, expect } from '@playwright/test'
 test.describe('Authentication', () => {
   test('đăng nhập thành công', async ({ page }) => {
     await page.goto('/login')
+    await page.waitForFunction(() => document.cookie.includes('csrf_token'), null, { timeout: 10000 })
     await page.getByLabel(/email/i).fill('test2@locherbal.com')
     await page.getByLabel(/mật khẩu/i).fill('Test@123456')
     await page.getByRole('button', { name: /đăng nhập/i }).click()
     await page.waitForURL('/', { timeout: 10000 })
-    await expect(page.getByText('Test User')).toBeVisible()
+    // "Test User" xuất hiện ở nhiều nơi (sidebar mobile, toast) → dùng data-testid
+    // navbar-account-btn (chỉ hiện khi đã đăng nhập) làm auth indicator đáng tin
+    await expect(page.getByTestId('navbar-account-btn')).toBeVisible()
   })
 
   test('đăng nhập sai mật khẩu hiện lỗi', async ({ page }) => {

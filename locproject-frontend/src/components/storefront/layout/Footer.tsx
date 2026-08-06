@@ -1,70 +1,105 @@
-import Image from 'next/image';
-
 export default function Footer() {
   return (
-    <footer className="bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-container w-full py-stack-lg mt-12">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-        <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
-            <h2 className="font-headline-md text-headline-md text-on-primary">LocHerbal</h2>
-          </div>
-          <p className="font-body-sm text-body-sm opacity-80 leading-relaxed">
-            Giải pháp thảo dược hiện đại cho sức khỏe truyền thống. Chúng tôi kết hợp tinh hoa y học dân tộc với công nghệ bào chế tiên tiến.
-          </p>
-          <div className="flex gap-4">
-            <a className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors" href="#">
-              <Image alt="Facebook" className="w-5 h-5 invert" width={20} height={20} src="https://lh3.googleusercontent.com/aida-public/AB6AXuABUStJxMAEtFuQCyvBD8vZbgkCFl6ZgBwRRAkYElGFJ0eowdze9vDd7AgldI0QO9p40MvPZJ5EjHbb7BXMLJsR8IfQDjVnWYHWyLHDmCuq048s9_mxEZVPl1MgmkH8gCYREueUnBuZRbK0NvDgBs2HsNV1gMMk2wP44PL64lQ_JiJthQCpfNlWZnTATcUhxQdqM1RlFlPoHxh9SvjiDClthNTx-8bc4TL_dZqdU_iuz2qM2d3Cvg" />
-            </a>
-            <a className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors font-bold" href="#">Z</a>
-            <a className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors" href="#">
-              <Image alt="YouTube" className="w-8 h-8 invert" width={32} height={32} src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr71xHlOYO7MKQNcukGsgDtDZbjmV8gMbVygpnO-_FB5Z828cnsbK58RvEcoV5V1029CGtGvhsWrnqhhJPPa47xCOzVLer7C7b4J7ZbJAHF7K6ndN_MLd2emKZEecyQrzvh5y-3dMkhzpLivbtNnPfGNgtucOxTFliFTfSxB8iZyXGRKwxetqshPpriNEga2qTMntp-MCSsu3I7ghkHix81zQUo3qZkTSy6rgLSzpLbdIKdyqsrA" />
-            </a>
-          </div>
-        </div>
+    <footer className="bg-[#166b42] text-white mt-16 border-t border-primary-800">
+      {/* Main footer content */}
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
 
-        <div>
-          <h4 className="font-label-bold text-label-bold mb-6 text-white">Về chúng tôi</h4>
-          <ul className="space-y-4">
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Giới thiệu công ty</a></li>
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Hệ thống phân phối</a></li>
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Tuyển dụng</a></li>
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Liên hệ</a></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="font-label-bold text-label-bold mb-6 text-white">Chính sách</h4>
-          <ul className="space-y-4">
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Chính sách bảo mật</a></li>
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Chính sách đổi trả</a></li>
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Chính sách vận chuyển</a></li>
-            <li><a className="font-body-sm text-body-sm opacity-80 hover:text-secondary-fixed transition-all" href="#">Điều khoản dịch vụ</a></li>
-          </ul>
-        </div>
-
-        <div className="space-y-6">
-          <h4 className="font-label-bold text-label-bold mb-6 text-white">Thanh toán</h4>
-          <div className="flex flex-wrap gap-4 grayscale opacity-60">
-            <Image alt="MoMo" className="h-8 bg-white p-1 rounded" width={64} height={32} src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl8-dhGoA_gyIV3wHP47BsiX7Ne6xN_klJVzAnEDPWJ_BDB-pYHU33cU6YYkbTHDHcASHjNmbziNuP9vh1Zvt1hQ1MWq6lJ6tyt7wwwJ-jEadu9cZYSStkqNX7HF4tSpsh-xph0Yte8pKdDCg0UNQcOI-sJ4R2ZLI2DCVVHeJ2eNmtDrp1LFQMTRZBMcRlYMAxtOFK9_2Rm5J9uUzVts1KRf649pfGTHo0eTFcqeips1yj4uE97A" />
-            <Image alt="VNPay" className="h-8 bg-white p-1 rounded" width={64} height={32} src="https://lh3.googleusercontent.com/aida-public/AB6AXuACtRmdGyRpchfAK7jCXoeH3lvrccjhXM-HAEE1yTHyMxJ_Oo1gXtXqWMFIf-MHYT8k3JZyelsPmEu80Ley74rycWH215VA9AY2ZCEe2Q8dUBzd1R35-7lXK_bwnYlr270tgxM3p66JBerANqDuzw41OF0vX9zjF-nqda4UgiHJ-jr2iTgxJq6x-QKXQ0AtArzndQkb8xTrAFVp7tJh5qkStSW06bLRy0apkGd6R7ibISrFhjkdJg" />
-            <div className="bg-white p-1 rounded h-8 flex items-center px-2 text-primary font-bold text-[10px]">COD</div>
-          </div>
-          <div className="pt-4 border-t border-white/10">
-            <h4 className="font-label-bold text-label-bold mb-2 text-white">Đăng ký nhận tin</h4>
-            <div className="flex">
-              <input className="bg-white/10 border-none rounded-l-lg p-2 text-white placeholder-white/40 flex-1" placeholder="Email của bạn" type="email" />
-              <button className="bg-secondary text-white px-4 rounded-r-lg hover:bg-secondary-container transition-colors">
-                {/* TODO: connect API /marketing/subscribe */}
-                <span className="material-symbols-outlined text-sm">send</span>
-              </button>
+          {/* Cột 1: Brand */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-3xl text-accent-gold-light" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
+              <span className="font-display font-bold text-xl tracking-tight">LocHerbal</span>
+            </div>
+            <p className="text-white/80 text-sm leading-relaxed max-w-sm">
+              Giải pháp thảo dược hiện đại cho sức khỏe truyền thống người Việt. Chúng tôi kết hợp tinh hoa y học dân tộc với công nghệ bào chế tiên tiến.
+            </p>
+            {/* Social icons dùng Material Symbols */}
+            <div className="flex gap-3 pt-1">
+              {[
+                { icon: 'chat_bubble', label: 'Facebook', href: '#' },
+                { icon: 'play_circle', label: 'YouTube', href: '#' },
+                { icon: 'phone_in_talk', label: 'Zalo', href: '#' },
+              ].map(({ icon, label, href }) => (
+                <a
+                  key={label}
+                  href={href}
+                  aria-label={label}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-accent-gold hover:text-white flex items-center justify-center transition-all duration-200"
+                >
+                  <span className="material-symbols-outlined text-lg leading-none">{icon}</span>
+                </a>
+              ))}
             </div>
           </div>
+
+          {/* Cột 2: Về chúng tôi */}
+          <div>
+            <h3 className="font-display font-bold text-base mb-4 tracking-wide text-accent-gold-light uppercase">Về chúng tôi</h3>
+            <ul className="space-y-3 text-sm text-white/80">
+              {['Giới thiệu công ty', 'Hệ thống phân phối', 'Tuyển dụng', 'Liên hệ'].map(item => (
+                <li key={item}>
+                  <a href="#" className="hover:text-accent-gold-light hover:underline transition-colors">{item}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Cột 3: Chính sách */}
+          <div>
+            <h3 className="font-display font-bold text-base mb-4 tracking-wide text-accent-gold-light uppercase">Chính sách</h3>
+            <ul className="space-y-3 text-sm text-white/80">
+              {['Chính sách bảo mật', 'Chính sách đổi trả', 'Chính sách vận chuyển', 'Điều khoản dịch vụ'].map(item => (
+                <li key={item}>
+                  <a href="#" className="hover:text-accent-gold-light hover:underline transition-colors">{item}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Cột 4: Thanh toán + Newsletter */}
+          <div className="space-y-5">
+            <div>
+              <h3 className="font-display font-bold text-base mb-3 tracking-wide text-accent-gold-light uppercase">Thanh toán</h3>
+              <div className="flex flex-wrap gap-2">
+                {['VNPAY', 'MOMO', 'COD'].map(m => (
+                  <span
+                    key={m}
+                    className="px-3 py-1 bg-white/10 border border-white/5 rounded-lg text-xs font-semibold tracking-wider text-white"
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3">
+              <h3 className="font-display font-bold text-base tracking-wide text-accent-gold-light uppercase">Nhận tin khuyến mãi</h3>
+              <div className="flex overflow-hidden rounded-xl border border-white/20 focus-within:border-accent-gold-light transition-colors">
+                <input
+                  type="email"
+                  placeholder="Email của bạn"
+                  className="flex-1 px-3 py-2.5 bg-white/10 placeholder:text-white/50 text-sm text-white focus:outline-none min-w-0"
+                />
+                <button className="px-4 py-2.5 bg-white text-[#166b42] font-semibold text-sm hover:bg-accent-gold-light hover:text-white transition-colors flex-shrink-0">
+                  Gửi
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div className="mt-12 pt-8 border-t border-white/10 text-center px-margin-mobile">
-        <p className="font-body-sm text-body-sm opacity-60 text-on-primary">© 2024 LocHerbal. Giải pháp thảo dược hiện đại cho sức khỏe truyền thống.</p>
+      {/* Bottom bar */}
+      <div className="border-t border-white/10 bg-[#0f5432]">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="text-white/70 text-xs md:text-sm">
+            © 2024 LocHerbal. Bảo lưu mọi quyền.
+          </p>
+          <p className="text-white/50 text-[11px] md:text-xs tracking-wider uppercase font-semibold">
+            Được cấp phép bởi Bộ Y Tế Việt Nam
+          </p>
+        </div>
       </div>
     </footer>
   );

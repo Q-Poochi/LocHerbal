@@ -18,7 +18,7 @@ import { AuditService } from './shared/services/audit.service';
   imports: [
     PrismaModule,
     EventEmitterModule.forRoot(),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: Number(process.env.THROTTLE_LIMIT ?? 60) }]),
     CoreModule,
     CatalogModule,
     SalesModule,

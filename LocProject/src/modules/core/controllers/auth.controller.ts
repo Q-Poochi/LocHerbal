@@ -17,7 +17,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Public()
-  @Throttle({ default: { limit: 3, ttl: 600000 } })
+  @Throttle({ default: { limit: Number(process.env.AUTH_THROTTLE_LIMIT ?? 3), ttl: 600000 } })
   @Post('register')
   @ApiOperation({ summary: 'Đăng ký tài khoản mới' })
   @ApiResponse({ status: 201, description: 'Đăng ký thành công' })
@@ -27,7 +27,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: Number(process.env.AUTH_THROTTLE_LIMIT ?? 5), ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập' })
@@ -71,7 +71,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Throttle({ default: { limit: Number(process.env.AUTH_THROTTLE_LIMIT ?? 5), ttl: 60000 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })

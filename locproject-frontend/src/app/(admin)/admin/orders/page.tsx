@@ -1,37 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { apiClient } from '@/lib/api/client';
+import { getErrorMessage } from '@/lib/utils/error';
 
 type OrderStatus = 'ALL' | 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-
-interface Order {
-    id: string;
-    code: string;
-    customer: string;
-    product: string;
-    total: number;
-    paymentMethod: string;
-    paymentStatus: string;
-    status: OrderStatus;
-    createdAt: string;
-}
-
-const mockOrders: Order[] = Array.from({ length: 25 }, (_, i) => {
-    const statuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
-    const s = statuses[i % statuses.length];
-    return {
-        id: String(i + 1),
-        code: `#ORD-${String(100 + i).padStart(3, '0')}`,
-        customer: ['Nguyễn Văn A', 'Trần Thị B', 'Lê Hoàng C', 'Phạm Minh D', 'Hoàng Kim E', 'Vũ Thanh F', 'Đặng Thu G'][i % 7],
-        product: ['Cao Gắm Thảo Dược', 'Trà Dây Túi Lọc', 'Sâm Ngọc Linh', 'Tinh Dầu Tràm Gió', 'Viên Uống Bổ Gan', 'Cao Ích Mẫu'][i % 6],
-        total: Math.round(200_000 + Math.random() * 5_000_000),
-        paymentMethod: i % 3 === 0 ? 'VNPAY' : i % 3 === 1 ? 'MOMO' : 'COD',
-        paymentStatus: s === 'CANCELLED' ? 'REFUNDED' : s === 'DELIVERED' ? 'PAID' : 'UNPAID',
-        status: s,
-        createdAt: new Date(2026, 6, 1 + i).toISOString(),
-    };
-});
 
 const statusTabs = [
     { key: 'ALL' as const, label: 'Tất cả' },
@@ -43,201 +17,282 @@ const statusTabs = [
     { key: 'CANCELLED' as const, label: 'Đã hủy' },
 ];
 
-const statusBadge: Record<OrderStatus, string> = {
-    ALL: '',
-    PENDING: 'bg-secondary-container text-on-secondary-container',
+const statusStyles: Record<string, string> = {
+    PENDING: 'bg-primary-100 text-primary-700',
     CONFIRMED: 'bg-blue-100 text-blue-700',
-    PROCESSING: 'bg-purple-100 text-purple-700',
-    SHIPPED: 'bg-orange-100 text-orange-700',
+    PROCESSING: 'bg-amber-100 text-amber-700',
+    SHIPPED: 'bg-violet-100 text-violet-700',
     DELIVERED: 'bg-green-100 text-green-700',
     CANCELLED: 'bg-red-100 text-red-700',
+    REFUNDED: 'bg-slate-200 text-slate-700',
 };
 
-const statusLabel: Record<OrderStatus, string> = {
-    ALL: '',
+const statusLabels: Record<string, string> = {
     PENDING: 'Chờ xác nhận',
     CONFIRMED: 'Đã xác nhận',
     PROCESSING: 'Đang xử lý',
     SHIPPED: 'Đang giao',
     DELIVERED: 'Đã giao',
     CANCELLED: 'Đã hủy',
-};
-
-const paymentBadge: Record<string, string> = {
-    PAID: 'bg-green-100 text-green-700',
-    UNPAID: 'bg-yellow-100 text-yellow-700',
-    REFUNDED: 'bg-gray-100 text-gray-500',
-};
-
-const paymentLabel: Record<string, string> = {
-    PAID: 'Đã thanh toán',
-    UNPAID: 'Chưa thanh toán',
     REFUNDED: 'Đã hoàn tiền',
 };
+
+interface AdminOrder {
+    id: string;
+    orderCode: string;
+    customer: { fullName?: string; phone?: string; email?: string } | null;
+    items: { id: string; productNameSnapshot?: string }[];
+    totalAmount: number;
+    subtotal: number;
+    status: string;
+    paymentStatus?: string;
+    paymentTxns?: { provider?: string; status?: string }[];
+    createdAt: string;
+}
+
+interface OrderListResponse {
+    data: AdminOrder[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
 
 export default function AdminOrdersPage() {
     const [filterTab, setFilterTab] = useState<OrderStatus>('ALL');
     const [search, setSearch] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const [from, setFrom] = useState('');
+    const [to, setTo] = useState('');
+    const [orders, setOrders] = useState<AdminOrder[]>([]);
+    const [total, setTotal] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
     const [page, setPage] = useState(1);
-    const pageSize = 10;
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    const filtered = useMemo(() => {
-        let list = mockOrders;
-        if (filterTab !== 'ALL') {
-            list = list.filter((o) => o.status === filterTab);
+    const load = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const res = await apiClient.get<OrderListResponse>('/admin/orders', {
+                params: {
+                    page,
+                    limit: 20,
+                    ...(filterTab !== 'ALL' ? { status: filterTab } : {}),
+                    ...(search ? { search } : {}),
+                    ...(from ? { from } : {}),
+                    ...(to ? { to } : {}),
+                },
+            });
+            setOrders(res.data.data);
+            setTotal(res.data.total);
+            setTotalPages(res.data.totalPages);
+        } catch (e) {
+            setError(getErrorMessage(e, 'Không thể tải danh sách đơn hàng'));
+        } finally {
+            setLoading(false);
         }
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            list = list.filter((o) => o.code.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q));
-        }
-        return list;
-    }, [filterTab, search]);
+    }, [page, filterTab, search, from, to]);
 
-    const tabCounts = useMemo(() => {
-        const counts: Record<string, number> = { ALL: mockOrders.length };
-        statusTabs.slice(1).forEach((t) => {
-            counts[t.key] = mockOrders.filter((o) => o.status === t.key).length;
-        });
-        return counts;
-    }, []);
+    useEffect(() => {
+        load();
+    }, [load]);
 
-    const totalPages = Math.ceil(filtered.length / pageSize);
-    const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+    const changeTab = (key: OrderStatus) => {
+        setFilterTab(key);
+        setPage(1);
+    };
+
+    const applySearch = () => {
+        setSearch(searchInput.trim());
+        setPage(1);
+    };
+
+    const resetFilters = () => {
+        setSearchInput('');
+        setSearch('');
+        setFrom('');
+        setTo('');
+        setFilterTab('ALL');
+        setPage(1);
+    };
+
+    const hasFilters = Boolean(search || from || to || filterTab !== 'ALL');
 
     return (
         <div className="p-8 max-w-[1400px] mx-auto w-full">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-caption text-on-surface-variant mb-1">
+            <nav className="flex items-center gap-2 text-xs text-text-tertiary mb-1">
                 <span className="material-symbols-outlined text-[16px]">store</span>
                 <span>Bán hàng</span>
                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span className="text-primary font-semibold">Đơn hàng</span>
             </nav>
-            <h2 className="font-headline-lg text-headline-lg text-primary mb-6">Quản lý Đơn hàng</h2>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="font-display font-bold text-2xl text-text-primary">Quản lý Đơn hàng</h2>
+                <span className="text-sm text-text-tertiary bg-surface-alt px-3 py-1.5 rounded-lg">
+                    {total.toLocaleString('vi-VN')} đơn hàng
+                </span>
+            </div>
 
             {/* Filter Tabs */}
-            <div className="flex flex-wrap gap-2 mb-6 border-b border-outline-variant pb-3">
+            <div className="flex flex-wrap gap-2 mb-4 border-b border-border pb-3">
                 {statusTabs.map((tab) => (
                     <button
                         key={tab.key}
-                        onClick={() => { setFilterTab(tab.key); setPage(1); }}
-                        className={`px-4 py-1.5 rounded-full text-caption font-bold transition-colors ${filterTab === tab.key
-                                ? 'bg-primary text-on-primary shadow-sm'
-                                : 'text-on-surface-variant hover:bg-surface-container hover:text-primary'
+                        onClick={() => changeTab(tab.key)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${filterTab === tab.key
+                                ? 'bg-primary-700 text-white shadow-sm'
+                                : 'text-text-tertiary hover:bg-surface-alt hover:text-primary-700'
                             }`}
                     >
                         {tab.label}
-                        {tab.key !== 'ALL' && (
-                            <span className={`ml-1.5 ${filterTab === tab.key ? 'text-on-primary/70' : 'text-on-surface-variant/60'}`}>
-                                ({tabCounts[tab.key]})
-                            </span>
-                        )}
                     </button>
                 ))}
             </div>
 
-            {/* Search */}
-            <div className="mb-6">
-                <div className="relative max-w-md">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60 material-symbols-outlined text-[20px]">search</span>
+            {/* Search + Date range */}
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+                <div className="flex items-center gap-2 flex-1 min-w-[220px] max-w-md bg-white rounded-xl border border-border px-3 py-2">
+                    <span className="material-symbols-outlined text-[18px] text-text-tertiary">search</span>
                     <input
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none text-body-sm bg-surface-white transition-all"
-                        placeholder="Tìm theo mã đơn, tên khách hàng..."
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && applySearch()}
+                        placeholder="Tìm mã đơn, tên KH, SĐT, email..."
+                        className="flex-1 text-sm outline-none placeholder:text-text-tertiary"
+                    />
+                    {search && (
+                        <button onClick={() => { setSearchInput(''); setSearch(''); setPage(1); }} className="text-text-tertiary hover:text-primary-700">
+                            <span className="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                    )}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-text-tertiary">
+                    <span>Từ</span>
+                    <input
+                        type="date"
+                        value={from}
+                        onChange={(e) => { setFrom(e.target.value); setPage(1); }}
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-text-primary"
+                    />
+                    <span>đến</span>
+                    <input
+                        type="date"
+                        value={to}
+                        onChange={(e) => { setTo(e.target.value); setPage(1); }}
+                        className="rounded-xl border border-border px-3 py-2 text-sm text-text-primary"
                     />
                 </div>
+                {hasFilters && (
+                    <button
+                        onClick={resetFilters}
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl border border-border text-sm font-bold text-text-secondary hover:border-primary-700 hover:text-primary-700 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                        Xóa bộ lọc
+                    </button>
+                )}
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="bg-primary text-white">
-                                <th className="px-5 py-4 text-left font-label-bold text-[12px] uppercase tracking-wider">Mã đơn</th>
-                                <th className="px-5 py-4 text-left font-label-bold text-[12px] uppercase tracking-wider">Khách hàng</th>
-                                <th className="px-5 py-4 text-left font-label-bold text-[12px] uppercase tracking-wider">Sản phẩm</th>
-                                <th className="px-5 py-4 text-right font-label-bold text-[12px] uppercase tracking-wider">Tổng tiền</th>
-                                <th className="px-5 py-4 text-center font-label-bold text-[12px] uppercase tracking-wider">Thanh toán</th>
-                                <th className="px-5 py-4 text-center font-label-bold text-[12px] uppercase tracking-wider">Trạng thái</th>
-                                <th className="px-5 py-4 text-left font-label-bold text-[12px] uppercase tracking-wider">Ngày đặt</th>
-                                <th className="px-5 py-4 text-center font-label-bold text-[12px] uppercase tracking-wider">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-outline-variant/20">
-                            {paged.map((order) => (
-                                <tr key={order.id} className="hover:bg-surface-container-lowest/60 transition-colors">
-                                    <td className="px-5 py-4">
-                                        <span className="font-label-bold text-primary text-body-sm">{order.code}</span>
-                                    </td>
-                                    <td className="px-5 py-4 text-body-sm text-on-surface">{order.customer}</td>
-                                    <td className="px-5 py-4 text-body-sm text-on-surface-variant max-w-[160px] truncate">{order.product}</td>
-                                    <td className="px-5 py-4 text-right text-body-sm font-semibold text-primary">{order.total.toLocaleString('vi-VN')}₫</td>
-                                    <td className="px-5 py-4 text-center">
-                                        <span className={`inline-block px-2.5 py-1 text-[10px] font-bold rounded-full ${paymentBadge[order.paymentStatus] || ''}`}>
-                                            {paymentLabel[order.paymentStatus] || order.paymentStatus}
-                                        </span>
-                                    </td>
-                                    <td className="px-5 py-4 text-center">
-                                        <span className={`inline-block px-2.5 py-1 text-[10px] font-bold rounded-full ${statusBadge[order.status]}`}>
-                                            {statusLabel[order.status]}
-                                        </span>
-                                    </td>
-                                    <td className="px-5 py-4 text-body-sm text-on-surface-variant">
-                                        {new Date(order.createdAt).toLocaleDateString('vi-VN')}
-                                    </td>
-                                    <td className="px-5 py-4 text-center">
-                                        <Link
-                                            href={`/admin/orders/${order.id}`}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary hover:bg-primary/10 transition-colors text-caption font-bold"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">visibility</span>
-                                            Xem
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
-                            {paged.length === 0 && (
-                                <tr>
-                                    <td colSpan={8} className="px-5 py-16 text-center text-on-surface-variant text-body-sm">
-                                        <span className="material-symbols-outlined text-4xl text-outline mb-3 block">receipt_long</span>
-                                        Không tìm thấy đơn hàng nào.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+            {loading ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                    <span className="text-text-tertiary">Đang tải đơn hàng...</span>
                 </div>
+            ) : error ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                    <p className="text-text-secondary font-medium">{error}</p>
+                </div>
+            ) : orders.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                    <div className="flex flex-col items-center justify-center py-24 text-center px-8">
+                        <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">receipt_long</span>
+                        <p className="text-text-secondary font-semibold text-base">Chưa có dữ liệu đơn hàng</p>
+                    </div>
+                </div>
+            ) : (
+                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead className="bg-primary text-white">
+                                <tr>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Mã đơn</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Khách hàng</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Sản phẩm</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-right">Tổng tiền</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Thanh toán</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-center">Trạng thái</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Ngày tạo</th>
+                                    <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {orders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-surface-alt transition-colors">
+                                        <td className="p-4 font-semibold text-primary-700">{order.orderCode}</td>
+                                        <td className="p-4">
+                                            <p className="text-sm font-medium text-text-primary">{order.customer?.fullName || '—'}</p>
+                                            <p className="text-xs text-text-tertiary">{order.customer?.phone || order.customer?.email || ''}</p>
+                                        </td>
+                                        <td className="p-4 text-sm text-text-secondary truncate max-w-[160px]">
+                                            {order.items[0]?.productNameSnapshot || '—'}
+                                            {order.items.length > 1 ? ` +${order.items.length - 1}` : ''}
+                                        </td>
+                                        <td className="p-4 text-sm font-bold text-right">
+                                            {Number(order.totalAmount).toLocaleString('vi-VN')}đ
+                                        </td>
+                                        <td className="p-4 text-sm text-text-secondary">
+                                            {order.paymentStatus || '—'}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className={`px-3 py-1 rounded-full text-[12px] font-semibold ${statusStyles[order.status] || 'bg-surface-alt text-text-tertiary'}`}>
+                                                {statusLabels[order.status] || order.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-sm text-text-tertiary">
+                                            {new Date(order.createdAt).toLocaleString('vi-VN')}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-end">
+                                                <Link
+                                                    href={`/admin/orders/${order.id}`}
+                                                    className="p-1.5 text-text-tertiary hover:text-primary hover:bg-surface-alt transition-all rounded-lg inline-flex"
+                                                >
+                                                    <span className="material-symbols-outlined text-[18px]">visibility</span>
+                                                </Link>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="px-5 py-4 bg-surface-container-low flex items-center justify-between border-t border-outline-variant/20">
-                        <p className="text-caption text-on-surface-variant">
-                            <span className="font-semibold text-primary">{(page - 1) * pageSize + 1}</span>
-                            {' – '}
-                            <span className="font-semibold text-primary">{Math.min(page * pageSize, filtered.length)}</span>
-                            {' / '}{filtered.length} đơn hàng
+                    <div className="p-4 bg-surface-alt flex items-center justify-between border-t border-border">
+                        <p className="text-xs text-text-tertiary">
+                            Trang {page}/{Math.max(totalPages, 1)} · {total.toLocaleString('vi-VN')} đơn hàng
                         </p>
-                        <div className="flex items-center gap-1">
-                            <button disabled={page <= 1} onClick={() => setPage(page - 1)}
-                                className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white text-on-surface-variant disabled:opacity-30 transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page <= 1}
+                                className="px-3 py-1.5 rounded-lg border border-border text-sm font-bold text-text-secondary disabled:opacity-40 hover:border-primary-700 hover:text-primary-700 transition-colors"
+                            >
+                                Trước
                             </button>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                                <button key={p} onClick={() => setPage(p)}
-                                    className={`w-9 h-9 flex items-center justify-center rounded-lg text-[13px] font-bold transition-colors ${p === page ? 'bg-primary text-white shadow-sm' : 'hover:bg-white text-on-surface-variant'}`}>
-                                    {p}
-                                </button>
-                            ))}
-                            <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}
-                                className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white text-on-surface-variant disabled:opacity-30 transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                            <button
+                                onClick={() => setPage((p) => p + 1)}
+                                disabled={page >= totalPages}
+                                className="px-3 py-1.5 rounded-lg border border-border text-sm font-bold text-text-secondary disabled:opacity-40 hover:border-primary-700 hover:text-primary-700 transition-colors"
+                            >
+                                Sau
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -7,6 +7,8 @@ import { useCart, useUpdateCartItem, useRemoveFromCart } from '../../lib/hooks/u
 import { useCartStore } from '../../lib/store/cart.store';
 import { useToast } from '../../lib/providers/toast-provider';
 import { useAuthStore } from '../../lib/store/auth.store';
+import { resolveCartItemImage } from '../../lib/utils/imageUrl';
+import type { CartItem } from '@/types/api.types';
 
 const FREE_SHIP_THRESHOLD = 500000;
 
@@ -39,7 +41,7 @@ export default function CartDrawer() {
   const items = Array.isArray(cart?.items) ? cart.items : [];
 
   const subtotal = items.reduce(
-    (sum: number, item: any) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
+    (sum: number, item: CartItem) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
     0
   );
 
@@ -175,17 +177,19 @@ export default function CartDrawer() {
             </div>
           )}
 
-          {!isLoading && !error && items.map((item: any, idx: number) => {
+          {!isLoading && !error && items.map((item: CartItem, idx: number) => {
             const price = Number(item.priceSnapshot ?? item.unitPrice ?? 0);
             return (
               <div
                 key={item.id ?? item.productVariantId ?? idx}
+                data-testid={`cart-item-${item.productVariantId ?? idx}`}
                 className="flex items-start gap-3 py-3 border-b border-border last:border-0"
               >
                 {/* Thumbnail */}
                 <div className="w-16 h-16 rounded-xl bg-surface-alt flex-shrink-0 overflow-hidden border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.thumbnailUrl || '/placeholder.png'}
+                    src={resolveCartItemImage(item) || '/placeholder.png'}
                     className="w-full h-full object-cover"
                     alt={item.productNameSnapshot ?? 'Sản phẩm'}
                   />
@@ -263,6 +267,7 @@ export default function CartDrawer() {
               </Link>
               <button
                 onClick={handleCheckout}
+                data-testid="cart-drawer-checkout-btn"
                 className="py-3 px-4 rounded-xl bg-primary-700 hover:bg-primary-800 text-white font-semibold
                            text-xs hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-1"
               >

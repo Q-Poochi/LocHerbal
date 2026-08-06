@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useCategories, useCreateProduct, useUpdateProduct } from '@/lib/hooks/useProducts';
+import { useCategories, useCreateProduct, useUpdateProduct, CreateProductPayload } from '@/lib/hooks/useProducts';
 import { useToast } from '@/lib/providers/toast-provider';
-import Link from 'next/link';
+import { getErrorMessage } from '@/lib/utils/error';
 import VariantEditor from './VariantEditor';
 import EAVAttributeForm from './EAVAttributeForm';
 import PublishSidebar from './PublishSidebar';
@@ -59,7 +59,7 @@ export default function ProductForm() {
             thumbnailUrl,
             isPublished: publish,
             images: images.filter((i) => !i.uploading).map((i) => i.url),
-        } as any;
+        } as CreateProductPayload;
     };
 
     const handleSave = async (publish: boolean) => {
@@ -77,9 +77,8 @@ export default function ProductForm() {
                 await createMutation.mutateAsync(payload);
             }
             toast.success(publish ? 'Đã xuất bản sản phẩm thành công!' : 'Đã lưu nháp thành công!');
-        } catch (err: any) {
-            const msg = err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại';
-            toast.error(msg);
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Có lỗi xảy ra, vui lòng thử lại'));
         }
     };
 
@@ -186,7 +185,7 @@ export default function ProductForm() {
                                         onChange={(e) => setCategoryId(e.target.value)}
                                     >
                                         <option value="">Chọn danh mục...</option>
-                                        {(categories ?? []).map((cat: any) => (
+                                        {(categories ?? []).map((cat) => (
                                             <option key={cat.id} value={cat.id}>
                                                 -- {cat.name}
                                             </option>
@@ -208,7 +207,7 @@ export default function ProductForm() {
                     {/* Tab 3: EAV */}
                     {activeTab === 'eav' && (
                         <div className="p-6">
-                            <EAVAttributeForm />
+                            <EAVAttributeForm categoryId={categoryId || undefined} />
                         </div>
                     )}
 

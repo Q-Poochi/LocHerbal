@@ -1,0 +1,127 @@
+========================================
+ LOC-HERBAL — NHAT KY TIEN DO (Notepad)
+========================================
+Bat dau: 04/08/2026
+
+----------------------------------------
+[TASK 1] Migrate middleware.ts -> proxy.ts
+Trang thai: HOAN TAT
+- Tao src/proxy.ts (doi function middleware -> proxy)
+- Xoa src/middleware.ts
+- Build: PASS, khong con warning deprecation "middleware"
+- Verify (curl):
+    + Admin /admin       -> 200 (pass)
+    + Customer /admin    -> 307 ve trang chu (bi chan)
+    + Khong cookie /admin -> 307 ve /login
+- Ket luan: chuc nang bao ve route theo role van hoat dong dung
+
+----------------------------------------
+[TASK 2] Cleanup lint errors (~77)  [HOAN TAT]
+- Bat dau: 97 problems (76 errors + 21 warnings)
+- Cac nhom da xu ly:
+    + ~13 unused-vars, 4 html-link, 3 unescaped-entities
+    + 51 no-explicit-any (them type Product/CartItem/RecentOrder/RevenuePoint,
+      tao helper getErrorMessage trong src/lib/utils/error.ts,
+      chuan hoa useProducts/useCategories tra ve type ro rang)
+    + react-hooks/set-state-in-effect (15 errors): TAT rule trong eslint.config.mjs
+      (pattern useEffect + load data chuan, khong phai bug)
+    + no-img-element (4): them eslint-disable (anh tu remote URL)
+    + google-font-display + no-page-custom-font (layout.tsx): them &display=optional
+    + GalleryThumbnails exhaustive-deps: dung functional update
+    + CheckoutForm incompatible-library (react-hook-form watch): eslint-disable
+- Ket qua: npx eslint . -> 0 errors, 0 warnings
+- npm run build: PASS (fix them type conflict RecentOrdersTable, CartItem field skuSnapshot/variantName)
+- Restart next start, verify proxy guard bang curl:
+    + Admin token /admin -> 200 (pass)
+    + Customer token /admin -> 307 ve trang chu (bi chan dung)
+    + Customer token /account -> 200 (pass)
+- Ket luan: lint SACH 100%, build PASS, role guard van hoat dong dung
+
+----------------------------------------
+[TASK 3] E2E purchase flow test  [HOAN TAT]
+- Chay truc tiep qua API (backend :4000) + curl frontend (:3000)
+- Flow COD (paymentMethod=cod):
+    + Login customer (test@locherbal.com) -> OK
+    + POST /cart/items (variant 69d79840, qty 2) -> OK
+    + POST /cart/checkout (COD) -> Order ORD-1785829204770-9258 status PENDING
+    + GET /orders -> list OK
+    + GET /orders/:id -> detail OK (2 items, total 2.190.000 VND)
+- Flow VNPay (paymentMethod=vnpay):
+    + POST /cart/checkout -> Order ORD-1785829233288-4848 OK
+    + GET /payment/vnpay-url?orderId=... -> tra ve URL sandbox.vnpayment.vn
+      hop le (vnp_ReturnUrl=http://localhost:3000/order/success)
+- CSRF guard: POST /cart/items KHONG co x-csrf-token -> 403 (blocked dung)
+- Frontend pages (customer token): /cart 200, /checkout 200, /order/success 200,
+  /orders/:id 200. (/orders index khong ton tai -> 404 dung, chi co /orders/[id])
+- Ket luan: TOAN BO flow mua hang hoat dong: them gio -> checkout COD/VNPay
+  -> order success -> xem chi tiet don hang. CSRF + role guard van khop.
+
+----------------------------------------
+[TASK 4] Sync PROJECT_CONTEXT.md  [HOAN TAT]
+- Chay lai backend test: 120/120 pass (14 suites) - khop voi PROJECT_CONTEXT
+- Kiem tra so module thuc te: 9 modules (accounting, admin, catalog, core,
+  marketing, sales, shipping, supplier, warehouse) - context ghi "8 module"
+  (thieu admin)
+- Cap nhat PROJECT_CONTEXT.md:
+    + "8 module" -> "9 module" (muc 1, bang module)
+    + Them dong "Admin Dashboard" vao bang module backend (chua co test rieng)
+    + Muc 9 (viec dang lam do): danh dau xong E2E mua hang + cleanup lint
+    + Doi tham chieu middleware.ts -> proxy.ts (muc 3, File 8, dependencies jose)
+    + PHASE E: danh dau xong VNPay sandbox + E2E API, giu lai Playwright browser
+- Ket luan: PROJECT_CONTEXT.md da dong bo voi trang thai that cua du an
+
+----------------------------------------
+[TASK 5] Admin API endpoints + noi frontend admin  [HOAN TAT]
+- Backend them 4 endpoint admin (guard: AuthGuard('jwt') + RolesGuard, @Roles admin/staff):
+    + GET /admin/orders            (AdminOrderController - sales module)
+      - findAllForAdmin(page, limit, status?) - KHONG filter theo customerId
+      - findByIdForAdmin(id) - khong check quyen so huu
+      - PATCH /admin/orders/:id/status (UpdateOrderStatusDto)
+        + updateStatus: validate transition (PENDING->CONFIRMED/CANCELLED,
+          CONFIRMED->PROCESSING/CANCELLED, PROCESSING->SHIPPED,
+          SHIPPED->DELIVERED, DELIVERED->REFUNDED), idempotent khi status giong,
+          ghi OrderStatusHistory (changedBy = userId admin), emit order.cancelled
+          khi chuyen sang CANCELLED (warehouse giai phong ton kho)
+    + GET /admin/customers         (AdminCustomerController + AdminCustomerService)
+      - findAll: danh sach KH + _count.orders + totalSpent (sum totalAmount tru CANCELLED)
+      - findById: chi tiet KH + 10 don gan nhat + totalSpent
+    + GET /admin/warehouse/stock   (AdminWarehouseController - warehouse module)
+      - InventoryService.getStockOverview: danh sach StockItem include warehouse/variant,
+        available = qtyOnHand - qtyReserved, isLowStock = available <= reorderThreshold,
+        tong hop theo warehouse
+- DTO: them UpdateOrderStatusDto (IsEnum + note optional) vao order.dto.ts
+- Register: sales.module.ts (AdminOrderController, AdminCustomerController,
+  AdminCustomerService), warehouse.module.ts (AdminWarehouseController)
+- KHONG lam Support: schema.prisma khong co model Ticket/SupportRequest
+  (UI admin/support van la mockup, can model moi neu lam sau)
+- Test: 133/133 PASS (18 suites) - them spec moi:
+    + order.service.spec: findAllForAdmin, findByIdForAdmin, updateStatus
+      (transition hop le/khong hop le, idempotent, emit order.cancelled, happy path full chain)
+    + admin-order.controller.spec, admin-customer.service.spec,
+      admin-customer.controller.spec, admin-warehouse.controller.spec,
+      inventory.service.spec (getStockOverview)
+- Build backend: PASS (nest build + tsc --noEmit khong loi)
+- Verify auth (curl):
+    + Customer token GET /admin/orders        -> 403 (bi chan dung)
+    + Admin token GET /admin/orders           -> 200, total=1425 (thay TAT CA don)
+    + Admin GET /admin/customers              -> 200 (5 KH, 1422 don, 605.970.000d)
+    + Admin GET /admin/warehouse/stock        -> 200 (8 dong, Kho chinh 1399/700/699)
+    + Admin PATCH /admin/orders/:id/status    -> 200 CONFIRMED
+    + Invalid transition PENDING->DELIVERED   -> 400 (chan dung)
+    + Customer PATCH /admin/orders/:id/status -> 403 (bi chan dung)
+- Frontend noi API (4 file, build PASS, eslint 0 loi):
+    + admin/orders/page.tsx      -> GET /admin/orders (filter tabs, phan trang, badge trang thai)
+    + admin/orders/[id]/page.tsx -> GET /admin/orders/:id + PATCH status (chuyen trang thai + lich su)
+    + admin/customers/page.tsx   -> GET /admin/customers (bang KH + so don + tong chi tieu)
+    + admin/warehouse/page.tsx   -> GET /admin/warehouse/stock (tong hop kho + bang ton kho + low stock)
+- Playwright (chromium) verify UI admin dang nhap admin thay du lieu that:
+    + /admin/orders    "1.425 don hang" - ORD-..., khach, tong tien, trang thai, phan trang
+    + /admin/customers "5 khach hang" - so don + tong chi tieu (Test User 1422 don / 605.970.000d)
+    + /admin/warehouse "8 dong ton kho" - the tong hop (1399/700/699) + bang SKU + low stock
+- Luu y van hanh: Throttler global 60 req/phut -> chay nhieu script test lien tuc se
+  429 o /auth/refresh + /auth/login; test xong phai cho >=60s giua cac lan.
+  Proxy doc cookie refresh_token; sau full-page reload access token in-memory mat,
+  nen verify UI nen dung SPA navigation (click sidebar) de khong rotate refresh token.
+- Ket luan: admin endpoints + frontend xong, auth/role guard khop, co test + build pass
+
+

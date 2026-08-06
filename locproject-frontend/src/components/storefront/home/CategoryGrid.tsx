@@ -49,7 +49,7 @@ const CATEGORIES = [
   },
 ];
 
-export default function CategoryGrid({ categories: _categories }: { categories: any[] }) {
+export default function CategoryGrid() {
   return (
     <section className="w-full py-16 md:py-20 bg-surface-alt">
       <div className="max-w-[1280px] mx-auto px-4 md:px-10">

@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { useRef, useState } from 'react';
-import { useAddToCart } from '../../../lib/hooks/useProducts';
+import { useAddToCart, AuthRequiredError } from '../../../lib/hooks/useProducts';
 import { useCartStore } from '../../../lib/store/cart.store';
+import { resolveImageUrl } from '../../../lib/utils/imageUrl';
+import type { Product } from '@/types/api.types';
 
 type BtnState = 'idle' | 'loading' | 'success' | 'error';
 
-function ProductCard({ product }: { product: any }) {
+function ProductCard({ product }: { product: Product }) {
   const [btnState, setBtnState] = useState<BtnState>('idle');
   const addToCartMutation = useAddToCart();
   const { openDrawer } = useCartStore();
@@ -28,7 +30,8 @@ function ProductCard({ product }: { product: any }) {
       setBtnState('success');
       openDrawer();
       setTimeout(() => setBtnState('idle'), 1500);
-    } catch {
+    } catch (err) {
+      if (err instanceof AuthRequiredError) return;
       setBtnState('error');
       setTimeout(() => setBtnState('idle'), 1500);
     }
@@ -42,14 +45,23 @@ function ProductCard({ product }: { product: any }) {
     >
       {/* Image area */}
       <div className="relative aspect-[3/4] bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span
-            className="material-symbols-outlined text-primary-200 group-hover:scale-105 transition-transform duration-400"
-            style={{ fontSize: '72px', fontVariationSettings: "'FILL' 1" }}
-          >
-            local_pharmacy
-          </span>
-        </div>
+        {resolveImageUrl(product.thumbnailUrl) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={resolveImageUrl(product.thumbnailUrl)}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="material-symbols-outlined text-primary-200 group-hover:scale-105 transition-transform duration-400"
+              style={{ fontSize: '72px', fontVariationSettings: "'FILL' 1" }}
+            >
+              local_pharmacy
+            </span>
+          </div>
+        )}
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
@@ -142,7 +154,7 @@ function ProductCardSkeleton() {
   );
 }
 
-export default function FeaturedProducts({ products }: { products: any[] }) {
+export default function FeaturedProducts({ products }: { products: Product[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -212,7 +224,7 @@ export default function FeaturedProducts({ products }: { products: any[] }) {
                 className="flex gap-6 transition-transform duration-400 ease-out"
                 style={{ willChange: 'transform' }}
               >
-                {products.map((p: any) => (
+                {products.map((p: Product) => (
                   <div key={p.id} className="flex-shrink-0 w-[calc(50%-12px)] md:w-[calc(25%-18px)]">
                     <ProductCard product={p} />
                   </div>

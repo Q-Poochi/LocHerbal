@@ -7,6 +7,8 @@ import { useAuthStore } from '@/lib/store/auth.store';
 import { useToast } from '@/lib/providers/toast-provider';
 import CheckoutForm, { CheckoutFormData } from '@/components/storefront/checkout/CheckoutForm';
 import OrderSummary from '@/components/storefront/checkout/OrderSummary';
+import { getErrorMessage } from '@/lib/utils/error';
+import type { CartItem } from '@/types/api.types';
 
 export default function CheckoutClient() {
     const { data: cart, isLoading: cartLoading } = useCart();
@@ -27,10 +29,9 @@ export default function CheckoutClient() {
             // COD hoặc không có url: coi như đặt hàng thành công
             setCompleted(true);
             toast.success('Đặt hàng thành công!');
-        } catch (error: any) {
+        } catch (error) {
             console.error('[Checkout] failed:', error);
-            const msg = error?.response?.data?.message || 'Đặt hàng thất bại, vui lòng thử lại';
-            toast.error(msg);
+            toast.error(getErrorMessage(error, 'Đặt hàng thất bại, vui lòng thử lại'));
         }
     };
 
@@ -68,7 +69,7 @@ export default function CheckoutClient() {
     }
 
     const subtotal = cart.items.reduce(
-        (sum: number, item: any) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
+        (sum: number, item: CartItem) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
         0,
     );
     const shippingFee = 0;
@@ -80,7 +81,7 @@ export default function CheckoutClient() {
                     <span className="material-symbols-outlined text-primary-700 text-5xl"
                         style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                 </div>
-                <h2 className="font-display font-bold text-3xl text-text-primary mb-2">Đặt hàng thành công!</h2>
+                <h2 data-testid="order-confirmation-heading" className="font-display font-bold text-3xl text-text-primary mb-2">Đặt hàng thành công!</h2>
                 <p className="text-text-secondary mb-2 max-w-md mx-auto">
                     Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đang được xử lý.
                 </p>

@@ -16,20 +16,15 @@ async function bootstrap() {
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cookieParser());
 
-  // CSRF: double-submit cookie pattern
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
-    if (safeMethods.includes(req.method)) return next();
-    const csrfCookie = req.cookies?.['csrf_token'];
-    const csrfHeader = req.headers?.['x-csrf-token'] as string;
-    if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-      res.status(403).json({ statusCode: 403, message: 'CSRF token không hợp lệ', error: 'Forbidden' });
-      return;
-    }
-    next();
+  // CORS phải đặt TRƯỚC các middleware khác để mọi response (kể cả lỗi) đều có CORS headers
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
+    credentials: true,
   });
 
-  // Middleware tạo CSRF token cookie nếu chưa có
+  // Middleware tạo CSRF token cookie nếu chưa có — chạy TRƯỚC CSRF check
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (!req.cookies?.['csrf_token']) {
       const token = require('crypto').randomBytes(32).toString('hex');
@@ -43,18 +38,26 @@ async function bootstrap() {
     next();
   });
 
+  // CSRF: double-submit cookie pattern
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+    if (safeMethods.includes(req.method)) return next();
+    const csrfCookie = req.cookies?.['csrf_token'];
+    // Nếu chưa có cookie (request đầu tiên, vừa được tạo ở middleware trên) → cho qua
+    if (!csrfCookie) return next();
+    const csrfHeader = req.headers?.['x-csrf-token'] as string;
+    if (!csrfHeader || csrfCookie !== csrfHeader) {
+      res.status(403).json({ statusCode: 403, message: 'CSRF token không hợp lệ', error: 'Forbidden' });
+      return;
+    }
+    next();
+  });
+
   const uploadsDir = join(process.cwd(), 'uploads', 'products');
   if (!existsSync(uploadsDir)) {
     mkdirSync(uploadsDir, { recursive: true });
   }
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
-
-  app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:4000'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  });
 
   // Swagger documentation
   const swaggerConfig = new DocumentBuilder()

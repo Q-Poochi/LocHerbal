@@ -31,7 +31,6 @@ function SearchContent() {
 
     const { data: response, isLoading, error } = useProducts(params);
     const products = response?.data ?? [];
-    const totalPages = response?.totalPages ?? 1;
 
     if (isLoading) {
         return <ProductCardSkeleton count={8} />;

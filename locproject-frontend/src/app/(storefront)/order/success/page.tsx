@@ -40,7 +40,7 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
 
                 {/* Title & Order Info */}
                 <div className="text-center mb-8 space-y-3">
-                    <h1 className="font-display font-bold text-2xl md:text-3xl text-text-primary">
+                    <h1 data-testid="order-confirmation-heading" className="font-display font-bold text-2xl md:text-3xl text-text-primary">
                         Đặt hàng thành công! 🎉
                     </h1>
                     <p className="text-text-secondary text-sm md:text-base max-w-sm mx-auto">

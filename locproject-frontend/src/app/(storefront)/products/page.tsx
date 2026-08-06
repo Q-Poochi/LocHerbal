@@ -6,6 +6,7 @@ import FilterSidebar from '../../../components/storefront/FilterSidebar';
 import SortBar from '../../../components/storefront/SortBar';
 import ProductGrid from '../../../components/storefront/ProductGrid';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '../../../lib/hooks/useProducts';
 
@@ -82,9 +83,9 @@ function HeaderSection() {
     <div className="mb-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-text-secondary mb-6 font-medium">
-        <a className="hover:text-primary-700" href="/">Trang chủ</a>
+        <Link className="hover:text-primary-700" href="/">Trang chủ</Link>
         <span className="material-symbols-outlined text-[12px] leading-none text-text-tertiary">chevron_right</span>
-        <a className="hover:text-primary-700" href="/products">Sản phẩm</a>
+        <Link className="hover:text-primary-700" href="/products">Sản phẩm</Link>
         {catId && (
           <>
             <span className="material-symbols-outlined text-[12px] leading-none text-text-tertiary">chevron_right</span>
@@ -117,6 +118,6 @@ function ProductCount() {
     search: searchParams.get('search') || undefined,
   };
   const { data } = useProducts(params);
-  const count = (data as any)?.totalCount ?? 0;
+  const count = Array.isArray(data) ? 0 : (data?.totalCount ?? 0);
   return <span className="text-xs text-text-secondary font-medium">({count} sản phẩm)</span>;
 }

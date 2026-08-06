@@ -1,8 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { apiClient } from '../api/client';
-import { Product, ProductDetail, Category } from '../../types/api.types';
+import { ProductDetail, CartItem, Product, Category } from '../../types/api.types';
 import { useAuthStore } from '../store/auth.store';
 import { getSessionId } from '../session';
+import { useToast } from '../providers/toast-provider';
+
+/** Lỗi khi người dùng chưa đăng nhập mà thực hiện thao tác yêu cầu đăng nhập. */
+export class AuthRequiredError extends Error {
+  constructor() {
+    super('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+    this.name = 'AuthRequiredError';
+  }
+}
 
 interface ProductsParams {
     categoryId?: string;
@@ -11,14 +21,21 @@ interface ProductsParams {
     sort?: 'popular' | 'price_asc' | 'price_desc' | 'newest';
     page?: number;
     limit?: number;
+    search?: string;
+}
+
+interface ProductsResponse {
+    data?: Product[];
+    totalCount?: number;
+    totalPages?: number;
 }
 
 export function useProducts(params: ProductsParams = {}) {
     return useQuery({
         queryKey: ['products', params],
         queryFn: async () => {
-            const { data } = await apiClient.get<any>('/products', { params });
-            return data;
+            const { data } = await apiClient.get<ProductsResponse | Product[]>('/products', { params });
+            return Array.isArray(data) ? { data } : data;
         },
     });
 }
@@ -27,7 +44,7 @@ export function useCategories() {
     return useQuery({
         queryKey: ['categories'],
         queryFn: async () => {
-            const { data } = await apiClient.get<any>('/categories');
+            const { data } = await apiClient.get<Category[] | { data?: Category[] }>('/categories');
             // Response có thể là array cũ (no pagination) hoặc { data, total } (có pagination)
             return Array.isArray(data) ? data : (data?.data ?? []);
         },
@@ -55,8 +72,16 @@ function guestParams() {
 
 export function useAddToCart() {
     const queryClient = useQueryClient();
+    const router = useRouter();
+    const toast = useToast();
     return useMutation({
         mutationFn: async ({ productVariantId, qty }: { productVariantId: string; qty: number }) => {
+            const { accessToken } = useAuthStore.getState();
+            if (!accessToken) {
+                toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+                router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+                throw new AuthRequiredError();
+            }
             const { data } = await apiClient.post('/cart/items', { productVariantId, qty }, {
                 params: guestParams(),
             });
@@ -102,7 +127,7 @@ export function useCart() {
     return useQuery({
         queryKey: ['cart'],
         queryFn: async ({ signal }) => {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
             const params = guestParams();
             const query = new URLSearchParams(params as Record<string, string>).toString();
             const url = `${baseUrl}/cart${query ? `?${query}` : ''}`;
@@ -120,7 +145,7 @@ export function useCart() {
 export function useCartCount(): number {
     const { data: cart } = useCart();
     if (!cart || !cart.items) return 0;
-    return cart.items.reduce((sum: number, item: any) => sum + item.qty, 0);
+    return cart.items.reduce((sum: number, item: CartItem) => sum + item.qty, 0);
 }
 
 export interface CreateProductPayload {

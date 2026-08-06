@@ -6,17 +6,18 @@ import { ToastProvider } from '../lib/providers/toast-provider';
 import { AuthBootstrap } from '../lib/providers/auth-bootstrap';
 import CartDrawer from '../components/storefront/CartDrawer';
 import MobileBottomNav from '@/components/storefront/layout/MobileBottomNav';
-import type { ReactNode } from 'react';
 
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-display',
+  display: 'optional',
 });
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
   variable: '--font-body',
+  display: 'optional',
 });
 
 export const metadata: Metadata = {
@@ -32,8 +33,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} h-full antialiased`}>
       <head>
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
           rel="stylesheet"
         />
       </head>

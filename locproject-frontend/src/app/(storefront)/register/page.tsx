@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '../../../lib/api/client';
 import { useAuthStore } from '../../../lib/store/auth.store';
+import { getErrorMessage } from '@/lib/utils/error';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -60,8 +61,8 @@ export default function RegisterPage() {
                 await useAuthStore.getState().login(email, password);
                 router.push('/');
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+        } catch (err) {
+            setError(getErrorMessage(err, 'Đăng ký thất bại. Vui lòng thử lại.'));
         } finally {
             setIsLoading(false);
         }

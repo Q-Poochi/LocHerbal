@@ -1,6 +1,7 @@
 import http from 'k6/http'
 import { check, sleep } from 'k6'
 import { Trend, Rate } from 'k6/metrics'
+import { BASE_URL } from '../k6.config.js'
 import { TEST_DATA } from '../helpers/data.js'
 
 const checkoutLatency = new Trend('checkout_latency')
@@ -20,7 +21,7 @@ export const options = {
 
 export function setup() {
   const res = http.post(
-    'http://localhost:4000/auth/login',
+    `${BASE_URL}/auth/login`,
     JSON.stringify({ email: TEST_DATA.testEmail, password: TEST_DATA.testPassword }),
     { headers: { 'Content-Type': 'application/json' } }
   )
@@ -39,7 +40,7 @@ export default function (data) {
 
   // Thêm vào giỏ
   let res = http.post(
-    'http://localhost:4000/cart/items',
+    `${BASE_URL}/cart/items`,
     JSON.stringify({ productVariantId: TEST_DATA.variantId, qty: 1 }),
     { headers }
   )
@@ -50,7 +51,7 @@ export default function (data) {
 
   // Checkout
   res = http.post(
-    'http://localhost:4000/cart/checkout',
+    `${BASE_URL}/cart/checkout`,
     JSON.stringify({
       addressId: TEST_DATA.addressId,
       paymentMethod: 'COD'

@@ -1,6 +1,8 @@
 import http from 'k6/http'
 import { check } from 'k6'
 import { Rate, Trend } from 'k6/metrics'
+import { BASE_URL } from '../k6.config.js'
+import { TEST_DATA } from '../helpers/data.js'
 
 const authLatency = new Trend('auth_latency')
 const errorRate = new Rate('auth_errors')
@@ -23,10 +25,10 @@ export const options = {
 
 export default function () {
   const res = http.post(
-    'http://localhost:4000/auth/login',
+    `${BASE_URL}/auth/login`,
     JSON.stringify({
-      email: 'test2@locherbal.com',
-      password: 'Test@123456'
+      email: TEST_DATA.testEmail,
+      password: TEST_DATA.testPassword
     }),
     { headers: { 'Content-Type': 'application/json' } }
   )

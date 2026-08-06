@@ -1,100 +1,106 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { ProductDetail } from '../../../types/api.types';
+import { resolveImageUrl } from '../../../lib/utils/imageUrl';
 
 interface RelatedProduct {
     id: string;
     name: string;
     slug: string;
-    thumbnailUrl: string;
-    categoryName: string;
-    price: number;
-    compareAtPrice?: number;
+    thumbnailUrl?: string;
+    category?: { name: string };
+    variants?: { price: number; compareAtPrice?: number }[];
 }
 
-const MOCK_RELATED: RelatedProduct[] = [
-    {
-        id: 'rp1',
-        name: 'Cao Hồng Sâm LocHerbal Nguyên Chất',
-        slug: 'cao-hong-sam-locherbal-nguyen-chat',
-        thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaNdKG9TWx9PyZ-vrlohFpeaQlRn2oUXcYtwWzO9EU1LzXZtF14eyu-B3cA4K05egjoZaFdbcDOyTm_mpn7lCSrz2wQ5megbKyE2LmKboToT4PqKYI4r-W_zOh3AzWgpataLymWpMzlIpJyzmT-_ES6e0QBnL_JQKqmuRGUC2VGdM2FHvJqErVD7hLYuItEq5RqgPhpCzaSCZVP0ScfsT-87sv-BJ3bEKeHNDCTiYkkHQYVsomTg',
-        categoryName: 'Bồi bổ sức khỏe',
-        price: 550000,
-        compareAtPrice: 650000,
-    },
-    {
-        id: 'rp2',
-        name: 'Trà Thảo Mộc An Thần Ngủ Ngon',
-        slug: 'tra-thao-moc-an-than-ngu-ngon',
-        thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-eKSTcn4PNv7NVZuy78Rm5HQT_EqxC4IPSM6kbMINaE7rXxawv2LPwg6mAWblI6NWs0AIaQI4nVxx7PknpxzKenXuOMBMnFhc41Wf7WP7dZHlAToa84kPxY--HL7T6h3YVQ26p0FaQNqSAoeNFUNuyJb6j_EbFYoz31N1CnlI_7eVyHpcwN-Ie0Y6GXldnFFRSHelkoxh-dcDvL0obgDyfi3Kt4QpnpUdE9ANnZ_e9KvYk2GWxA',
-        categoryName: 'Trà Thảo Mộc',
-        price: 180000,
-    },
-    {
-        id: 'rp3',
-        name: 'Viên Uống Giải Độc Gan Cà Gai Leo',
-        slug: 'vien-uong-giai-doc-gan-ca-gai-leo',
-        thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAsgfBipoel139l_OpyRdIOIv4BpRykIe1_Lv3MEajHfNeXfe33-pDjTURM7GUe6ijCWM3LxmkFWjrjJZKkUxy5vWSQw0ZKw-f9GloseeY9tF5gxgLN-but1ZKTPgfrk4QN7aj0dbJWyBHhGxytJ5oX4keYZ9L7WPamV_gm8cOiIXIOlu4pe-vZxGwKwt7UoLHYuhK4fH2CCvFHNJzcqq5T2Zj8xKg9TICf8MSxj6BFG2gzYdo0Zg',
-        categoryName: 'Giải độc gan',
-        price: 320000,
-        compareAtPrice: 400000,
-    },
-    {
-        id: 'rp4',
-        name: 'Set Quà Tặng Sức Khỏe Hoàng Gia',
-        slug: 'set-qua-tang-suc-khoe-hoang-gia',
-        thumbnailUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAoEakOt9AVcL5h7-I6bLGkbzp_hbXWE_m3C8aAebH-XXN4Iv-aamD8ZGSiiEOOJV2dr9pBiO-cR3FhMqobeA-q9zFJrXfdEs9O2AAZlYdaYwIyUrBO50d37yV1g_CvdIETYyjMlMkOkNnc9euM1VRQALvmTPBC5cahZyQBvtdBwMhutm_-z49ESWRMCqxq9tY93-4WKkpoK51zRFAsALzNfJi_CJAfVB2qaw7RbQeK2fXQsZlBhg',
-        categoryName: 'Combo Quà Tặng',
-        price: 1250000,
-    },
-];
+interface ProductsResponse {
+    data?: RelatedProduct[];
+    totalCount?: number;
+}
+
+async function getRelated(categoryId: string, limit = 4): Promise<RelatedProduct[]> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const res = await fetch(
+            `${baseUrl}/products?categoryId=${encodeURIComponent(categoryId)}&limit=${limit}&sort=popular`,
+            { next: { revalidate: 60 } },
+        );
+        if (!res.ok) return [];
+        const json: ProductsResponse = await res.json();
+        return Array.isArray(json?.data) ? json.data : [];
+    } catch {
+        return [];
+    }
+}
 
 function formatPrice(price: number): string {
-    return price.toLocaleString('vi-VN') + ' đ';
+    return price.toLocaleString('vi-VN') + 'đ';
 }
 
-export default function RelatedProducts() {
+export default async function RelatedProducts({ product }: { product: ProductDetail }) {
+    const related = (await getRelated(product.category.id)).filter((rp) => rp.id !== product.id);
+
     return (
         <section className="mb-16">
-            <div className="flex justify-between items-end mb-8">
+            <div className="flex justify-between items-end mb-6">
                 <div>
-                    <h2 className="font-headline-md text-headline-md text-primary font-bold">Sản phẩm liên quan</h2>
-                    <p className="text-on-surface-variant">Có thể bạn cũng quan tâm đến các loại thảo dược khác</p>
+                    <h2 className="font-display font-bold text-2xl text-text-primary">Sản phẩm liên quan</h2>
+                    <p className="text-sm text-text-secondary mt-1">Có thể bạn cũng quan tâm đến các loại thảo dược khác</p>
                 </div>
-                <Link href="/products" className="text-primary font-bold flex items-center gap-1 hover:underline">
+                <Link href="/products" className="text-primary-700 font-semibold text-sm flex items-center gap-1 hover:underline">
                     Xem tất cả
-                    <span className="material-symbols-outlined">arrow_right_alt</span>
+                    <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
                 </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {MOCK_RELATED.map((product) => (
-                    <Link
-                        key={product.id}
-                        href={`/products/${product.slug}`}
-                        className="bg-surface-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant/30 hover:-translate-y-1 transition-all block group"
-                    >
-                        <div className="aspect-square relative overflow-hidden">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                src={product.thumbnailUrl}
-                                alt={product.name}
-                            />
-                            <div className="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center text-outline hover:text-error transition-colors shadow-sm">
-                                <span className="material-symbols-outlined text-[20px]">favorite</span>
-                            </div>
-                        </div>
-                        <div className="p-4 space-y-2">
-                            <p className="text-caption text-outline font-bold uppercase tracking-tighter">{product.categoryName}</p>
-                            <h3 className="font-bold text-primary line-clamp-2 min-h-[48px]">{product.name}</h3>
-                            <div className="flex items-center gap-2">
-                                <span className="text-primary font-bold">{formatPrice(product.price)}</span>
-                                {product.compareAtPrice && (
-                                    <span className="text-caption text-outline line-through">{formatPrice(product.compareAtPrice)}</span>
-                                )}
-                            </div>
-                        </div>
-                    </Link>
-                ))}
-            </div>
+            {related.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <span className="material-symbols-outlined text-[48px] text-text-tertiary mb-4">ecg_heart</span>
+                    <p className="text-text-secondary font-medium">Chưa có sản phẩm liên quan.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {related.map((rp) => {
+                        const price = Number(rp.variants?.[0]?.price ?? 0);
+                        const compareAt = Number(rp.variants?.[0]?.compareAtPrice ?? 0);
+                        return (
+                            <Link
+                                key={rp.id}
+                                href={`/products/${rp.slug}`}
+                                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-border hover:-translate-y-1 transition-all duration-200 block group"
+                            >
+                                <div className="aspect-square relative overflow-hidden bg-surface-alt">
+                                    {resolveImageUrl(rp.thumbnailUrl) ? (
+                                        <Image
+                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                            src={resolveImageUrl(rp.thumbnailUrl)}
+                                            alt={rp.name}
+                                            fill
+                                            sizes="(max-width: 768px) 50vw, 25vw"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-primary-200 text-[56px]">local_pharmacy</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-3 md:p-4 space-y-1">
+                                    <p className="text-xs uppercase tracking-wider text-text-tertiary font-semibold">{rp.category?.name}</p>
+                                    <h3 className="font-semibold text-sm md:text-base text-text-primary leading-tight line-clamp-2 min-h-[40px] md:min-h-[48px]">{rp.name}</h3>
+                                    <div className="flex flex-wrap items-baseline gap-2 pt-1">
+                                        {price > 0 && (
+                                            <>
+                                                <span className="text-primary-700 font-bold text-sm md:text-base">{formatPrice(price)}</span>
+                                                {compareAt > price && (
+                                                    <span className="text-xs text-text-tertiary line-through">{formatPrice(compareAt)}</span>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
         </section>
     );
 }

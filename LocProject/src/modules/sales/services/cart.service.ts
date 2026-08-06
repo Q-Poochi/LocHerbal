@@ -13,26 +13,66 @@ export class CartService {
     if (customerId) {
       let cart = await this.prisma.cart.findFirst({
         where: { customerId },
-        include: { items: { include: { variant: true } } },
+        include: {
+          items: {
+            include: {
+              variant: {
+                include: {
+                  product: { select: { id: true, name: true, slug: true, thumbnailUrl: true, images: true } },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!cart) {
         cart = await this.prisma.cart.create({
           data: { customerId },
-          include: { items: { include: { variant: true } } },
+          include: {
+          items: {
+            include: {
+              variant: {
+                include: {
+                  product: { select: { id: true, name: true, slug: true, thumbnailUrl: true, images: true } },
+                },
+              },
+            },
+          },
+        },
         });
       }
       return cart;
     } else {
       let cart = await this.prisma.cart.findFirst({
         where: { sessionId },
-        include: { items: { include: { variant: true } } },
+        include: {
+          items: {
+            include: {
+              variant: {
+                include: {
+                  product: { select: { id: true, name: true, slug: true, thumbnailUrl: true, images: true } },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!cart) {
         cart = await this.prisma.cart.create({
           data: { sessionId },
-          include: { items: { include: { variant: true } } },
+          include: {
+          items: {
+            include: {
+              variant: {
+                include: {
+                  product: { select: { id: true, name: true, slug: true, thumbnailUrl: true, images: true } },
+                },
+              },
+            },
+          },
+        },
         });
       }
       return cart;

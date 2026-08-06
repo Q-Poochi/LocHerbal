@@ -1,6 +1,7 @@
 import http from 'k6/http'
 import { check, sleep } from 'k6'
 import { Trend, Rate } from 'k6/metrics'
+import { BASE_URL } from '../k6.config.js'
 import { login } from '../helpers/auth.js'
 import { TEST_DATA } from '../helpers/data.js'
 
@@ -38,7 +39,7 @@ export default function (data) {
 
   // Thêm vào giỏ
   let res = http.post(
-    'http://localhost:4000/cart/items',
+    `${BASE_URL}/cart/items`,
     JSON.stringify({ productVariantId: variantId, qty: 1 }),
     { headers }
   )

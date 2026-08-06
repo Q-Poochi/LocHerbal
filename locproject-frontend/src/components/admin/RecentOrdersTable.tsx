@@ -3,7 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-interface Order {
+interface RecentOrder {
+    id: string;
+    orderCode: string;
+    customer: { fullName?: string } | null;
+    items?: { productNameSnapshot?: string }[];
+    totalAmount: number;
+    status: string;
+    paymentStatus?: string;
+}
+
+interface OrderRow {
     id: string;
     code: string;
     customer: string;
@@ -12,17 +22,11 @@ interface Order {
     status: 'pending' | 'confirmed' | 'delivered' | 'cancelled';
 }
 
-const mockOrders: Order[] = [
-    { id: '1', code: '#ORD-102', customer: 'Nguyễn Văn A', product: 'Cao Gắm Thảo...', total: 1_250_000, status: 'pending' },
-    { id: '2', code: '#ORD-098', customer: 'Trần Thị B', product: 'Trà dây túi lọc', total: 450_000, status: 'delivered' },
-    { id: '3', code: '#ORD-095', customer: 'Lê Hoàng C', product: 'Sâm Ngọc Linh', total: 8_900_000, status: 'confirmed' },
-];
-
 const statusStyles: Record<string, string> = {
-    pending: 'bg-secondary-container text-on-secondary-container',
-    confirmed: 'bg-primary-fixed-dim/40 text-primary-container',
-    delivered: 'bg-success-leaf/20 text-success-leaf',
-    cancelled: 'bg-error-container text-on-error-container',
+    pending: 'bg-primary-100 text-primary-700',
+    confirmed: 'bg-blue-100 text-blue-700',
+    delivered: 'bg-green-100 text-green-700',
+    cancelled: 'bg-red-100 text-red-700',
 };
 
 const statusLabels: Record<string, string> = {
@@ -32,18 +36,35 @@ const statusLabels: Record<string, string> = {
     cancelled: 'Đã hủy',
 };
 
-const sortKeys: Record<string, keyof Order> = {
+const sortKeys: Record<string, keyof OrderRow> = {
     'Mã đơn': 'code',
     'Khách hàng': 'customer',
     'Sản phẩm': 'product',
     'Tổng cộng': 'total',
 };
 
-export default function RecentOrdersTable() {
-    const [sortKey, setSortKey] = useState<keyof Order>('code');
+function mapStatus(status: string): OrderRow['status'] {
+    const s = (status || '').toUpperCase();
+    if (s === 'PENDING' || s === 'PROCESSING') return 'pending';
+    if (s === 'CONFIRMED') return 'confirmed';
+    if (s === 'DELIVERED' || s === 'SHIPPED') return 'delivered';
+    return 'cancelled';
+}
+
+export default function RecentOrdersTable({ orders = [] }: { orders?: RecentOrder[] }) {
+    const [sortKey, setSortKey] = useState<keyof OrderRow>('code');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-    const sorted = [...mockOrders].sort((a, b) => {
+    const rows: OrderRow[] = orders.map((o) => ({
+        id: o.id,
+        code: o.orderCode || o.id,
+        customer: o.customer?.fullName || '—',
+        product: o.items?.[0]?.productNameSnapshot || '—',
+        total: Number(o.totalAmount || 0),
+        status: mapStatus(o.status),
+    }));
+
+    const sorted = [...rows].sort((a, b) => {
         const aVal = a[sortKey];
         const bVal = b[sortKey];
         if (typeof aVal === 'string' && typeof bVal === 'string') {
@@ -64,74 +85,81 @@ export default function RecentOrdersTable() {
     };
 
     return (
-        <div className="lg:col-span-6 bg-surface-white p-6 rounded-xl shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant flex flex-col">
+        <div className="lg:col-span-6 bg-white p-6 rounded-xl shadow-sm border border-border flex flex-col">
             <div className="flex justify-between items-center mb-6">
-                <h4 className="text-headline-md font-bold text-primary">Đơn hàng gần đây</h4>
+                <h4 className="font-display font-bold text-lg text-text-primary">Đơn hàng gần đây</h4>
                 <Link
                     href="/admin/orders"
-                    className="text-secondary font-label-bold text-body-sm hover:underline"
+                    className="text-primary-700 font-semibold text-sm hover:underline"
                 >
                     Xem tất cả
                 </Link>
             </div>
-            <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                    <thead className="bg-primary text-on-primary font-label-bold text-caption">
-                        <tr>
-                            {['Mã đơn', 'Khách hàng', 'Sản phẩm', 'Tổng cộng', 'Trạng thái', 'Action'].map(
-                                (header) => (
-                                    <th
-                                        key={header}
-                                        className={`px-4 py-3 first:rounded-tl-lg last:rounded-tr-lg uppercase ${sortKeys[header] ? 'cursor-pointer hover:opacity-80' : ''
-                                            }`}
-                                        onClick={() => sortKeys[header] && handleSort(header)}
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            {header}
-                                            {sortKeys[header] && sortKey === sortKeys[header] && (
-                                                <span className="text-[10px]">
-                                                    {sortDir === 'asc' ? '▲' : '▼'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </th>
-                                ),
-                            )}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-outline-variant">
-                        {sorted.map((order) => (
-                            <tr key={order.id} className="hover:bg-surface-container-low transition-colors">
-                                <td className="px-4 py-4 font-label-bold text-primary">{order.code}</td>
-                                <td className="px-4 py-4 text-body-sm">{order.customer}</td>
-                                <td className="px-4 py-4 text-body-sm truncate max-w-[120px]">
-                                    {order.product}
-                                </td>
-                                <td className="px-4 py-4 text-body-sm text-right font-bold">
-                                    {order.total.toLocaleString('vi-VN')}đ
-                                </td>
-                                <td className="px-4 py-4">
-                                    <span
-                                        className={`px-2 py-1 text-[10px] font-bold rounded uppercase ${statusStyles[order.status]}`}
-                                    >
-                                        {statusLabels[order.status]}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-4 text-center">
-                                    <Link
-                                        href={`/admin/orders/${order.id}`}
-                                        className="p-1 text-primary hover:bg-primary/10 rounded inline-flex transition-colors"
-                                    >
-                                        <span className="material-symbols-outlined text-[20px]">
-                                            visibility
-                                        </span>
-                                    </Link>
-                                </td>
+            {sorted.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <span className="material-symbols-outlined text-[40px] text-text-tertiary mb-3">receipt_long</span>
+                    <p className="text-sm text-text-secondary">Chưa có đơn hàng nào.</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-primary-700 text-white font-semibold text-xs">
+                            <tr>
+                                {['Mã đơn', 'Khách hàng', 'Sản phẩm', 'Tổng cộng', 'Trạng thái', 'Action'].map(
+                                    (header) => (
+                                        <th
+                                            key={header}
+                                            className={`px-4 py-3 first:rounded-tl-lg last:rounded-tr-lg uppercase ${sortKeys[header] ? 'cursor-pointer hover:opacity-80' : ''
+                                                }`}
+                                            onClick={() => sortKeys[header] && handleSort(header)}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                {header}
+                                                {sortKeys[header] && sortKey === sortKeys[header] && (
+                                                    <span className="text-[10px]">
+                                                        {sortDir === 'asc' ? '▲' : '▼'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </th>
+                                    ),
+                                )}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {sorted.map((order) => (
+                                <tr key={order.id} className="hover:bg-surface-alt transition-colors">
+                                    <td className="px-4 py-4 font-semibold text-primary-700">{order.code}</td>
+                                    <td className="px-4 py-4 text-sm text-text-primary">{order.customer}</td>
+                                    <td className="px-4 py-4 text-sm text-text-secondary truncate max-w-[120px]">
+                                        {order.product}
+                                    </td>
+                                    <td className="px-4 py-4 text-sm text-right font-bold">
+                                        {order.total.toLocaleString('vi-VN')}đ
+                                    </td>
+                                    <td className="px-4 py-4">
+                                        <span
+                                            className={`px-2 py-1 text-[10px] font-bold rounded uppercase ${statusStyles[order.status]}`}
+                                        >
+                                            {statusLabels[order.status]}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <Link
+                                            href={`/admin/orders/${order.id}`}
+                                            className="p-1 text-primary-700 hover:bg-primary-100 rounded inline-flex transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">
+                                                visibility
+                                            </span>
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }

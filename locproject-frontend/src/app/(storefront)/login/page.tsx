@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { apiClient } from '../../../lib/api/client';
 import { useAuthStore } from '../../../lib/store/auth.store';
 import { useToast } from '../../../lib/providers/toast-provider';
+import { getErrorMessage } from '@/lib/utils/error';
 
 function LoginForm() {
     const router = useRouter();
@@ -40,8 +41,8 @@ function LoginForm() {
 
             // Admin → /admin, còn lại → redirectTo (mặc định /)
             router.push(isAdmin ? '/admin' : redirectTo);
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+        } catch (err) {
+            setError(getErrorMessage(err, 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));
         } finally {
             setIsLoading(false);
         }

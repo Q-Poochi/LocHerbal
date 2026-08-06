@@ -1,5 +1,7 @@
 'use client';
 
+import { resolveCartItemImage } from '../../../lib/utils/imageUrl';
+
 interface OrderItem {
     id: string;
     productNameSnapshot?: string;
@@ -31,7 +33,7 @@ export default function OrderSummary({ items, subtotal, shippingFee = 0 }: Order
             <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
                 {items.map((item) => {
                     const itemPrice = Number(item.priceSnapshot ?? item.unitPrice ?? item.price ?? 0);
-                    const imgSrc = item.thumbnailUrl || item.thumbnail || item.product?.product?.images?.[0] || '/placeholder.png';
+                    const imgSrc = resolveCartItemImage(item) || '/placeholder.png';
                     return (
                         <div key={item.id} className="flex gap-3 items-center">
                             <div className="w-14 h-14 bg-primary-50 rounded-xl overflow-hidden flex-shrink-0 border border-primary-100">

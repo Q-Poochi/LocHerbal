@@ -14,20 +14,16 @@ import { apiClient } from '../../lib/api/client';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
+        const [productsRes] = await Promise.all([
           apiClient.get('/products', { params: { limit: 8 } }),
-          apiClient.get('/categories'),
         ]);
         setProducts(productsRes.data?.data ?? productsRes.data ?? []);
-        setCategories(categoriesRes.data?.data ?? categoriesRes.data ?? []);
       } catch {
         setProducts([]);
-        setCategories([]);
       }
     }
     fetchData();
@@ -39,7 +35,7 @@ export default function HomePage() {
       <main className="pb-16 md:pb-0">
         <HeroBanner />
         <TrustBar />
-        <CategoryGrid categories={categories} />
+        <CategoryGrid />
         <FeaturedProducts products={products} />
         <PromoBanner />
         <BlogSection posts={[]} />

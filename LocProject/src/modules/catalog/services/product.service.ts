@@ -23,7 +23,7 @@ export class ProductService {
       throw new NotFoundException('Danh mục không tồn tại');
     }
 
-    return this.prisma.$transaction(async (prisma) => {
+    const created = await this.prisma.$transaction(async (prisma) => {
       // 1. Tạo Product
       const product = await prisma.product.create({
         data: {
@@ -76,6 +76,8 @@ export class ProductService {
         },
       });
     });
+    await this.clearProductListCache();
+    return created;
   }
 
   async findAll(params?: {
@@ -96,6 +98,21 @@ export class ProductService {
       limit = 12,
       search,
     } = params || {};
+
+    const cacheKey = `catalog:products:${JSON.stringify({
+      categoryId,
+      minPrice,
+      maxPrice,
+      sort,
+      page,
+      limit,
+      search,
+    })}`;
+
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
     // Build where clause for filtering
     const where: any = {
@@ -176,13 +193,15 @@ export class ProductService {
 
     const totalCount = await this.prisma.product.count({ where });
 
-    return {
+    const result = {
       data: products,
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
       page,
       limit,
     };
+    await this.cacheManager.set(cacheKey, result, { ttl: 900 });
+    return result;
   }
 
   private transformProductDetail(product: any) {
@@ -302,11 +321,7 @@ export class ProductService {
     });
 
     await this.cacheManager.del(`catalog:product:${existingProduct.slug}`);
-
-    const listKeys = await this.cacheManager.store.keys('catalog:products:*');
-    for (const key of listKeys) {
-      await this.cacheManager.del(key);
-    }
+    await this.clearProductListCache();
 
     return updated;
   }
@@ -315,7 +330,10 @@ export class ProductService {
     const existingProduct = await this.findOne(id);
     await this.prisma.product.delete({ where: { id } });
     await this.cacheManager.del(`catalog:product:${existingProduct.slug}`);
+    await this.clearProductListCache();
+  }
 
+  private async clearProductListCache() {
     const listKeys = await this.cacheManager.store.keys('catalog:products:*');
     for (const key of listKeys) {
       await this.cacheManager.del(key);
@@ -344,7 +362,7 @@ export class ProductService {
       throw new BadRequestException('Thuộc tính này không thuộc danh mục (Category) của sản phẩm');
     }
 
-    return this.prisma.productAttributeValue.upsert({
+    const result = await this.prisma.productAttributeValue.upsert({
       where: {
         productId_attributeId: {
           productId,
@@ -363,6 +381,8 @@ export class ProductService {
         attribute: true,
       },
     });
+    await this.clearProductListCache();
+    return result;
   }
 
   async removeAttributeValue(productId: string, attributeId: string) {
@@ -379,7 +399,7 @@ export class ProductService {
       throw new NotFoundException('Sản phẩm không có giá trị thuộc tính này');
     }
 
-    return this.prisma.productAttributeValue.delete({
+    const result = await this.prisma.productAttributeValue.delete({
       where: {
         productId_attributeId: {
           productId,
@@ -387,5 +407,7 @@ export class ProductService {
         },
       },
     });
+    await this.clearProductListCache();
+    return result;
   }
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useAddToCart } from '@/lib/hooks/useProducts';
+import { useAddToCart, AuthRequiredError } from '@/lib/hooks/useProducts';
 import { useToast } from '@/lib/providers/toast-provider';
+import { getErrorMessage } from '@/lib/utils/error';
 
 interface AddToCartButtonProps {
   variantId: string;
@@ -19,9 +20,9 @@ export default function AddToCartButton({ variantId, productName }: AddToCartBut
         onSuccess: () => {
           toast.success(`Đã thêm "${productName}" vào giỏ hàng`);
         },
-        onError: (err: any) => {
-          const msg = err?.response?.data?.message || 'Thêm vào giỏ thất bại';
-          toast.error(msg);
+        onError: (err: unknown) => {
+          if (err instanceof AuthRequiredError) return;
+          toast.error(getErrorMessage(err, 'Thêm vào giỏ thất bại'));
         },
       },
     );

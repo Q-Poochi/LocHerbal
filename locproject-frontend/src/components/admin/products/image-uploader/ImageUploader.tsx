@@ -138,6 +138,7 @@ export default function ImageUploader({ images, onChange, maxFiles = 5 }: ImageU
                             key={idx}
                             className="relative group aspect-square rounded-lg border border-outline-variant overflow-hidden bg-surface-container-low"
                         >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={img.url}
                                 alt=""

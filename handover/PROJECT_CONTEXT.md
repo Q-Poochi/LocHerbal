@@ -12,7 +12,7 @@
 |---|---|
 | Backend | NestJS + TypeScript + Prisma 6.19.3 + PostgreSQL + Redis |
 | Frontend | Next.js 16 App Router + TypeScript + Tailwind v4 + Zustand + React Query |
-| Kiến trúc BE | Modular Monolith, 8 module, giao tiếp qua Domain Event |
+| Kiến trúc BE | Modular Monolith, 9 module, giao tiếp qua Domain Event |
 | Catalog schema | EAV động (Category → AttributeDefinition → ProductAttributeValue) |
 | Auth | JWT in-memory (15m, CHỈ nằm trong RAM — KHÔNG xuống localStorage) + Refresh Token httpOnly cookie (7d) + Rotation. Khi reload: gọi `POST /auth/refresh` (cookie tự gửi) để lấy accessToken mới. Chỉ `user` (không nhạy cảm) được persist. **QUYẾT ĐỊNH CUỐI: revert về in-memory, bỏ persist accessToken** (xem §12). |
 | Thanh toán | VNPay async webhook (IPN = source of truth), MoMo (planned) |
@@ -32,13 +32,17 @@
 | | Sales | ✅ Xong + test | 14/14 unit test pass + Cart/Order/Payment controllers | VNPay sandbox test PASS, IPN flow CONFIRMED|PAID verified |
 | | Accounting | ✅ Xong + test | 8/8 unit test pass | Invoice, PaymentTransaction, revenue report, payment.confirmed listener |
 | | Marketing | ✅ Xong + test | 26/26 unit test pass | Banner, Coupon, BlogPost CRUD |
-| | Supplier | ⬜ Chưa bắt đầu | — | Giai đoạn vận hành |
-| | Shipping | ⬜ Chưa bắt đầu | — | Giai đoạn vận hành |
+| | Supplier | ✅ Xong + test | 2 suite (supplier.service + purchase-order.service) | Supplier CRUD, Purchase Order, receive-items → restock event |
+| | Shipping | ✅ Xong + test | 2 suite (carrier.service + shipment.service) | Carrier, Shipment, tracking events, order-confirmed listener |
+| | Admin Dashboard | ✅ Xong (chưa có test riêng) | GET /admin/dashboard/* controllers | KPI stats, revenue-by-day, top-products, CSV export (client) |
 
-**Tổng test backend: 70/70 pass (9 suites)**
+**Tổng test backend: 120/120 pass (14 suites)** — verified lại 04/08/2026
 **API endpoints mới:**
 - **Accounting:** GET /accounting/revenue, GET /accounting/invoices, GET /accounting/invoices/:orderId, GET /accounting/transactions/:orderId
 - **Marketing:** GET/POST/PATCH/DELETE /marketing/banners, GET/POST/PATCH/DELETE /marketing/coupons, POST /marketing/coupons/validate, GET/POST/PATCH/DELETE /marketing/blog-posts
+- **Admin Dashboard:** GET /admin/dashboard/stats, GET /admin/dashboard/revenue-by-day?days=, GET /admin/dashboard/top-products?limit= (@Roles('admin','staff'))
+- **Supplier:** GET/POST /supplier, GET/PATCH/DELETE /supplier/:id (admin/staff)
+- **Shipping:** GET /api/v1/shipping/shipments/order/:orderId (@Public), POST /api/v1/shipping/shipments, PATCH /api/v1/shipping/shipments/:id/status, POST /api/v1/shipping/shipments/:id/tracking (ADMIN)
 
 
 ---
@@ -62,6 +66,11 @@
 | **Admin Products** | ✅ Xong | **File 9/10** — ProductsTable (sortable + bulk select + floating bar), ProductFilterBar, ProductStatusBadge, pagination |
 | **Admin Product Form** | ✅ Xong | **File 10/10** — ProductForm 4-tab (basic/variants/EAV/SEO), VariantEditor (inline editable), EAVAttributeForm (STRING/NUMBER/BOOLEAN/SELECT), PublishSidebar |
 | Gắn API (Phase C) | ✅ Xong | React Query hooks + auth flow + error/loading states |
+| **Auth guard /admin theo role** | ✅ Xong | 04/08/2026 — proxy.ts (migrate từ middleware.ts) verify refresh_token JWT bằng `jose`; user thường bị chặn khỏi /admin |
+| **Xuất báo cáo CSV** | ✅ Xong | 04/08/2026 — nút "Xuất báo cáo" trên admin dashboard tải CSV (KPI + top products + recent orders) |
+| **Add-to-cart yêu cầu login** | ✅ Xong | 04/08/2026 — `useAddToCart` guard trong hook, toast + redirect /login khi chưa đăng nhập |
+| **Fix CSRF/CORS** | ✅ Xong | 04/08/2026 — enableCors trước middleware CSRF, thêm x-csrf-token vào allowedHeaders, apiClient tự gắn CSRF header |
+| **Dependencies mới** | ✅ `jose` | Dùng để verify JWT trong proxy.ts (Edge runtime) |
 
 **Lưu ý kiến trúc:** OrderSummary.tsx ban đầu là Server Component nhưng CheckoutClient (Client) import nó → vi phạm Next.js rule. **Đã sửa:** thêm `'use client'` vào OrderSummary — Client import Client là hợp lệ.
 
@@ -206,6 +215,14 @@ Test flow đã verify:
 
 ## 9. Việc đang làm dở — tiếp tục từ đây
 
+> Cập nhật 04/08/2026: Phase B/C + Auth guard + CSRF/CORS + add-to-cart guard + xuất báo cáo CSV + **middleware→proxy migration** + **cleanup lint (97→0)** + **E2E mua hàng COD/VNPay** đã xong. Việc kế tiếp:
+
+1. ~~**Test luồng mua hàng E2E thật** — thêm giỏ → checkout → COD/VNPay → order success → /orders~~ ✅ **HOÀN TẤT 04/08/2026** (verify qua API + curl frontend: COD order PENDING OK, VNPay URL sandbox OK, CSRF 403 khi thiếu token, các trang /cart /checkout /order/success /orders/:id đều 200)
+2. ~~**Cleanup lint** — còn ~77 errors/22 warnings~~ ✅ **HOÀN TẤT 04/08/2026** (npx eslint . → 0 errors 0 warnings, npm run build PASS; đã tắt rule `react-hooks/set-state-in-effect` trong eslint.config.mjs, thêm helper `getErrorMessage`, chuẩn hóa type Product/CartItem/RecentOrder)
+3. **Nợ kỹ thuật cao:** #6 auth rate-limiting + bcrypt cost tối ưu, #7 stock allocation Redis Lua
+4. **Phase F:** E2E Playwright, CI/CD GitHub Actions, managed DB, deploy staging
+5. Tích hợp GHN/GHTK thật (hiện mới có Carrier abstraction nội bộ)
+
 **Phase B (Stitch → React convert): ✅ HOÀN TẤT 10/10 FILE**
 
 Kiến trúc Server/Client split pattern:
@@ -243,7 +260,7 @@ src/components/admin/
   RecentOrdersTable.tsx (Client) — sortable columns, clickable rows
   StockAlertCard.tsx  (Server) — alerts array, critical/urgent styling
   LeadCard.tsx        (Server) — leads array, contact button
-src/middleware.ts      — redirect /admin/* → /login nếu không có refresh_token cookie
+src/proxy.ts           — redirect /admin/* → /login nếu không có refresh_token cookie; role-guard admin (migrate từ middleware.ts, 04/08/2026)
 ```
 
 **File 9 (Admin Products List) — components đã tạo:**
@@ -267,13 +284,15 @@ src/components/admin/products/
 ```
 
 **Giai đoạn tiếp theo: PHASE D — Backend còn lại (2 module)**
-- Supplier module: Purchase order, nhà cung cấp
-- Shipping module: Tích hợp GHN/GHTK, tracking
+- ✅ Supplier module: Purchase order, nhà cung cấp — ĐÃ HOÀN TẤT (04/08/2026)
+- ✅ Shipping module: Carrier, shipment, tracking — ĐÃ HOÀN TẤT (04/08/2026)
+- ⬜ Tích hợp GHN/GHTK thật (hiện mới có Carrier abstraction + shipment CRUD nội bộ)
 
 **PHASE E — End-to-end testing & VNPay sandbox**
-- Test thật VNPay sandbox (open item từ trước)
-- E2E test Playwright: luồng mua hàng đầu đến cuối — **CẦN MODEL MẠNH**
-- Load test k6: 500 concurrent users trên /products và checkout
+- ✅ Test thật VNPay sandbox — **HOÀN TẤT** (04/08/2026): `GET /payment/vnpay-url?orderId=` trả URL sandbox hợp lệ, IPN flow CONFIRMED|PAID verified, đã fix typo `VNP_HASH_SECRET` (`NJPO`→`NJP0`)
+- ✅ E2E mua hàng qua API + curl frontend — **HOÀN TẤT** (04/08/2026): thêm giỏ → checkout COD/VNPay → order success → /orders/:id (xem Task 3 nhật ký)
+- ⬜ E2E test Playwright: luồng mua hàng đầu đến cuối trên browser — **CẦN MODEL MẠNH**
+- ⬜ Load test k6: 500 concurrent users trên /products và checkout (baseline k6 đã có, xem §12)
 
 **PHASE F — Production readiness**
 - ✅ Bước 1: POST /customers/addresses endpoint — **HOÀN TẤT**

@@ -38,7 +38,11 @@ test.describe('Homepage', () => {
 
   test('navigation links hoạt động', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('link', { name: /danh mục/i }).first().click()
+
+    // Desktop: "Danh mục" chỉ nằm trong mobile sidebar (ẩn) → điều hướng /products
+    // qua mega-dropdown "Sản phẩm" (CSS group-hover) rồi bấm "Xem tất cả"
+    await page.getByRole('button', { name: /sản phẩm/i }).hover()
+    await page.getByRole('link', { name: /xem tất cả/i }).first().click()
     await expect(page).toHaveURL(/\/products/)
   })
 })

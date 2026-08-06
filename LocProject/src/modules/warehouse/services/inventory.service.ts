@@ -186,4 +186,70 @@ export class InventoryService {
       });
     });
   }
+
+  /**
+   * Tổng quan tồn kho cho admin: danh sách StockItem + tổng hợp theo warehouse.
+   * available = qtyOnHand - qtyReserved; lowStock = available <= reorderThreshold.
+   */
+  async getStockOverview(page = 1, limit = 20) {
+    const [data, total, aggregate] = await Promise.all([
+      this.prisma.stockItem.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          warehouse: { select: { id: true, name: true, address: true, isActive: true } },
+          variant: {
+            select: {
+              id: true,
+              sku: true,
+              name: true,
+              price: true,
+              product: { select: { id: true, name: true, slug: true } },
+            },
+          },
+        },
+        orderBy: { qtyOnHand: 'asc' },
+      }),
+      this.prisma.stockItem.count(),
+      this.prisma.stockItem.groupBy({
+        by: ['warehouseId'],
+        _sum: { qtyOnHand: true, qtyReserved: true },
+      }),
+    ]);
+
+    const warehouseIds = aggregate.map((a) => a.warehouseId);
+    const warehouses = warehouseIds.length
+      ? await this.prisma.warehouse.findMany({ where: { id: { in: warehouseIds } } })
+      : [];
+
+    const warehouseMap = new Map(warehouses.map((w) => [w.id, w.name]));
+
+    const summaries = aggregate.map((a) => ({
+      warehouseId: a.warehouseId,
+      warehouseName: warehouseMap.get(a.warehouseId) || 'Không xác định',
+      qtyOnHand: a._sum.qtyOnHand || 0,
+      qtyReserved: a._sum.qtyReserved || 0,
+      available: (a._sum.qtyOnHand || 0) - (a._sum.qtyReserved || 0),
+    }));
+
+    const items = data.map((s) => ({
+      id: s.id,
+      warehouse: s.warehouse,
+      variant: s.variant,
+      qtyOnHand: s.qtyOnHand,
+      qtyReserved: s.qtyReserved,
+      available: s.qtyOnHand - s.qtyReserved,
+      reorderThreshold: s.reorderThreshold,
+      isLowStock: s.qtyOnHand - s.qtyReserved <= s.reorderThreshold,
+    }));
+
+    return {
+      data: items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      warehouses: summaries,
+    };
+  }
 }

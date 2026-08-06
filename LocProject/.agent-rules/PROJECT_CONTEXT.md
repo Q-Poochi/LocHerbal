@@ -28,14 +28,15 @@
 |---|---|---|---|
 | Core (Auth/RBAC) | ✅ Xong + test | 9/9 unit test pass | UserSession table, RTR, Fail-fast JWT |
 | Catalog | ✅ Xong + test | 5/5 unit test pass | EAV attribute validation |
-| Warehouse | ✅ Xong + test | 9/9 unit test pass | Atomic allocate/release/deduct |
-| Sales | ✅ Xong + test | 14/14 unit test pass + Cart/Order/Payment controllers | VNPay sandbox test PASS, IPN flow CONFIRMED|PAID verified |
+| Warehouse | ✅ Xong + test | 12/12 unit test pass | Atomic allocate/release/deduct + admin stock overview |
+| Sales | ✅ Xong + test | 35/35 unit test pass + Cart/Order/Payment/Admin controllers | VNPay sandbox test PASS, IPN flow CONFIRMED|PAID verified, admin orders/customers |
 | Accounting | ✅ Xong + test | 8/8 unit test pass | Invoice, PaymentTransaction, revenue report, payment.confirmed listener |
 | Marketing | ✅ Xong + test | 26/26 unit test pass | Banner, Coupon, BlogPost CRUD |
-| Supplier | ⬜ Chưa bắt đầu | — | Giai đoạn vận hành |
-| Shipping | ⬜ Chưa bắt đầu | — | Giai đoạn vận hành |
+| Supplier | ✅ Xong + test | 2/2 unit test pass | Supplier CRUD + PurchaseOrder |
+| Shipping | ✅ Xong + test | 2/2 unit test pass | Shipment + Carrier |
+| Admin | ✅ Xong + test | 3/3 unit test pass | Dashboard + AdminOrder/AdminCustomer/AdminWarehouse controllers |
 
-**Tổng test backend: 70/70 pass (9 suites)**
+**Tổng test backend: 133/133 pass (18 suites)**
 **API endpoints mới:**
 - **Accounting:** GET /accounting/revenue, GET /accounting/invoices, GET /accounting/invoices/:orderId, GET /accounting/transactions/:orderId
 - **Marketing:** GET/POST/PATCH/DELETE /marketing/banners, GET/POST/PATCH/DELETE /marketing/coupons, POST /marketing/coupons/validate, GET/POST/PATCH/DELETE /marketing/blog-posts
@@ -145,6 +146,16 @@ GET  /api/v1/admin/orders?limit=&sort=
 GET  /api/v1/admin/leads?status=&limit=
 ```
 
+### Admin (role admin/staff — endpoint mới, guard AuthGuard('jwt') + RolesGuard)
+```
+GET    /admin/orders                  ← Danh sách toàn hệ thống (filter status, paginate)
+GET    /admin/orders/:id              ← Chi tiết đơn (không check ownership)
+PATCH  /admin/orders/:id/status       ← Cập nhật trạng thái (body: status, note?)
+GET    /admin/customers               ← Danh sách KH + số đơn + tổng chi tiêu
+GET    /admin/customers/:id           ← Chi tiết KH + 10 đơn gần nhất
+GET    /admin/warehouse/stock         ← Tồn kho (include warehouse/variant, low stock, tổng hợp theo kho)
+```
+
 ---
 
 ## 6. Cấu trúc thư mục Stitch export (frontend)
@@ -241,8 +252,17 @@ src/components/admin/
   RecentOrdersTable.tsx (Client) — sortable columns, clickable rows
   StockAlertCard.tsx  (Server) — alerts array, critical/urgent styling
   LeadCard.tsx        (Server) — leads array, contact button
-src/middleware.ts      — redirect /admin/* → /login nếu không có refresh_token cookie
+src/proxy.ts           — redirect /admin/* → /login nếu không có refresh_token cookie (đổi từ middleware.ts)
 ```
+
+**Admin endpoints (đã nối API — HOÀN TẤT):**
+```
+src/modules/sales/controllers/admin-order.controller.ts      → GET /admin/orders, GET /admin/orders/:id, PATCH /admin/orders/:id/status
+src/modules/sales/controllers/admin-customer.controller.ts   → GET /admin/customers, GET /admin/customers/:id
+src/modules/warehouse/controllers/admin-warehouse.controller.ts → GET /admin/warehouse/stock
+```
+- Trang frontend đã nối API: admin/orders, admin/orders/[id] (chuyển trạng thái + lịch sử), admin/customers, admin/warehouse.
+- **admin/support CHƯA LÀM**: schema.prisma KHÔNG có model Ticket/SupportRequest → UI chỉ là mockup tabs. Cần model mới nếu làm sau.
 
 **File 9 (Admin Products List) — components đã tạo:**
 ```

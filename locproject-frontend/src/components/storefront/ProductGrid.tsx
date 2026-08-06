@@ -1,17 +1,19 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useProducts, useAddToCart } from '../../lib/hooks/useProducts';
+import { useProducts, useAddToCart, AuthRequiredError } from '../../lib/hooks/useProducts';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
 import Pagination from './Pagination';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useToast } from '../../lib/providers/toast-provider';
 import { useCartStore } from '../../lib/store/cart.store';
+import { resolveImageUrl } from '../../lib/utils/imageUrl';
+import type { Product } from '@/types/api.types';
 
 type BtnState = 'idle' | 'loading' | 'success' | 'error';
 
-function PLPProductCard({ product, highlightQuery }: { product: any; highlightQuery: string }) {
+function PLPProductCard({ product, highlightQuery }: { product: Product; highlightQuery: string }) {
   const [btnState, setBtnState] = useState<BtnState>('idle');
   const addToCartMutation = useAddToCart();
   const toast = useToast();
@@ -37,7 +39,8 @@ function PLPProductCard({ product, highlightQuery }: { product: any; highlightQu
       setBtnState('success');
       openDrawer();
       setTimeout(() => setBtnState('idle'), 1500);
-    } catch {
+    } catch (err) {
+      if (err instanceof AuthRequiredError) return;
       setBtnState('error');
       toast.error('Thêm sản phẩm thất bại');
       setTimeout(() => setBtnState('idle'), 1500);
@@ -59,10 +62,10 @@ function PLPProductCard({ product, highlightQuery }: { product: any; highlightQu
     >
       {/* Image area */}
       <div className="relative aspect-[3/4] bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
-        {product.thumbnailUrl ? (
+        {resolveImageUrl(product.thumbnailUrl) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={product.thumbnailUrl}
+            src={resolveImageUrl(product.thumbnailUrl)}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -252,7 +255,7 @@ export default function ProductGrid() {
 
       {/* Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {products.map((product: any) => (
+        {products.map((product: Product) => (
           <PLPProductCard key={product.id} product={product} highlightQuery={searchQuery} />
         ))}
       </div>
@@ -274,7 +277,7 @@ function BestsellerSuggestions() {
     <div className="space-y-6 pt-6 border-t border-border">
       <h3 className="font-display font-bold text-xl text-primary-700">Có thể bạn quan tâm</h3>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {items.map((product: any) => (
+        {items.map((product: Product) => (
           <PLPProductCard key={product.id} product={product} highlightQuery="" />
         ))}
       </div>

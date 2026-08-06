@@ -11,7 +11,7 @@ export default function MobileBottomNav() {
   const { data: cart } = useCart();
 
   const cartCount = Array.isArray(cart?.items)
-    ? cart.items.reduce((sum: number, item: any) => sum + (item.qty ?? 1), 0)
+    ? cart.items.reduce((sum: number, item: { qty?: number }) => sum + (item.qty ?? 1), 0)
     : 0;
 
   /* Don't show on admin pages */

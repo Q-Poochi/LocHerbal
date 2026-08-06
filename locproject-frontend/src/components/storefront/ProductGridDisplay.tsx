@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { Product } from '../../types/api.types';
-import { useAddToCart } from '../../lib/hooks/useProducts';
+import { useAddToCart, AuthRequiredError } from '../../lib/hooks/useProducts';
 import { useToast } from '../../lib/providers/toast-provider';
 import EmptyState from './EmptyState';
+import { resolveImageUrl } from '../../lib/utils/imageUrl';
+import { getErrorMessage } from '../../lib/utils/error';
 
 interface ProductGridDisplayProps {
     products: Product[];
@@ -29,9 +31,9 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
                 onSuccess: () => {
                     toast.success('Đã thêm vào giỏ hàng');
                 },
-                onError: (err: any) => {
-                    const msg = err?.response?.data?.message || 'Thêm vào giỏ thất bại';
-                    toast.error(msg);
+                onError: (err: unknown) => {
+                    if (err instanceof AuthRequiredError) return;
+                    toast.error(getErrorMessage(err, 'Thêm vào giỏ thất bại'));
                 },
             }
         );
@@ -61,11 +63,11 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
                 return (
                     <div key={product.id} className="product-card group relative bg-surface-white rounded-xl shadow-soft overflow-hidden transition-all duration-300 hover:shadow-lg border border-transparent hover:border-outline-variant">
                         <div className="relative aspect-square overflow-hidden bg-surface-container-low">
-                            {product.thumbnailUrl ? (
+                            {resolveImageUrl(product.thumbnailUrl) ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    src={product.thumbnailUrl}
+                                    src={resolveImageUrl(product.thumbnailUrl)}
                                     alt={product.name}
                                 />
                             ) : (

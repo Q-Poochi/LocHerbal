@@ -12,6 +12,7 @@ export interface Product {
   name: string;
   slug: string;
   thumbnailUrl?: string;
+  seq?: number;
   category: { name: string };
   variants: { id?: string; price: number; compareAtPrice?: number }[];
 }
@@ -59,4 +60,28 @@ export interface ProductReview {
   rating: number;
   content: string;
   createdAt: string;
+}
+
+export interface CartItem {
+  id?: string;
+  productVariantId: string;
+  qty: number;
+  priceSnapshot?: number;
+  unitPrice?: number;
+  productNameSnapshot?: string;
+  skuSnapshot?: string;
+  variantName?: string;
+  thumbnailUrl?: string | null;
+  thumbnail?: string | null;
+  variant?: {
+    product?: {
+      thumbnailUrl?: string | null;
+      images?: Array<{ url?: string | null } | string | null> | null;
+    } | null;
+  } | null;
+  product?: {
+    product?: {
+      images?: Array<{ url?: string | null } | string | null> | null;
+    } | null;
+  } | null;
 }

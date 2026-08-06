@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 interface CartItemProps {
-    id: string;
     name: string;
     variant: string;
     price: number;
@@ -15,7 +14,6 @@ interface CartItemProps {
 }
 
 export default function CartItem({
-    id,
     name,
     variant,
     price,
@@ -39,6 +37,7 @@ export default function CartItem({
                 {showPlaceholder ? (
                     <span className="material-symbols-outlined text-3xl text-outline">image</span>
                 ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                         className="w-full h-full object-cover"
                         src={thumbnail}

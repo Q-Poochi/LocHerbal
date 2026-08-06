@@ -48,7 +48,7 @@ export default function ProductTabs({ product }: ProductTabsProps) {
                                 <p className="text-body-lg text-on-surface-variant leading-relaxed">{product.description}</p>
                                 <div className="bg-primary/5 p-6 rounded-xl border-l-4 border-primary">
                                     <p className="font-body-md italic text-primary">
-                                        "Sứ mệnh của chúng tôi là mang lại trái tim khỏe mạnh cho hàng triệu người dân Việt Nam thông qua những tinh túy từ thiên nhiên quê hương."
+                                        &ldquo;Sứ mệnh của chúng tôi là mang lại trái tim khỏe mạnh cho hàng triệu người dân Việt Nam thông qua những tinh túy từ thiên nhiên quê hương.&rdquo;
                                     </p>
                                 </div>
                             </section>

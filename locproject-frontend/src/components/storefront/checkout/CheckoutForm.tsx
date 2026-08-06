@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import PaymentSelector, { PaymentMethod } from './PaymentSelector';
+import PaymentSelector from './PaymentSelector';
 
 const checkoutSchema = z.object({
     fullName: z.string().min(1, 'Họ và tên là bắt buộc'),
@@ -73,7 +73,9 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
             .catch(() => setProvinces([]));
     }, []);
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const provinceCode = watch('province');
+     
     const districtCode = watch('district');
 
     // Load districts when province changes
@@ -85,7 +87,7 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
         }
         fetch(`${API}/p/${provinceCode}?depth=2`)
             .then((r) => r.json())
-            .then((data: any) => setDistricts(data.districts || []))
+            .then((data: { districts?: District[] }) => setDistricts(data.districts || []))
             .catch(() => setDistricts([]));
         setValue('district', '');
         setValue('ward', '');
@@ -99,7 +101,7 @@ export default function CheckoutForm({ defaultValues, isPending, onSubmit }: Che
         }
         fetch(`${API}/d/${districtCode}?depth=2`)
             .then((r) => r.json())
-            .then((data: any) => setWards(data.wards || []))
+            .then((data: { wards?: Ward[] }) => setWards(data.wards || []))
             .catch(() => setWards([]));
         setValue('ward', '');
     }, [districtCode, setValue]);

@@ -8,6 +8,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/lib/providers/toast-provider';
+import { resolveCartItemImage } from '@/lib/utils/imageUrl';
+import { getErrorMessage } from '@/lib/utils/error';
 
 type Tab = 'profile' | 'orders' | 'addresses' | 'password';
 
@@ -142,13 +144,13 @@ export default function AccountPage() {
 
     useEffect(() => {
         if (!addrProvince) { setDistricts([]); setWards([]); return }
-        fetch(`${API}/p/${addrProvince}?depth=2`).then((r) => r.json()).then((d: any) => setDistricts(d.districts || [])).catch(() => setDistricts([]));
+        fetch(`${API}/p/${addrProvince}?depth=2`).then((r) => r.json()).then((d: { districts?: District[] }) => setDistricts(d.districts || [])).catch(() => setDistricts([]));
         setAddrDistrict(''); setWards([]);
     }, [addrProvince]);
 
     useEffect(() => {
         if (!addrDistrict) { setWards([]); return }
-        fetch(`${API}/d/${addrDistrict}?depth=2`).then((r) => r.json()).then((d: any) => setWards(d.wards || [])).catch(() => setWards([]));
+        fetch(`${API}/d/${addrDistrict}?depth=2`).then((r) => r.json()).then((d: { wards?: Ward[] }) => setWards(d.wards || [])).catch(() => setWards([]));
     }, [addrDistrict]);
 
     /* ── Handlers ── */
@@ -202,8 +204,8 @@ export default function AccountPage() {
         try {
             await apiClient.patch('/auth/profile', { fullName: profileFullName, phone: profilePhone });
             setProfileMsg('Cập nhật thông tin thành công');
-        } catch (err: any) {
-            setProfileError(err?.response?.data?.message || 'Cập nhật thông tin thất bại');
+        } catch (err) {
+            setProfileError(getErrorMessage(err, 'Cập nhật thông tin thất bại'));
         } finally {
             setSavingProfile(false);
         }
@@ -219,8 +221,8 @@ export default function AccountPage() {
             });
             setPasswordMsg('Đổi mật khẩu thành công');
             passwordForm.reset();
-        } catch (err: any) {
-            setPasswordError(err?.response?.data?.message || 'Đổi mật khẩu thất bại');
+        } catch (err) {
+            setPasswordError(getErrorMessage(err, 'Đổi mật khẩu thất bại'));
         }
     });
 
@@ -403,7 +405,8 @@ export default function AccountPage() {
                                             <div className="flex items-center gap-3 mb-3">
                                                 {(order.items?.slice(0, 3) || []).map((item, idx) => (
                                                     <div key={idx} className="w-10 h-10 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
-                                                        <img className="w-full h-full object-cover" src={item.thumbnail || item.product?.product?.images?.[0] || ''} alt="" />
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img className="w-full h-full object-cover" src={resolveCartItemImage(item) || ''} alt="" />
                                                     </div>
                                                 ))}
                                                 <span className="text-body-sm text-on-surface-variant truncate">

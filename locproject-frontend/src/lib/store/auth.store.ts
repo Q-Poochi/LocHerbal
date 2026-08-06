@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
           const { data: user } = await apiClient.get('/auth/me');
           set({ accessToken: data.accessToken, user });
           return true;
-        } catch (error) {
+        } catch {
           console.log('[Auth] No valid session, user not logged in');
           set({ accessToken: null, user: null });
           return false;

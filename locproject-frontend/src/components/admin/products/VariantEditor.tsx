@@ -28,7 +28,7 @@ interface VariantEditorProps {
     productName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function VariantEditor({ productName }: VariantEditorProps) {
     const [variants, setVariants] = useState<Variant[]>([
@@ -128,7 +128,7 @@ export default function VariantEditor({ productName }: VariantEditorProps) {
 
             {variants.length === 0 && (
                 <div className="text-center py-12 text-on-surface-variant text-body-sm border-2 border-dashed border-outline-variant rounded-xl">
-                    Chưa có biến thể nào. Nhấn "Thêm biến thể" để bắt đầu.
+                    Chưa có biến thể nào. Nhấn &ldquo;Thêm biến thể&rdquo; để bắt đầu.
                 </div>
             )}
 

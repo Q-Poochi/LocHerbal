@@ -1,268 +1,288 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/api/client';
+import { getErrorMessage } from '@/lib/utils/error';
 
-interface TimelineEvent {
-    label: string;
-    date: string;
-    done: boolean;
-}
-
-const statusTimeline: Record<string, TimelineEvent[]> = {
-    PENDING: [
-        { label: 'Đơn hàng được tạo', date: '24/07/2026 10:30', done: true },
-        { label: 'Xác nhận đơn hàng', date: '', done: false },
-        { label: 'Đang xử lý', date: '', done: false },
-        { label: 'Đang giao hàng', date: '', done: false },
-        { label: 'Đã giao hàng', date: '', done: false },
-    ],
-    CONFIRMED: [
-        { label: 'Đơn hàng được tạo', date: '24/07/2026 10:30', done: true },
-        { label: 'Xác nhận đơn hàng', date: '24/07/2026 11:00', done: true },
-        { label: 'Đang xử lý', date: '', done: false },
-        { label: 'Đang giao hàng', date: '', done: false },
-        { label: 'Đã giao hàng', date: '', done: false },
-    ],
-    DELIVERED: [
-        { label: 'Đơn hàng được tạo', date: '24/07/2026 10:30', done: true },
-        { label: 'Xác nhận đơn hàng', date: '24/07/2026 11:00', done: true },
-        { label: 'Đang xử lý', date: '24/07/2026 14:00', done: true },
-        { label: 'Đang giao hàng', date: '25/07/2026 09:00', done: true },
-        { label: 'Đã giao hàng', date: '26/07/2026 15:30', done: true },
-    ],
-};
-
-const mockOrder = {
-    id: '1',
-    code: '#ORD-102',
-    customer: 'Nguyễn Văn A',
-    email: 'nguyenvana@email.com',
-    phone: '0901 234 567',
-    address: '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
-    status: 'CONFIRMED' as string,
-    paymentMethod: 'VNPAY',
-    paymentStatus: 'UNPAID',
-    createdAt: '24/07/2026 10:30',
-    items: [
-        { name: 'Cao Gắm Thảo Dược 500g', sku: 'CG-500', qty: 2, price: 450000 },
-        { name: 'Trà Dây Túi Lọc 20 túi', sku: 'TD-20', qty: 1, price: 85000 },
-    ],
-    subtotal: 985000,
-    shipping: 0,
-    discount: 0,
-    total: 985000,
-};
-
-const statusBadge: Record<string, string> = {
-    PENDING: 'bg-secondary-container text-on-secondary-container',
+const statusStyles: Record<string, string> = {
+    PENDING: 'bg-primary-100 text-primary-700',
     CONFIRMED: 'bg-blue-100 text-blue-700',
-    PROCESSING: 'bg-purple-100 text-purple-700',
-    SHIPPED: 'bg-orange-100 text-orange-700',
+    PROCESSING: 'bg-amber-100 text-amber-700',
+    SHIPPED: 'bg-violet-100 text-violet-700',
     DELIVERED: 'bg-green-100 text-green-700',
     CANCELLED: 'bg-red-100 text-red-700',
+    REFUNDED: 'bg-slate-200 text-slate-700',
 };
 
-const statusLabel: Record<string, string> = {
+const statusLabels: Record<string, string> = {
     PENDING: 'Chờ xác nhận',
     CONFIRMED: 'Đã xác nhận',
     PROCESSING: 'Đang xử lý',
     SHIPPED: 'Đang giao',
     DELIVERED: 'Đã giao',
     CANCELLED: 'Đã hủy',
+    REFUNDED: 'Đã hoàn tiền',
 };
 
+const nextStatusOptions: Record<string, string[]> = {
+    PENDING: ['CONFIRMED', 'CANCELLED'],
+    CONFIRMED: ['PROCESSING', 'CANCELLED'],
+    PROCESSING: ['SHIPPED'],
+    SHIPPED: ['DELIVERED'],
+    DELIVERED: ['REFUNDED'],
+};
+
+interface OrderItem {
+    id: string;
+    productVariantId: string;
+    productNameSnapshot: string;
+    skuSnapshot: string;
+    qty: number;
+    unitPrice: number;
+    subtotal: number;
+}
+
+interface StatusHistoryEntry {
+    id: string;
+    status: string;
+    note?: string;
+    changedBy?: string;
+    createdAt: string;
+}
+
+interface AdminOrderDetail {
+    id: string;
+    orderCode: string;
+    customer: { id: string; fullName?: string; phone?: string; email?: string } | null;
+    items: OrderItem[];
+    subtotal: number;
+    discountAmount: number;
+    shippingFee: number;
+    totalAmount: number;
+    status: string;
+    paymentStatus?: string;
+    createdAt: string;
+    address?: {
+        recipientName?: string;
+        phone?: string;
+        addressLine?: string;
+        ward?: string;
+        district?: string;
+        province?: string;
+    } | null;
+    statusHistory?: StatusHistoryEntry[];
+}
+
 export default function OrderDetailPage() {
-    const timeline = statusTimeline[mockOrder.status] || statusTimeline.PENDING;
-    const activeIdx = timeline.filter((e) => e.done).length - 1;
+    const params = useParams();
+    const orderId = params?.id as string | undefined;
+
+    const [order, setOrder] = useState<AdminOrderDetail | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [updating, setUpdating] = useState(false);
+    const [updateError, setUpdateError] = useState('');
+
+    useEffect(() => {
+        async function load() {
+            if (!orderId) return;
+            setLoading(true);
+            setError('');
+            try {
+                const res = await apiClient.get<AdminOrderDetail>(`/admin/orders/${orderId}`);
+                setOrder(res.data);
+            } catch (e) {
+                setError(getErrorMessage(e, 'Không tìm thấy thông tin đơn hàng'));
+            } finally {
+                setLoading(false);
+            }
+        }
+        load();
+    }, [orderId]);
+
+    const changeStatus = async (status: string) => {
+        if (!orderId) return;
+        setUpdating(true);
+        setUpdateError('');
+        try {
+            const res = await apiClient.patch<AdminOrderDetail>(`/admin/orders/${orderId}/status`, { status });
+            setOrder(res.data);
+        } catch (e) {
+            setUpdateError(getErrorMessage(e, 'Không thể cập nhật trạng thái'));
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const money = (n: number) => Number(n).toLocaleString('vi-VN') + 'đ';
 
     return (
         <div className="p-8 max-w-[1400px] mx-auto w-full">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <nav className="flex items-center gap-2 text-caption text-on-surface-variant mb-1">
-                        <Link href="/admin/orders" className="hover:text-primary transition-colors flex items-center gap-1">
+                    <nav className="flex items-center gap-2 text-xs text-text-tertiary mb-1">
+                        <Link href="/admin/orders" className="hover:text-primary-700 transition-colors flex items-center gap-1">
                             <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                             Đơn hàng
                         </Link>
                         <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                        <span className="text-primary font-semibold">{mockOrder.code}</span>
+                        <span className="text-primary-700 font-semibold">Chi tiết đơn hàng</span>
                     </nav>
                     <div className="flex items-center gap-3 mt-1">
-                        <h2 className="font-headline-lg text-headline-lg text-primary">{mockOrder.code}</h2>
-                        <span className={`px-3 py-1 text-[11px] font-bold rounded-full ${statusBadge[mockOrder.status]}`}>
-                            {statusLabel[mockOrder.status]}
-                        </span>
+                        <h2 className="font-display font-bold text-2xl text-text-primary">
+                            {order ? order.orderCode : 'Chi tiết đơn hàng'}
+                        </h2>
+                        {order && (
+                            <span className={`px-3 py-1 rounded-full text-[12px] font-semibold ${statusStyles[order.status] || 'bg-surface-alt text-text-tertiary'}`}>
+                                {statusLabels[order.status] || order.status}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <Link
                     href="/admin/orders"
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary transition-all text-body-sm font-bold"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-text-secondary hover:text-primary-700 hover:border-primary-700 transition-all text-sm font-bold"
                 >
                     <span className="material-symbols-outlined text-[18px]">arrow_back</span>
                     Quay lại
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left — Timeline + Items */}
-                <div className="lg:col-span-2 space-y-8">
-                    {/* Timeline */}
-                    <div className="bg-surface-white p-7 rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30">
-                        <div className="flex items-center gap-2 mb-7">
-                            <span className="material-symbols-outlined text-primary">timeline</span>
-                            <h3 className="font-headline-md text-headline-md text-primary">Trạng thái đơn hàng</h3>
-                        </div>
-                        <div className="relative pl-1">
-                            {timeline.map((event, idx) => (
-                                <div key={event.label} className="flex items-start gap-4 pb-7 last:pb-0 relative">
-                                    {idx < timeline.length - 1 && (
-                                        <div className={`absolute left-[13px] top-8 w-[2px] h-full rounded-full ${event.done ? 'bg-primary/30' : 'bg-outline-variant'}`} />
-                                    )}
-                                    <div className={`relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${event.done ? 'bg-primary' : 'bg-outline-variant'}`}>
-                                        {event.done ? (
-                                            <span className="material-symbols-outlined text-[15px] text-white">check</span>
-                                        ) : (
-                                            <span className="w-2.5 h-2.5 rounded-full bg-outline" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 pt-0.5">
-                                        <p className={`font-label-bold text-body-sm ${event.done ? 'text-primary' : 'text-outline'}`}>
-                                            {event.label}
-                                        </p>
-                                        {event.date && (
-                                            <p className="text-caption text-on-surface-variant mt-0.5">{event.date}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+            {loading ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                    <span className="text-text-tertiary">Đang tải đơn hàng...</span>
+                </div>
+            ) : error || !order ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                    <div className="flex flex-col items-center justify-center py-24 text-center px-8">
+                        <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">receipt_long</span>
+                        <p className="text-text-secondary font-semibold text-base">{error || 'Không tìm thấy thông tin đơn hàng'}</p>
                     </div>
-
-                    {/* Products Table */}
-                    <div className="bg-surface-white p-7 rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30">
-                        <div className="flex items-center gap-2 mb-6">
-                            <span className="material-symbols-outlined text-primary">inventory_2</span>
-                            <h3 className="font-headline-md text-headline-md text-primary">Sản phẩm trong đơn</h3>
-                        </div>
-                        <div className="overflow-hidden rounded-xl border border-outline-variant/20">
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Cột trái: sản phẩm + khách hàng */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Sản phẩm */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                            <div className="px-6 py-4 border-b border-border">
+                                <h3 className="font-bold text-text-primary">Sản phẩm</h3>
+                            </div>
                             <table className="w-full">
-                                <thead>
-                                    <tr className="bg-surface-container-low text-caption text-on-surface-variant font-bold uppercase">
-                                        <th className="px-5 py-3.5 text-left">Sản phẩm</th>
-                                        <th className="px-5 py-3.5 text-left">SKU</th>
-                                        <th className="px-5 py-3.5 text-center">SL</th>
-                                        <th className="px-5 py-3.5 text-right">Đơn giá</th>
-                                        <th className="px-5 py-3.5 text-right">Thành tiền</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-outline-variant/20">
-                                    {mockOrder.items.map((item) => (
-                                        <tr key={item.sku} className="hover:bg-surface-container-lowest/50 transition-colors">
-                                            <td className="px-5 py-3.5 text-body-sm text-primary font-label-bold">{item.name}</td>
-                                            <td className="px-5 py-3.5 text-caption text-on-surface-variant font-mono">{item.sku}</td>
-                                            <td className="px-5 py-3.5 text-center text-body-sm">{item.qty}</td>
-                                            <td className="px-5 py-3.5 text-right text-body-sm">{item.price.toLocaleString('vi-VN')}₫</td>
-                                            <td className="px-5 py-3.5 text-right text-body-sm font-bold text-primary">{(item.qty * item.price).toLocaleString('vi-VN')}₫</td>
+                                <tbody className="divide-y divide-border">
+                                    {order.items.map((item) => (
+                                        <tr key={item.id}>
+                                            <td className="px-6 py-4">
+                                                <p className="font-semibold text-text-primary">{item.productNameSnapshot}</p>
+                                                <p className="text-xs text-text-tertiary">SKU: {item.skuSnapshot}</p>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-text-secondary text-right">
+                                                {money(item.unitPrice)} × {item.qty}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm font-bold text-text-primary text-right">
+                                                {money(item.subtotal)}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right — Customer Info + Actions */}
-                <div className="space-y-6">
-                    {/* Customer Info */}
-                    <div className="bg-surface-white p-7 rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30">
-                        <div className="flex items-center gap-2 mb-5">
-                            <span className="material-symbols-outlined text-primary">person</span>
-                            <h3 className="font-headline-md text-headline-md text-primary">Thông tin khách hàng</h3>
-                        </div>
-                        <div className="space-y-4">
-                            {[
-                                { label: 'Họ tên', value: mockOrder.customer, highlight: true },
-                                { label: 'Email', value: mockOrder.email },
-                                { label: 'Số điện thoại', value: mockOrder.phone },
-                                { label: 'Địa chỉ', value: mockOrder.address, highlight: true },
-                            ].map((field) => (
-                                <div key={field.label}>
-                                    <p className="text-caption text-on-surface-variant mb-0.5">{field.label}</p>
-                                    <p className={`text-body-sm ${field.highlight ? 'font-label-bold text-primary' : 'text-on-surface'}`}>{field.value}</p>
+                            <div className="px-6 py-4 border-t border-border space-y-1 text-sm bg-surface-alt/50">
+                                <div className="flex justify-between text-text-secondary">
+                                    <span>Tạm tính</span><span>{money(order.subtotal)}</span>
                                 </div>
-                            ))}
+                                <div className="flex justify-between text-text-secondary">
+                                    <span>Giảm giá</span><span>-{money(order.discountAmount)}</span>
+                                </div>
+                                <div className="flex justify-between text-text-secondary">
+                                    <span>Phí ship</span><span>{money(order.shippingFee)}</span>
+                                </div>
+                                <div className="flex justify-between font-bold text-text-primary pt-1 border-t border-border mt-1">
+                                    <span>Tổng cộng</span><span>{money(order.totalAmount)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Khách hàng */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                            <div className="px-6 py-4 border-b border-border">
+                                <h3 className="font-bold text-text-primary">Khách hàng</h3>
+                            </div>
+                            <div className="px-6 py-4 space-y-1 text-sm">
+                                <p className="font-semibold text-text-primary">{order.customer?.fullName || '—'}</p>
+                                <p className="text-text-secondary">{order.customer?.phone || ''}</p>
+                                <p className="text-text-secondary">{order.customer?.email || ''}</p>
+                                {order.address && (
+                                    <p className="text-text-secondary pt-2">
+                                        {order.address.recipientName} · {order.address.phone} · {order.address.addressLine}, {order.address.ward || ''} {order.address.district || ''} {order.address.province || ''}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Payment Summary */}
-                    <div className="bg-surface-white p-7 rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30">
-                        <div className="flex items-center gap-2 mb-5">
-                            <span className="material-symbols-outlined text-primary">payments</span>
-                            <h3 className="font-headline-md text-headline-md text-primary">Tổng tiền</h3>
-                        </div>
-                        <div className="space-y-3.5">
-                            <Row label="Tạm tính" value={`${mockOrder.subtotal.toLocaleString('vi-VN')}₫`} />
-                            <Row label="Phí vận chuyển" value="Miễn phí" valueClass="text-success-leaf font-bold" />
-                            <Row label="Giảm giá" value={mockOrder.discount > 0 ? `-${mockOrder.discount.toLocaleString('vi-VN')}₫` : '0₫'} />
-                            <hr className="border-outline-variant/50" />
-                            <div className="flex justify-between items-center">
-                                <span className="font-headline-md text-headline-md text-primary">Tổng cộng</span>
-                                <span className="font-headline-md text-headline-md font-bold text-primary">{mockOrder.total.toLocaleString('vi-VN')}₫</span>
+                    {/* Cột phải: trạng thái + lịch sử */}
+                    <div className="space-y-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                            <div className="px-6 py-4 border-b border-border">
+                                <h3 className="font-bold text-text-primary">Cập nhật trạng thái</h3>
                             </div>
-                            <hr className="border-outline-variant/50" />
-                            <Row
-                                label="Thanh toán"
-                                value={`${mockOrder.paymentMethod} — ${mockOrder.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}`}
-                                valueClass="font-bold"
-                            />
+                            <div className="px-6 py-4 space-y-2">
+                                <p className="text-sm text-text-tertiary">
+                                    Thanh toán: <span className="font-semibold text-text-secondary">{order.paymentStatus || '—'}</span>
+                                </p>
+                                {(nextStatusOptions[order.status] || []).length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {nextStatusOptions[order.status].map((s) => (
+                                            <button
+                                                key={s}
+                                                onClick={() => changeStatus(s)}
+                                                disabled={updating}
+                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors disabled:opacity-50 ${s === 'CANCELLED' || s === 'REFUNDED'
+                                                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                                        : 'bg-primary-700 text-white hover:bg-primary-800'
+                                                    }`}
+                                            >
+                                                {updating ? 'Đang cập nhật...' : `Chuyển → ${statusLabels[s]}`}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-text-tertiary">Không còn trạng thái chuyển tiếp.</p>
+                                )}
+                                {updateError && <p className="text-sm text-red-600">{updateError}</p>}
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                            <div className="px-6 py-4 border-b border-border">
+                                <h3 className="font-bold text-text-primary">Lịch sử trạng thái</h3>
+                            </div>
+                            <div className="px-6 py-4 space-y-3">
+                                {(order.statusHistory || []).length === 0 ? (
+                                    <p className="text-sm text-text-tertiary">Chưa có lịch sử.</p>
+                                ) : (
+                                    (order.statusHistory || []).map((h) => (
+                                        <div key={h.id} className="flex items-start gap-3">
+                                            <span className={`mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusStyles[h.status] || 'bg-surface-alt text-text-tertiary'}`}>
+                                                {statusLabels[h.status] || h.status}
+                                            </span>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-text-tertiary">
+                                                    {new Date(h.createdAt).toLocaleString('vi-VN')}
+                                                </p>
+                                                {h.note && <p className="text-sm text-text-secondary">{h.note}</p>}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
-
-                    {/* Actions */}
-                    {(mockOrder.status === 'PENDING' || mockOrder.status === 'CONFIRMED') && (
-                        <div className="bg-surface-white p-7 rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30">
-                            <div className="flex items-center gap-2 mb-5">
-                                <span className="material-symbols-outlined text-primary">settings</span>
-                                <h3 className="font-headline-md text-headline-md text-primary">Hành động</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {mockOrder.status === 'PENDING' && (
-                                    <button className="w-full bg-primary text-on-primary py-3.5 rounded-xl font-label-bold hover:opacity-90 transition-all shadow-sm shadow-primary/20">
-                                        <span className="flex items-center justify-center gap-2">
-                                            <span className="material-symbols-outlined text-[20px]">check_circle</span>
-                                            Xác nhận đơn hàng
-                                        </span>
-                                    </button>
-                                )}
-                                {mockOrder.status === 'CONFIRMED' && (
-                                    <button className="w-full bg-primary text-on-primary py-3.5 rounded-xl font-label-bold hover:opacity-90 transition-all shadow-sm shadow-primary/20">
-                                        <span className="flex items-center justify-center gap-2">
-                                            <span className="material-symbols-outlined text-[20px]">local_shipping</span>
-                                            Cập nhật vận chuyển
-                                        </span>
-                                    </button>
-                                )}
-                                <button className="w-full border border-red-200 text-red-600 py-3.5 rounded-xl font-label-bold hover:bg-red-50 transition-all">
-                                    <span className="flex items-center justify-center gap-2">
-                                        <span className="material-symbols-outlined text-[20px]">cancel</span>
-                                        Hủy đơn hàng
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
-            </div>
-        </div>
-    );
-}
-
-function Row({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
-    return (
-        <div className="flex justify-between text-body-sm">
-            <span className="text-on-surface-variant">{label}</span>
-            <span className={valueClass || 'text-on-surface font-semibold'}>{value}</span>
+            )}
         </div>
     );
 }
