@@ -42,6 +42,18 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(makeContext({ roles: ['admin'] }, ['ADMIN']))).toBe(false);
   });
 
+  it('should deny when user has UPPERCASE role but endpoint requires lowercase', () => {
+    // Bug cụ thể từng gây lỗi thật trong dự án: user có role 'ADMIN' (hoặc DB trả 'ADMIN')
+    // nhưng @Roles('admin') lại không thể truy cập → gọi kiểu uppercase là rule
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['admin']);
+    expect(guard.canActivate(makeContext({ roles: ['ADMIN'] }, ['admin']))).toBe(false);
+  });
+
+  it('should deny when user has a different role entirely', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['staff']);
+    expect(guard.canActivate(makeContext({ roles: ['admin'] }, ['staff']))).toBe(false);
+  });
+
   it('should allow when ANY required role matches', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['staff', 'admin']);
     expect(guard.canActivate(makeContext({ roles: ['admin'] }, ['staff', 'admin']))).toBe(true);
