@@ -3,19 +3,21 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCreatedEvent } from '../events/order-created.event';
 import { OrderCancelledEvent } from '../events/order-cancelled.event';
-import { OrderStatus, PaymentStatus, Prisma } from '@prisma/client';
+import { CouponService } from '../../marketing/services/coupon.service';
+import { OrderStatus, PaymentStatus, Coupon, Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly couponService: CouponService,
   ) { }
 
   /**
    * Tạo đơn hàng từ giỏ hàng (Checkout)
    */
-  async checkout(cartId: string, customerId: string, addressId?: string, agentId?: string) {
+  async checkout(cartId: string, customerId: string, addressId?: string, agentId?: string, couponCode?: string) {
     // 1. Lấy thông tin Cart và CartItems
     const cart = await this.prisma.cart.findUnique({
       where: { id: cartId },
@@ -87,8 +89,17 @@ export class OrderService {
 
     // 3. Tính toán tổng tiền
     const subtotal = itemsWithCurrentPrice.reduce((sum, item) => sum + item.subtotal, 0);
-    const discountAmount = 0; // Tạm thời chưa áp coupon
-    const shippingFee = 0; // Tạm thời miễn phí vận chuyển
+
+    // Xác thực coupon nếu có trước khi tính tổng tiền
+    let coupon: Coupon | null = null;
+    let discountAmount = 0;
+    if (couponCode) {
+      const validated = await this.couponService.validateCode(couponCode, subtotal);
+      coupon = validated;
+      discountAmount = (await this.couponService.calculateDiscount(validated.id, subtotal)).discountAmount;
+    }
+
+    const shippingFee = 0; // Khách hàng chưa có config phí vận chuyển — giữ 0
     const totalAmount = subtotal - discountAmount + shippingFee;
 
     const orderCode = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -138,6 +149,33 @@ export class OrderService {
       await tx.cartItem.deleteMany({
         where: { cartId },
       });
+
+      // Ghi nhận coupon usage trong cùng transaction với order
+      if (coupon) {
+        await tx.couponUsage.create({
+          data: {
+            couponId: coupon.id,
+            orderId: newOrder.id,
+            customerId,
+          },
+        });
+
+        // Tăng usedCount một cách atomic, chống race cho usageLimit
+        if (coupon.usageLimit !== null) {
+          const res = await tx.coupon.updateMany({
+            where: { id: coupon.id, usedCount: { lt: coupon.usageLimit } },
+            data: { usedCount: { increment: 1 } },
+          });
+          if (res.count === 0) {
+            throw new BadRequestException('Mã giảm giá đã hết lượt sử dụng');
+          }
+        } else {
+          await tx.coupon.update({
+            where: { id: coupon.id },
+            data: { usedCount: { increment: 1 } },
+          });
+        }
+      }
 
       return newOrder;
     });
@@ -331,6 +369,9 @@ export class OrderService {
         qty: item.qty,
       }));
       this.eventEmitter.emit('order.cancelled', new OrderCancelledEvent(id, eventItems));
+    } else if (status === OrderStatus.CONFIRMED) {
+      // Báo shipping chuẩn bị vận đơn
+      this.eventEmitter.emit('order.confirmed', { orderId: id });
     }
 
     return updatedOrder;

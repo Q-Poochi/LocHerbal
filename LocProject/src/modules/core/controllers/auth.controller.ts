@@ -31,7 +31,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng nhập' })
-  @ApiResponse({ status: 200, description: 'Đăng nhập thành công, trả về accessToken + user' })
+  @ApiResponse({ status: 200, description: 'Đăng nhập thành công, trả về accessToken + user', schema: { example: { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', user: { id: 'user-uuid', email: 'user@example.com', fullName: 'Nguyễn Văn A', phone: '0912345678', roles: ['customer'] } } } })
   @ApiResponse({ status: 401, description: 'Email hoặc mật khẩu không chính xác' })
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const { accessToken, refreshToken, user } = await this.authService.login(dto);
@@ -66,8 +66,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Đổi mật khẩu' })
   @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
   @ApiResponse({ status: 401, description: 'Mật khẩu hiện tại không chính xác' })
-  async changePassword(@User('userId') userId: string, @Body() dto: ChangePasswordDto) {
-    return this.authService.changePassword(userId, dto);
+  async changePassword(@User('userId') userId: string, @User('jti') jti: string | undefined, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(userId, dto, jti);
   }
 
   @Public()

@@ -1,10 +1,13 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { InvoiceService } from '../services/invoice.service';
 import { PaymentTransactionService } from '../services/payment-transaction.service';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 
+@ApiTags('Accounting')
+@ApiBearerAuth()
 @Controller('accounting')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AccountingController {
@@ -15,28 +18,16 @@ export class AccountingController {
 
     @Get('revenue')
     @Roles('admin', 'staff')
+    @ApiOperation({ summary: 'Doanh thu theo khoảng thời gian' })
     async getRevenue(@Query('from') from?: string, @Query('to') to?: string) {
-        const startDate = from ? new Date(from) : new Date(new Date().getFullYear(), 0, 1);
-        const endDate = to ? new Date(to) : new Date();
-
-        const invoices = await this.invoiceService.findAll(1, 1000);
-        const revenue = invoices.data
-            .filter((inv: any) => {
-                const issuedAt = new Date(inv.issuedAt);
-                return issuedAt >= startDate && issuedAt <= endDate;
-            })
-            .reduce((sum: number, inv: any) => sum + Number(inv.totalAmount), 0);
-
-        return {
-            from: startDate.toISOString(),
-            to: endDate.toISOString(),
-            revenue,
-            invoiceCount: invoices.data.length,
-        };
+        const startDate = from ? new Date(from) : undefined;
+        const endDate = to ? new Date(to) : undefined;
+        return this.invoiceService.getRevenue(startDate, endDate);
     }
 
     @Get('invoices')
     @Roles('admin', 'staff')
+    @ApiOperation({ summary: 'Danh sách hoá đơn (có phân trang)' })
     async getInvoices(@Query('page') page?: string, @Query('limit') limit?: string) {
         const pageNum = page ? parseInt(page, 10) : 1;
         const limitNum = limit ? parseInt(limit, 10) : 20;
@@ -45,12 +36,14 @@ export class AccountingController {
 
     @Get('invoices/:orderId')
     @Roles('admin', 'staff')
+    @ApiOperation({ summary: 'Hoá đơn theo đơn hàng' })
     async getInvoiceByOrderId(@Param('orderId') orderId: string) {
         return this.invoiceService.findByOrderId(orderId);
     }
 
     @Get('transactions/:orderId')
     @Roles('admin', 'staff')
+    @ApiOperation({ summary: 'Giao dịch thanh toán theo đơn hàng' })
     async getTransactionsByOrderId(@Param('orderId') orderId: string) {
         return this.paymentTransactionService.findByOrderId(orderId);
     }

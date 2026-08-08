@@ -60,6 +60,33 @@ export class InvoiceService {
         return invoice;
     }
 
+    /**
+     * Doanh thu theo khoảng thời gian — thống nhất nguồn với Dashboard:
+     * tổng totalAmount của các order có paymentStatus = PAID (đã bao gồm
+     * discount/shippingFee). Không dựa trên invoice để tránh 2 nguồn lệch nhau.
+     */
+    async getRevenue(from?: Date, to?: Date) {
+        const startDate = from ?? new Date(new Date().getFullYear(), 0, 1);
+        const endDate = to ?? new Date();
+
+        const orders = await this.prisma.order.findMany({
+            where: {
+                paymentStatus: 'PAID',
+                createdAt: { gte: startDate, lte: endDate },
+            },
+            select: { totalAmount: true },
+        });
+
+        const revenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+
+        return {
+            from: startDate.toISOString(),
+            to: endDate.toISOString(),
+            revenue,
+            orderCount: orders.length,
+        };
+    }
+
     async findAll(page: number = 1, limit: number = 20) {
         const skip = (page - 1) * limit;
         const [invoices, total] = await Promise.all([

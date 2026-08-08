@@ -10,8 +10,8 @@ export class DashboardService {
     today.setHours(0, 0, 0, 0);
 
     const [totalRevenue, todayRevenue, totalOrders, todayOrders, totalCustomers, totalProducts, lowStockItems, recentOrders] = await Promise.all([
-      this.prisma.order.aggregate({ _sum: { subtotal: true }, where: { paymentStatus: 'PAID' } }),
-      this.prisma.order.aggregate({ _sum: { subtotal: true }, where: { createdAt: { gte: today }, paymentStatus: 'PAID' } }),
+      this.prisma.order.aggregate({ _sum: { totalAmount: true }, where: { paymentStatus: 'PAID' } }),
+      this.prisma.order.aggregate({ _sum: { totalAmount: true }, where: { createdAt: { gte: today }, paymentStatus: 'PAID' } }),
       this.prisma.order.count(),
       this.prisma.order.count({ where: { createdAt: { gte: today } } }),
       this.prisma.customer.count(),
@@ -29,8 +29,8 @@ export class DashboardService {
 
     return {
       revenue: {
-        total: totalRevenue._sum.subtotal || 0,
-        today: todayRevenue._sum.subtotal || 0,
+        total: totalRevenue._sum.totalAmount || 0,
+        today: todayRevenue._sum.totalAmount || 0,
       },
       orders: {
         total: totalOrders,
@@ -50,14 +50,14 @@ export class DashboardService {
 
     const orders = await this.prisma.order.findMany({
       where: { createdAt: { gte: since }, paymentStatus: 'PAID' },
-      select: { subtotal: true, createdAt: true },
+      select: { totalAmount: true, createdAt: true },
       orderBy: { createdAt: 'asc' },
     });
 
     const map = new Map<string, number>();
     for (const o of orders) {
       const date = o.createdAt.toISOString().slice(0, 10);
-      map.set(date, (map.get(date) || 0) + Number(o.subtotal));
+      map.set(date, (map.get(date) || 0) + Number(o.totalAmount));
     }
 
     return Array.from(map, ([date, revenue]) => ({ date, revenue }));

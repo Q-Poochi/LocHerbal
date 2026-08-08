@@ -103,7 +103,7 @@ export class AuthService {
     return this.toUserDto(updated);
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto) {
+  async changePassword(userId: string, dto: ChangePasswordDto, currentJti?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new UnauthorizedException('User không tồn tại');
@@ -115,9 +115,21 @@ export class AuthService {
     }
 
     const newHash = await bcrypt.hash(dto.newPassword, 10);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash: newHash },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { passwordHash: newHash },
+      });
+
+      // Thu hồi toàn bộ phiên khác (trừ phiên đang thực hiện đổi mật khẩu)
+      await tx.userSession.updateMany({
+        where: {
+          userId,
+          ...(currentJti ? { jti: { not: currentJti } } : {}),
+          isRevoked: false,
+        },
+        data: { isRevoked: true },
+      });
     });
 
     return { message: 'Đổi mật khẩu thành công' };

@@ -4,6 +4,7 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { CouponService } from '../../marketing/services/coupon.service';
 
 describe('OrderService', () => {
   let service: OrderService;
@@ -33,6 +34,11 @@ describe('OrderService', () => {
     emit: jest.fn(),
   };
 
+  const mockCouponService = {
+    validateCode: jest.fn(),
+    calculateDiscount: jest.fn(),
+  };
+
   beforeEach(async () => {
     // Giả lập transaction
     mockPrisma.$transaction.mockImplementation(async (cb: any) => {
@@ -51,6 +57,13 @@ describe('OrderService', () => {
         cartItem: {
           deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
+        couponUsage: {
+          create: jest.fn().mockResolvedValue({ id: 'cu-1' }),
+        },
+        coupon: {
+          update: jest.fn().mockResolvedValue({ id: 'coupon-1' }),
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
       };
       return cb(tx);
     });
@@ -60,6 +73,7 @@ describe('OrderService', () => {
         OrderService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: EventEmitter2, useValue: mockEventEmitter },
+        { provide: CouponService, useValue: mockCouponService },
       ],
     }).compile();
 
@@ -172,6 +186,74 @@ describe('OrderService', () => {
           items: [{ productVariantId: 'variant-1', qty: 2 }],
         }),
       );
+    });
+
+    it('should apply coupon discount and record usage when couponCode provided', async () => {
+      const mockCart = {
+        id: 'cart-1',
+        items: [{ productVariantId: 'variant-1', qty: 2, priceSnapshot: 1000 }],
+      };
+      mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        {
+          id: 'variant-1',
+          sku: 'SKU-001',
+          name: 'Size L',
+          price: 1500,
+          productId: 'product-1',
+          product: { name: 'Tra Herbal' },
+        },
+      ]);
+      mockPrisma.customerAddress.findUnique.mockResolvedValue({
+        id: 'address-1',
+        customerId: 'customer-1',
+      });
+      mockCouponService.validateCode.mockResolvedValue({
+        id: 'coupon-1',
+        usageLimit: 5,
+      });
+      mockCouponService.calculateDiscount.mockResolvedValue({
+        discountAmount: 500,
+      });
+
+      const order = await service.checkout(
+        'cart-1',
+        'customer-1',
+        'address-1',
+        undefined,
+        'SALE10',
+      );
+
+      expect(order.subtotal).toBe(3000);
+      expect(order.discountAmount).toBe(500);
+      expect(order.totalAmount).toBe(2500);
+      expect(mockCouponService.validateCode).toHaveBeenCalledWith('SALE10', 3000);
+    });
+
+    it('should not call coupon service when no couponCode', async () => {
+      const mockCart = {
+        id: 'cart-1',
+        items: [{ productVariantId: 'variant-1', qty: 2, priceSnapshot: 1000 }],
+      };
+      mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        {
+          id: 'variant-1',
+          sku: 'SKU-001',
+          name: 'Size L',
+          price: 1500,
+          productId: 'product-1',
+          product: { name: 'Tra Herbal' },
+        },
+      ]);
+      mockPrisma.customerAddress.findUnique.mockResolvedValue({
+        id: 'address-1',
+        customerId: 'customer-1',
+      });
+
+      const order = await service.checkout('cart-1', 'customer-1', 'address-1');
+      expect(order.discountAmount).toBe(0);
+      expect(mockCouponService.validateCode).not.toHaveBeenCalled();
     });
   });
 
@@ -366,7 +448,7 @@ describe('OrderService', () => {
       const result = await service.updateStatus('order-1', OrderStatus.CONFIRMED, 'admin-1', 'Duyệt đơn');
 
       expect(result.status).toBe(OrderStatus.CONFIRMED);
-      expect(eventEmitter.emit).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).toHaveBeenCalledWith('order.confirmed', { orderId: 'order-1' });
     });
 
     it('should emit order.cancelled when transitioning to CANCELLED', async () => {

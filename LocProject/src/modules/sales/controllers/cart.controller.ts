@@ -12,7 +12,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard, OptionalJwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { Public } from '../../core/decorators/public.decorator';
 import { CartService } from '../services/cart.service';
@@ -101,8 +101,13 @@ export class CartController {
      */
     @Post('checkout')
     @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Thanh toán giỏ hàng — tạo đơn hàng mới' })
+    @ApiResponse({ status: 201, description: 'Tạo đơn hàng thành công', schema: { example: { id: 'order-uuid', orderCode: 'LH-2026-000001', status: 'PENDING', paymentStatus: 'UNPAID', subtotal: 450000, shippingFee: 30000, totalAmount: 480000, customerId: 'customer-uuid', createdAt: '2026-08-07T00:00:00.000Z' } } })
+    @ApiResponse({ status: 401, description: 'Yêu cầu đăng nhập để thanh toán' })
     async checkout(
         @Body('addressId') addressId: string | undefined,
+        @Body('couponCode') couponCode: string | undefined,
         @Req() req: Request,
     ) {
         const customerId = await this.getCustomerId(req);
@@ -110,7 +115,7 @@ export class CartController {
             throw new UnauthorizedException('Yêu cầu đăng nhập để thanh toán');
         }
         const cart = await this.cartService.getOrCreateCart(customerId);
-        return this.orderService.checkout(cart.id, customerId, addressId);
+        return this.orderService.checkout(cart.id, customerId, addressId, undefined, couponCode);
     }
 
     /**

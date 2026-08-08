@@ -26,6 +26,7 @@ describe('AuthService', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    $transaction: jest.fn(),
   };
 
   function mockUser(overrides: Record<string, any> = {}) {
@@ -196,6 +197,16 @@ describe('AuthService', () => {
       const hash = await bcrypt.hash('correct_old', 10);
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
       mockPrismaService.user.update.mockResolvedValue(mockUser());
+      mockPrismaService.userSession.updateMany.mockResolvedValue({ count: 1 });
+
+      // changePassword chạy trong $transaction — mock tx trỏ về các method của mockPrismaService
+      mockPrismaService.$transaction.mockImplementation(async (cb: any) => {
+        const tx = {
+          user: mockPrismaService.user,
+          userSession: mockPrismaService.userSession,
+        };
+        return cb(tx);
+      });
 
       const result = await service.changePassword('user-1', { currentPassword: 'correct_old', newPassword: 'new12345' });
       expect(result).toEqual({ message: 'Đổi mật khẩu thành công' });
@@ -205,6 +216,27 @@ describe('AuthService', () => {
       expect(newHash).not.toBe(hash);
       const isMatch = await bcrypt.compare('new12345', newHash);
       expect(isMatch).toBe(true);
+
+      // Revoke tất cả session khác (trừ session đang đổi mật khẩu nếu có jti)
+      expect(mockPrismaService.userSession.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { isRevoked: true } }),
+      );
+    });
+
+    it('should revoke all other sessions but keep current jti', async () => {
+      const hash = await bcrypt.hash('correct_old', 10);
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ passwordHash: hash }));
+      mockPrismaService.userSession.updateMany.mockResolvedValue({ count: 1 });
+      mockPrismaService.$transaction.mockImplementation(async (cb: any) => {
+        return cb({ user: mockPrismaService.user, userSession: mockPrismaService.userSession });
+      });
+
+      await service.changePassword('user-1', { currentPassword: 'correct_old', newPassword: 'new12345' }, 'jti-current');
+
+      expect(mockPrismaService.userSession.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1', jti: { not: 'jti-current' }, isRevoked: false },
+        data: { isRevoked: true },
+      });
     });
   });
 

@@ -5,7 +5,7 @@ export class RegisterDto {
   email: string;
 
   @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
-  @MinLength(6, { message: 'Mật khẩu phải từ 6 ký tự trở lên' })
+  @MinLength(8, { message: 'Mật khẩu phải từ 8 ký tự trở lên' })
   password: string;
 
   @IsNotEmpty({ message: 'Họ tên không được để trống' })

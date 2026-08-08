@@ -1,4 +1,5 @@
 import { IsString, IsNumber, IsBoolean, IsOptional, IsDate, IsEnum } from 'class-validator';
+import { Type } from 'class-transformer';
 import { DiscountType } from '@prisma/client';
 
 export class CreateCouponDto {
@@ -19,9 +20,11 @@ export class CreateCouponDto {
     @IsOptional()
     usageLimit?: number;
 
+    @Type(() => Date)
     @IsDate()
     startDate: Date;
 
+    @Type(() => Date)
     @IsDate()
     endDate: Date;
 
@@ -51,10 +54,12 @@ export class UpdateCouponDto {
     @IsOptional()
     usageLimit?: number;
 
+    @Type(() => Date)
     @IsDate()
     @IsOptional()
     startDate?: Date;
 
+    @Type(() => Date)
     @IsDate()
     @IsOptional()
     endDate?: Date;

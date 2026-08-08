@@ -185,6 +185,8 @@ export class VNPayService {
         qty: item.qty,
       }));
       this.eventEmitter.emit('payment.confirmed', new PaymentConfirmedEvent(orderId, eventItems));
+      // Đơn đã được xác nhận thanh toán — báo cho shipping chuẩn bị vận đơn
+      this.eventEmitter.emit('order.confirmed', { orderId });
     }
 
     return { RspCode: '00', Message: 'Confirm success' };

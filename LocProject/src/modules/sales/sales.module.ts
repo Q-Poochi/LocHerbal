@@ -5,6 +5,7 @@ import { VNPayService } from './services/vnpay.service';
 import { AddressService } from './services/address.service';
 import { WishlistService } from './services/wishlist.service';
 import { AdminCustomerService } from './services/admin-customer.service';
+import { MarketingModule } from '../marketing/marketing.module';
 import { PaymentController } from './controllers/payment.controller';
 import { CartController } from './controllers/cart.controller';
 import { OrderController } from './controllers/order.controller';
@@ -16,6 +17,7 @@ import { WishlistController } from './controllers/wishlist.controller';
 import { InventoryAllocationFailedListener } from './listeners/inventory-allocation-failed.listener';
 
 @Module({
+  imports: [MarketingModule],
   providers: [
     CartService,
     OrderService,

@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ConfigModule } from '@nestjs/config';
+import { validate } from './shared/config/env.validation';
 import { CoreModule } from './modules/core/core.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { SalesModule } from './modules/sales/sales.module';
@@ -16,6 +18,10 @@ import { AuditService } from './shared/services/audit.service';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,
+    }),
     PrismaModule,
     EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: Number(process.env.THROTTLE_LIMIT ?? 60) }]),
