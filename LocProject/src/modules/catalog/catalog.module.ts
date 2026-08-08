@@ -7,7 +7,8 @@ import { CategoryController } from './controllers/category.controller';
 import { ProductController } from './controllers/product.controller';
 import { UploadController } from './controllers/upload.controller';
 import { ReviewController } from './controllers/review.controller';
-import * as redisStore from 'cache-manager-redis-yet';
+import KeyvRedis from '@keyv/redis';
+import Keyv from 'keyv';
 
 @Module({
   controllers: [CategoryController, ProductController, UploadController, ReviewController],
@@ -15,10 +16,13 @@ import * as redisStore from 'cache-manager-redis-yet';
   exports: [ProductService, CategoryService],
   imports: [
     CacheModule.register({
-      store: redisStore,
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      ttl: 3600,
+      stores: [new Keyv(new KeyvRedis({
+        socket: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        },
+      }))],
+      ttl: 3_600_000,
     }),
   ],
 })

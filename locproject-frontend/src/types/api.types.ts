@@ -40,18 +40,18 @@ export interface ProductDetail {
   slug: string;
   description: string;
   ingredients: string;
-  dosage: string;
-  contraindications: string;
+  dosage?: string;
+  contraindications?: string;
+  usageTips?: string;
   thumbnailUrl?: string;
   images: { url: string; alt: string }[];
   category: { id: string; name: string; slug: string };
   variants: ProductVariant[];
-  rating: number;
-  reviewCount: number;
-  soldCount: number;
+  rating?: number;
+  reviewCount?: number;
+  soldCount?: number;
   specifications?: { label: string; value: string }[];
   benefits?: string[];
-  usageTips: string;
 }
 
 export interface ProductReview {

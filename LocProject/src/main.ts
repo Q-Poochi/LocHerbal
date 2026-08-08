@@ -38,18 +38,33 @@ async function bootstrap() {
     next();
   });
 
-  // CSRF: double-submit cookie pattern
+  // CSRF: double-submit cookie pattern (fail-closed cho browser, thân thiện cho API client)
   app.use((req: Request, res: Response, next: NextFunction) => {
     const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
     if (safeMethods.includes(req.method)) return next();
+
+    // Bỏ qua CSRF cho request same-origin (browser gửi Sec-Fetch-Site: same-origin/none).
+    // Same-origin request không phải vector CSRF → cho phép Swagger UI (/api/docs) dùng được.
+    const secFetchSite = req.headers['sec-fetch-site'] as string | undefined;
+    if (secFetchSite === 'same-origin' || secFetchSite === 'none') return next();
+
     const csrfCookie = req.cookies?.['csrf_token'];
-    // Nếu chưa có cookie (request đầu tiên, vừa được tạo ở middleware trên) → cho qua
-    if (!csrfCookie) return next();
     const csrfHeader = req.headers?.['x-csrf-token'] as string;
-    if (!csrfHeader || csrfCookie !== csrfHeader) {
+    const match = csrfCookie && csrfHeader && csrfCookie === csrfHeader;
+    if (match) return next();
+
+    // Request có "dấu hiệu trình duyệt" (Sec-Fetch-Site / Origin) HOẶC có sẵn CSRF cookie
+    // → phải khớp double-submit, nếu không thì TỪ CHỐI (fail-closed).
+    // Che được cả vector: browser cross-site (form/JS của trang khác) sẽ gửi
+    // Sec-Fetch-Site: cross-site nhưng KHÔNG kèm cookie (SameSite=Strict) → chặn.
+    const browserLike = !!secFetchSite || !!req.headers['origin'];
+    if (browserLike || csrfCookie) {
       res.status(403).json({ statusCode: 403, message: 'CSRF token không hợp lệ', error: 'Forbidden' });
       return;
     }
+
+    // Client không cookie, không dấu browser (curl, k6, server-to-server, mobile app)
+    // → không có ambient session để bị CSRF, cho qua.
     next();
   });
 
@@ -66,8 +81,11 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  // Chỉ bật Swagger UI/docs khi KHÔNG chạy production — không lộ schema/struct hệ thống ra ngoài.
+  if (process.env.NODE_ENV !== 'production') {
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   // Global exception filter — handles Prisma errors, unified response format
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -83,4 +101,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 4000);
 }
+
 bootstrap();

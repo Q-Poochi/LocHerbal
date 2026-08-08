@@ -5,6 +5,7 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 import { CreateAttributeDefinitionDto } from '../dto/attribute.dto';
 import { PaginationDto, PaginatedResponse } from '../../../shared/dto/pagination.dto';
+import { clearCacheByPrefix } from '../../../shared/cache/cache.util';
 
 @Injectable()
 export class CategoryService {
@@ -12,6 +13,36 @@ export class CategoryService {
     private readonly prisma: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: any,
   ) { }
+
+  private readonly inflight = new Map<string, Promise<any>>();
+
+  private async singleFlightCache(cacheKey: string, ttlMs: number, loader: () => Promise<any>): Promise<any> {
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const existing = this.inflight.get(cacheKey);
+    if (existing) {
+      return existing;
+    }
+    const p = (async () => {
+      const result = await loader();
+      try {
+        await this.cacheManager.set(cacheKey, result, ttlMs);
+      } catch {
+        // cache write failure must not break the response
+      }
+      return result;
+    })();
+    this.inflight.set(cacheKey, p);
+    try {
+      return await p;
+    } finally {
+      if (this.inflight.get(cacheKey) === p) {
+        this.inflight.delete(cacheKey);
+      }
+    }
+  }
 
   async create(dto: CreateCategoryDto) {
     const existing = await this.prisma.category.findUnique({ where: { slug: dto.slug } });
@@ -42,26 +73,21 @@ export class CategoryService {
     const limit = pagination?.limit || 20;
 
     const cacheKey = `catalog:categories:page=${page}:limit=${limit}`;
-    const cached = await this.cacheManager.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
+    return this.singleFlightCache(cacheKey, 3_600_000, async () => {
+      const [data, total] = await Promise.all([
+        this.prisma.category.findMany({
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            children: true,
+            attributes: true,
+          },
+        }),
+        this.prisma.category.count(),
+      ]);
 
-    const [data, total] = await Promise.all([
-      this.prisma.category.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-        include: {
-          children: true,
-          attributes: true,
-        },
-      }),
-      this.prisma.category.count(),
-    ]);
-
-    const result = { data, total, page, limit, totalPages: Math.ceil(total / limit) };
-    await this.cacheManager.set(cacheKey, result, { ttl: 3600 });
-    return result;
+      return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+    });
   }
 
   async findOne(id: string) {
@@ -107,13 +133,21 @@ export class CategoryService {
       data: dto,
     });
 
-    await this.cacheManager.del('catalog:categories');
+    await this.clearCategoryListCache();
   }
 
   async remove(id: string) {
     await this.findOne(id);
     await this.prisma.category.delete({ where: { id } });
-    await this.cacheManager.del('catalog:categories');
+    await this.clearCategoryListCache();
+  }
+
+  private async clearCategoryListCache() {
+    try {
+      await clearCacheByPrefix(this.cacheManager, 'catalog:categories:');
+    } catch {
+      // cache invalidation failure must not break the write path
+    }
   }
 
   // --- QUẢN LÝ THUỘC TÍNH ĐỘNG (Attribute Definitions) ---

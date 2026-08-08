@@ -3,13 +3,45 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto, UpsertProductAttributeValueDto } from '../dto/product.dto';
+import { clearCacheByPrefix } from '../../../shared/cache/cache.util';
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: any,
-  ) { }
+  ) {
+  }
+
+  private readonly inflight = new Map<string, Promise<any>>();
+
+  private async singleFlightCache<T>(cacheKey: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
+    const cached = await this.cacheManager.get(cacheKey);
+    if (cached) {
+      return cached as T;
+    }
+    const existing = this.inflight.get(cacheKey);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+    const p = (async () => {
+      const result = await loader();
+      try {
+        await this.cacheManager.set(cacheKey, result, ttlMs);
+      } catch {
+        // cache write failure must not break the response
+      }
+      return result;
+    })();
+    this.inflight.set(cacheKey, p);
+    try {
+      return await p;
+    } finally {
+      if (this.inflight.get(cacheKey) === p) {
+        this.inflight.delete(cacheKey);
+      }
+    }
+  }
 
   async create(dto: CreateProductDto) {
     const existing = await this.prisma.product.findUnique({ where: { slug: dto.slug } });
@@ -109,13 +141,9 @@ export class ProductService {
       search,
     })}`;
 
-    const cached = await this.cacheManager.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    // Build where clause for filtering
-    const where: any = {
+    return this.singleFlightCache(cacheKey, 900_000, async () => {
+      // Build where clause for filtering
+      const where: any = {
       isPublished: true,
     };
 
@@ -193,18 +221,25 @@ export class ProductService {
 
     const totalCount = await this.prisma.product.count({ where });
 
-    const result = {
-      data: products,
-      totalCount,
-      totalPages: Math.ceil(totalCount / limit),
-      page,
-      limit,
-    };
-    await this.cacheManager.set(cacheKey, result, { ttl: 900 });
-    return result;
+      return {
+        data: products,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        page,
+        limit,
+      };
+    });
   }
 
-  private transformProductDetail(product: any) {
+  private async getSoldCount(productId: string): Promise<number> {
+    const agg = await this.prisma.orderItem.aggregate({
+      _sum: { qty: true },
+      where: { variant: { productId } },
+    });
+    return agg._sum.qty || 0;
+  }
+
+  private transformProductDetail(product: any, soldCount: number) {
     // Transform variants to include stock from StockItem
     const variantsWithStock = (product.variants || []).map((variant: any) => ({
       ...variant,
@@ -217,54 +252,62 @@ export class ProductService {
       value: av.value,
     }));
 
-    // For now, use description as benefits (split by period or return empty)
+    // Benefits derived trực tiếp từ description — không bịa
     const benefits = product.description ?
       product.description.split('. ').filter((s: string) => s.length > 0).slice(0, 4) :
       [];
 
-    return {
+    // Rating/reviewCount tính từ reviews thật
+    const reviews: Array<{ rating: number }> = product.reviews || [];
+    const reviewCount = reviews.length;
+    const rating = reviewCount > 0
+      ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount) * 10) / 10
+      : 0;
+
+    const detail: any = {
       ...product,
       variants: variantsWithStock,
       ingredients: product.description || '',
-      dosage: 'Theo hướng dẫn của bác sĩ hoặc trên bao bì sản phẩm',
-      contraindications: 'Không dùng cho người dưới 18 tuổi, phụ nữ có thai hoặc cho con nhiễm',
-      rating: 4.5,
-      reviewCount: 0,
-      soldCount: 0,
       specifications,
       benefits,
-      usageTips: 'Sử dụng theo liều lượng và thời gian được khuyến cáo trên bao bì sản phẩm.',
     };
+
+    // Chỉ đính kèm dữ liệu đánh giá khi có dữ liệu THẬT — không có review/đơn hàng thì ẩn field đi.
+    if (reviewCount > 0) {
+      detail.rating = rating;
+      detail.reviewCount = reviewCount;
+    }
+    if (soldCount > 0) {
+      detail.soldCount = soldCount;
+    }
+    return detail;
   }
 
   async findBySlug(slug: string) {
     const detailCacheKey = `catalog:product:${slug}`;
-    const cached = await this.cacheManager.get(detailCacheKey);
-    if (cached) {
-      return cached;
-    }
-
-    const product = await this.prisma.product.findUnique({
-      where: { slug },
-      include: {
-        category: true,
-        variants: {
-          include: {
-            stockItems: true,
+    return this.singleFlightCache(detailCacheKey, 900_000, async () => {
+      const product = await this.prisma.product.findUnique({
+        where: { slug },
+        include: {
+          category: true,
+          variants: {
+            include: {
+              stockItems: true,
+            },
           },
-        },
-        images: true,
-        attributeValues: {
-          include: {
-            attribute: true,
+          images: true,
+          attributeValues: {
+            include: {
+              attribute: true,
+            },
           },
+          reviews: { select: { rating: true } },
         },
-      },
+      });
+      if (!product) throw new NotFoundException('Không tìm thấy sản phẩm');
+      const soldCount = await this.getSoldCount(product.id);
+      return this.transformProductDetail(product, soldCount);
     });
-    if (!product) throw new NotFoundException('Không tìm thấy sản phẩm');
-    const result = this.transformProductDetail(product);
-    await this.cacheManager.set(detailCacheKey, result, { ttl: 900 });
-    return result;
   }
 
   async findOne(id: string) {
@@ -283,13 +326,15 @@ export class ProductService {
             attribute: true,
           },
         },
+        reviews: { select: { rating: true } },
       },
     });
 
     if (!product) {
       throw new NotFoundException('Không tìm thấy sản phẩm');
     }
-    return this.transformProductDetail(product);
+    const soldCount = await this.getSoldCount(product.id);
+    return this.transformProductDetail(product, soldCount);
   }
 
   async update(id: string, dto: UpdateProductDto) {
@@ -334,9 +379,10 @@ export class ProductService {
   }
 
   private async clearProductListCache() {
-    const listKeys = await this.cacheManager.store.keys('catalog:products:*');
-    for (const key of listKeys) {
-      await this.cacheManager.del(key);
+    try {
+      await clearCacheByPrefix(this.cacheManager, 'catalog:products:');
+    } catch {
+      // cache invalidation failure must not break the write path
     }
   }
 

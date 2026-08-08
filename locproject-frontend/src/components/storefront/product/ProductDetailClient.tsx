@@ -42,22 +42,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 </div>
             </div>
 
-            {/* Ingredients / Dosage / Contraindications (static) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-outline-variant/50 rounded-xl bg-surface-white">
+            {/* Ingredients — Liều dùng/Chống chỉ định đang ẨN chờ nội dung y tế đã kiểm chứng của chủ sản phẩm */}
+            <div className="grid grid-cols-1 gap-4 p-4 border border-outline-variant/50 rounded-xl bg-surface-white">
                 <div className="space-y-1">
                     <p className="text-caption text-outline uppercase tracking-wider">Thành phần chính</p>
                     <p className="font-body-md font-medium text-primary">{product.ingredients}</p>
                 </div>
-                <div className="space-y-1">
-                    <p className="text-caption text-outline uppercase tracking-wider">Liều dùng</p>
-                    <p className="font-body-md font-medium text-primary">{product.dosage}</p>
-                </div>
-                {product.contraindications && (
-                    <div className="col-span-full pt-2 border-t border-outline-variant/30">
-                        <p className="text-caption text-error uppercase tracking-wider">Chống chỉ định</p>
-                        <p className="text-body-sm text-on-surface-variant">{product.contraindications}</p>
-                    </div>
-                )}
             </div>
 
             {/* Quantity + Add to Cart */}

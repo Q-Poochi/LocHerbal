@@ -16,7 +16,7 @@ export default function ProductTabs({ product }: ProductTabsProps) {
         { id: 'description', label: 'Mô tả sản phẩm' },
         { id: 'details', label: 'Thông tin chi tiết' },
         { id: 'usage', label: 'Hướng dẫn sử dụng' },
-        { id: 'reviews', label: `Đánh giá (${product.reviewCount})` },
+        { id: 'reviews', label: product.reviewCount != null && product.reviewCount > 0 ? `Đánh giá (${product.reviewCount})` : 'Đánh giá' },
     ];
 
     return (

@@ -29,21 +29,33 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 <h1 data-testid="product-detail-name" className="font-headline-lg text-headline-lg text-primary font-bold mb-2">
                     {product.name}
                 </h1>
-                <div className="flex items-center gap-4 text-body-sm">
-                    <div className="flex items-center gap-1 text-secondary">
-                        <div className="flex">
-                            {[1, 2, 3, 4].map((star) => (
-                                <span key={star} className="material-symbols-outlined filled-icon text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                            ))}
-                            <span className="material-symbols-outlined text-[18px]">star_half</span>
+                {/* Rating/Đã bán — chỉ hiển thị khi có dữ liệu thật từ Review/OrderItem */}
+                {product.reviewCount != null && product.reviewCount > 0 && (
+                    <div className="flex items-center gap-4 text-body-sm">
+                        <div className="flex items-center gap-1 text-secondary">
+                            <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <span
+                                        key={star}
+                                        className={`material-symbols-outlined text-[18px] ${star <= Math.round(product.rating ?? 0) ? 'filled-icon' : ''}`}
+                                        style={star <= Math.round(product.rating ?? 0) ? { fontVariationSettings: "'FILL' 1" } : { color: '#d1d5db' }}
+                                    >
+                                        star
+                                    </span>
+                                ))}
+                            </div>
+                            <span className="font-bold">{product.rating}</span>
                         </div>
-                        <span className="font-bold">{product.rating}</span>
+                        <span className="text-outline">|</span>
+                        <span className="text-outline">{product.reviewCount} đánh giá</span>
+                        {product.soldCount != null && product.soldCount > 0 && (
+                            <>
+                                <span className="text-outline">|</span>
+                                <span className="text-outline">Đã bán {product.soldCount}</span>
+                            </>
+                        )}
                     </div>
-                    <span className="text-outline">|</span>
-                    <span className="text-outline">{product.reviewCount} đánh giá</span>
-                    <span className="text-outline">|</span>
-                    <span className="text-outline">Đã bán {product.soldCount}</span>
-                </div>
+                )}
             </div>
 
             {/* Price Box */}
