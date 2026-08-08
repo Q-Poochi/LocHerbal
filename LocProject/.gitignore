@@ -21,7 +21,20 @@ Thumbs.db
 .DS_Store
 
 # Prisma
-prisma/migrations/**/migration_lock.toml
+migrations/**/migration_lock.toml
+
+# Runtime logs & artifacts (không commit)
+*.log
+cookies.txt
+dev.err
+
+# Prisma compiled seed artifacts (sinh ra từ ts-node)
+prisma/*.js
+prisma/*.js.map
+prisma/*.d.ts
+
+# User-uploaded files
+uploads/
 
 # Coverage
 coverage/
