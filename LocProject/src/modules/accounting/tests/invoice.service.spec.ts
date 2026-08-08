@@ -19,6 +19,7 @@ describe('InvoiceService', () => {
     };
 
     beforeEach(async () => {
+        jest.clearAllMocks();
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 InvoiceService,
@@ -101,6 +102,53 @@ describe('InvoiceService', () => {
 
         const result = await service.createFromOrder('order-1');
         expect(result.invoiceNumber).toMatch(/^INV-\d{8}-\d{4}$/);
+    });
+
+    it('should retry when invoice_number collides (P2002 race) and succeed on recount', async () => {
+        const order = { id: 'order-1', totalAmount: 100000 };
+        mockPrisma.order.findUnique.mockResolvedValue(order);
+        mockPrisma.invoice.findUnique.mockResolvedValue(null);
+
+        // Lần 1: đếm = 5 → số 0006 → P2002 trùng (race). Lần 2: đếm = 6 → số 0007 → thành công
+        mockPrisma.invoice.count
+            .mockResolvedValueOnce(5)
+            .mockResolvedValueOnce(6);
+
+        const p2002Error = Object.assign(new Error('Unique constraint failed'), {
+            code: 'P2002',
+            meta: { target: ['invoice_number'] },
+        });
+        const createdInvoice = {
+            id: 'inv-1',
+            orderId: 'order-1',
+            invoiceNumber: 'INV-20240101-0007',
+            totalAmount: 100000,
+            taxAmount: 0,
+        };
+        mockPrisma.invoice.create
+            .mockRejectedValueOnce(p2002Error)
+            .mockResolvedValueOnce(createdInvoice);
+
+        const result = await service.createFromOrder('order-1');
+        expect(result.invoiceNumber).toBe('INV-20240101-0007');
+        expect(prisma.invoice.count).toHaveBeenCalledTimes(2);
+        expect(prisma.invoice.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not retry on unrelated P2002 and rethrow', async () => {
+        const order = { id: 'order-1', totalAmount: 100000 };
+        mockPrisma.order.findUnique.mockResolvedValue(order);
+        mockPrisma.invoice.findUnique.mockResolvedValue(null);
+        mockPrisma.invoice.count.mockResolvedValue(0);
+        const p2002Error = Object.assign(new Error('Unique constraint failed'), {
+            code: 'P2002',
+            meta: { target: ['order_id'] },
+        });
+        mockPrisma.invoice.create.mockRejectedValue(p2002Error);
+
+        await expect(service.createFromOrder('order-1')).rejects.toBe(p2002Error);
+        expect(prisma.invoice.count).toHaveBeenCalledTimes(1);
+        expect(prisma.invoice.create).toHaveBeenCalledTimes(1);
     });
 
     it('should return paginated invoices', async () => {

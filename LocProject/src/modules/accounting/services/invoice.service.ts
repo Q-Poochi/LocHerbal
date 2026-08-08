@@ -5,6 +5,12 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 export class InvoiceService {
     constructor(private readonly prisma: PrismaService) { }
 
+    /**
+     * Tạo hóa đơn từ đơn hàng khi thanh toán được xác nhận.
+     * Race condition: nhiều đơn PAID cùng lúc → cùng đếm `invoice.count` +1 →
+     * trùng invoice_number (P2002). Fix: retry có giới hạn — khi bắt được P2002
+     * do invoice_number, đếm lại (count đã bao gồm invoice vừa commit) rồi tạo lại.
+     */
     async createFromOrder(orderId: string) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
@@ -22,29 +28,45 @@ export class InvoiceService {
 
         const today = new Date();
         const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-        const countToday = await this.prisma.invoice.count({
-            where: {
-                issuedAt: {
-                    gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        const MAX_RETRIES = 5;
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            const countToday = await this.prisma.invoice.count({
+                where: {
+                    issuedAt: { gte: startOfDay },
                 },
-            },
-        });
-        const sequence = String(countToday + 1).padStart(4, '0');
-        const invoiceNumber = `INV-${dateStr}-${sequence}`;
+            });
+            const sequence = String(countToday + 1).padStart(4, '0');
+            const invoiceNumber = `INV-${dateStr}-${sequence}`;
 
-        const invoice = await this.prisma.invoice.create({
-            data: {
-                orderId,
-                invoiceNumber,
-                totalAmount: order.totalAmount,
-                taxAmount: 0,
-            },
-            include: {
-                order: true,
-            },
-        });
+            try {
+                return await this.prisma.invoice.create({
+                    data: {
+                        orderId,
+                        invoiceNumber,
+                        totalAmount: order.totalAmount,
+                        taxAmount: 0,
+                    },
+                    include: {
+                        order: true,
+                    },
+                });
+            } catch (error: any) {
+                const isNumberCollision =
+                    error?.code === 'P2002' &&
+                    Array.isArray(error?.meta?.target) &&
+                    error.meta.target.includes('invoice_number');
+                if (isNumberCollision && attempt < MAX_RETRIES) {
+                    // invoice_number trùng do race → đếm lại và thử lại
+                    continue;
+                }
+                throw error;
+            }
+        }
 
-        return invoice;
+        // Không thể tới đây nhưng cần để TypeScript thỏa mãn return path
+        throw new BadRequestException('Không thể sinh số hóa đơn, thử lại sau');
     }
 
     async findByOrderId(orderId: string) {
