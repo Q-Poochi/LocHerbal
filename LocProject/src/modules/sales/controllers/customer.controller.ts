@@ -1,9 +1,12 @@
 import { Controller, Post, Body, Req, Get, Param, Patch, Delete, UseGuards, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateCustomerAddressDto } from '../dto/customer.dto';
 
+@ApiTags('Customer Profile')
+@ApiBearerAuth()
 @Controller('customers')
 export class CustomerController {
     constructor(private readonly prisma: PrismaService) { }
@@ -14,6 +17,7 @@ export class CustomerController {
      */
     @Post('addresses')
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Tạo địa chỉ giao hàng mới' })
     async createAddress(@Body() dto: CreateCustomerAddressDto, @Req() req: Request) {
         const userId = (req as any).user?.userId;
         if (!userId) {
@@ -59,6 +63,7 @@ export class CustomerController {
      */
     @Get('addresses')
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Danh sách địa chỉ của khách hàng hiện tại' })
     async listAddresses(@Req() req: Request) {
         const userId = (req as any).user?.userId;
         if (!userId) {
@@ -85,6 +90,7 @@ export class CustomerController {
      */
     @Patch('addresses/:id')
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Cập nhật địa chỉ giao hàng' })
     async updateAddress(@Param('id') id: string, @Body() dto: CreateCustomerAddressDto, @Req() req: Request) {
         const userId = (req as any).user?.userId;
         if (!userId) {
@@ -135,6 +141,7 @@ export class CustomerController {
      */
     @Delete('addresses/:id')
     @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Xoá địa chỉ giao hàng' })
     async deleteAddress(@Param('id') id: string, @Req() req: Request) {
         const userId = (req as any).user?.userId;
         if (!userId) {

@@ -1,10 +1,12 @@
 import { Controller, Get, Query, Req, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Request } from 'express';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { VNPayService } from '../services/vnpay.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { Public } from '../../core/decorators/public.decorator';
 import { OrderStatus } from '@prisma/client';
 
+@ApiTags('Payment')
 @Controller('payment')
 export class PaymentController {
   constructor(
@@ -31,6 +33,7 @@ export class PaymentController {
    * để chống giả mạo số tiền thanh toán.
    */
   @Get('vnpay-url')
+  @ApiOperation({ summary: 'Tạo URL thanh toán VNPay cho đơn hàng' })
   async getPaymentUrl(
     @Query('orderId') orderId: string,
     @Req() req: Request,
@@ -65,12 +68,14 @@ export class PaymentController {
 
   @Public()
   @Get('vnpay-ipn')
+  @ApiOperation({ summary: 'VNPay IPN (callback từ VNPay, không cần auth)' })
   async handleIpn(@Query() query: Record<string, any>) {
     return this.vnpayService.verifyIpn(query);
   }
 
   @Public()
   @Get('vnpay-return')
+  @ApiOperation({ summary: 'VNPay return URL (chuyển hướng sau khi thanh toán)' })
   async handleReturn(@Query() query: Record<string, any>) {
     return this.vnpayService.verifyReturn(query);
   }

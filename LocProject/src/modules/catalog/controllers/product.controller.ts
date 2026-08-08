@@ -27,6 +27,7 @@ export class ProductController {
   @Public()
   @Get()
   @ApiOperation({ summary: 'Danh sách sản phẩm (có phân trang, lọc)' })
+  @ApiResponse({ status: 200, description: 'Danh sách sản phẩm phân trang', schema: { example: { data: [{ id: 'product-uuid', name: 'Cỏ Thoái Vương', slug: 'cot-thoai-vuong', price: 290000, salePrice: 250000, imageUrl: 'http://localhost:4000/uploads/products/xxx.png', categoryId: 'cat-uuid' }], total: 12, page: 1, limit: 12, totalPages: 1 } } })
   findAll(
     @Query('categoryId') categoryId?: string,
     @Query('minPrice') minPrice?: string,
@@ -62,6 +63,8 @@ export class ProductController {
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cập nhật sản phẩm (admin)' })
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productService.update(id, dto);
   }
@@ -69,6 +72,8 @@ export class ProductController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Xoá sản phẩm (admin)' })
   remove(@Param('id') id: string) {
     return this.productService.remove(id);
   }
@@ -143,6 +148,8 @@ export class ProductController {
   @Post(':id/attributes')
   @UseGuards(RolesGuard)
   @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cập nhật giá trị thuộc tính sản phẩm (EAV, admin)' })
   upsertAttributeValue(@Param('id') id: string, @Body() dto: UpsertProductAttributeValueDto) {
     return this.productService.upsertAttributeValue(id, dto);
   }
@@ -150,6 +157,8 @@ export class ProductController {
   @Delete(':id/attributes/:attributeId')
   @UseGuards(RolesGuard)
   @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Xoá giá trị thuộc tính sản phẩm (admin)' })
   removeAttributeValue(@Param('id') id: string, @Param('attributeId') attributeId: string) {
     return this.productService.removeAttributeValue(id, attributeId);
   }
