@@ -317,6 +317,7 @@ src/components/admin/products/
 | 5 | POST /customers/addresses chưa có endpoint | ✅ Đã giải quyết | GET/POST /customers/addresses, PATCH /customers/addresses/:id/default, DELETE /customers/addresses/:id |
 | 6 | **Auth rate limiting + bcrypt optimization** — bcrypt cost=10 block event loop ở 50 concurrent → p(95)=6.4s | **Cao** | Trước launch production |
 | 7 | **Stock allocation Redis Lua Script** — PostgreSQL serialize concurrent UPDATE cùng variant | **Cao** | Trước launch production |
+| 8 | **Node.js cluster mode KHÔNG load-balance trên Windows** — đã thử (4 workers) trên máy dev Windows, `cluster` funnel toàn bộ request về 1 worker duy nhất (mọi worker khác CPU = 0), giới hạn thông lượng ~1 core. Đã REVERT về single-process. Nếu muốn scale multi-core thật → đánh giá lại trên **staging Linux thật** và dùng PM2 cluster / Docker Swarm / K8s (load-balance đã kiểm chứng) thay vì tự quản `cluster` module. | Trung bình | Khi traffic tăng cao, trên staging Linux |
  
  ---
  
@@ -378,3 +379,44 @@ localStorage. Vi phạm quyết định gốc (in-memory only) vì localStorage 
 
 **File liên quan:** `src/lib/store/auth.store.ts` (persist + partialize), `src/lib/providers/auth-bootstrap.tsx`,
 `src/app/layout.tsx` (mount AuthBootstrap), `src/app/(storefront)/login/page.tsx` (setAuth).
+
+---
+
+## 14. k6 Load Test — Baseline CUỐI 07/08/2026 (single-process, đã revert cluster)
+
+**Môi trường đo:** máy dev Windows, **4 logical CPUs**, load nền ~43-70% CPU
+(docker: postgres primary+replica, pgbouncer, redis, minio). Backend **single-process**
+(`src/main.ts` đã bỏ `cluster`), Redis cache thật + single-flight GIỮ NGUYÊN,
+throttle relax (THROTTLE_LIMIT/AUTH_THROTTLE_LIMIT=200000) để đo latency thật.
+`.env` không set throttle → production giữ default code (login=5, register=3, global=60).
+
+| Scenario | Metric | Threshold | Actual | Trạng thái |
+|---|---|---|---|---|
+| 01-catalog-load (solo, 500 VUs) | categories p95 | <300ms | 1,829ms | ❌ (0% lỗi) |
+| 01-catalog-load (solo) | products_list p95 | <300ms | 1,451ms | ❌ (0% lỗi) |
+| 01-catalog-load (solo) | product_detail p95 | <300ms | 1,597ms | ❌ (0% lỗi) |
+| 02-checkout-stress (solo, 100 VUs) | add_to_cart p95 | <3500ms | **1,772ms** | ✅ |
+| 03-auth-burst (solo, 50 VUs) | auth p95 | <7000ms | **4,901ms** | ✅ (0% lỗi) |
+| Q1 song song (01 500VU + 02 100VU) | catalog p95 | <300ms | 784ms (0% lỗi, 245 rps) | ❌ |
+| Q1 song song | **add_to_cart p95** | <3500ms | **3,219ms** | ✅ |
+
+**Kết luận kiến trúc — xác nhận REVERT cluster là đúng:**
+- **add_to_cart dưới tải hỗn hợp = 3,219ms (PASS)** — so với **9,758ms (FAIL)** khi chạy
+  chung cluster-concurrent. Cluster funnel 1 worker tạo contention nghiêm trọng; revert
+  về single-process bỏ hẳn vấn đề này.
+- Checkout (1,772ms) và auth (4,901ms) solo đều PASS, tốt hơn baseline 18/07
+  (2,797ms / 6,390ms) và tốt hơn cluster (auth 9,579ms).
+
+**Cảnh báo — catalog FAIL <300ms KHÔNG phải regression, là giới hạn môi trường:**
+- Cache nhanh khi tuần tự: categories 3–13ms, products 11ms, detail 4ms → Redis + single-flight OK.
+- Dưới 500 VUs, single-process **bão hòa 1 core** (~245–650 rps, backend ~72% core) → p95
+  trôi lên vài giây. Máy 4-core + tải nền cao làm giới hạn này hiện rõ.
+- Threshold 13.4ms (18/07) ghi trước đây không tái lập được ở môi trường hiện tại
+  (payload nặng hơn: categories kèm children+attributes, products 13.7KB).
+
+**Thay đổi code đã thực hiện:** `src/main.ts` revert về single-process bootstrap,
+xóa `cluster` import + biến `WORKERS` (`.env`/docker-compose không có reference).
+`catalog.module.ts`, `product.service.ts`, `category.service.ts`, `docker-compose.yml`
+**(PgBouncer pool=50) giữ nguyên không đổi.**
+
+**File baseline scenarios:** `k6/scenarios/01-catalog-load.js`, `02-checkout-stress.js`, `03-auth-burst.js`.

@@ -17,15 +17,18 @@
 
 | Module | Trạng thái | Ghi chú |
 |---|---|---|
-| Hạ tầng DB & Migration | ✅ Xong + có test | Postgres Primary/Replica + PgBouncer local. Bằng chứng: migration `20260713065626_first` tạo 42 bảng thành công, replication hoạt động (xác nhận qua `pg_stat_replication`). |
-| Core (Auth/RBAC) | ✅ Xong + có test | Đã triển khai Auth Controller, JWT, Refresh Token Rotation, Role Guards. Bằng chứng: migration `20260713111915_add_user_sessions`, 9/9 unit test pass (`auth.service.spec.ts`). |
-| Catalog | ✅ Xong + có test | CRUD Category/Product/Variant, thiết kế EAV chuẩn Vendure. Bằng chứng: 5/5 unit test pass (`product.service.spec.ts`) |
-| Sales | 🟨 Đang làm | CartService, OrderService, VNPayService. Bằng chứng: unit test 14/14 pass (`order.service.spec.ts`, `vnpay.service.spec.ts`), chờ test thật VNPay sandbox. |
-| Warehouse | ✅ Xong + có test | InventoryService: allocate/release/deduct atomic chống race condition. Bằng chứng: 9/9 unit test pass (`inventory.service.spec.ts`) |
-| Accounting | ⬜ Chưa bắt đầu | |
-| Marketing | ⬜ Chưa bắt đầu | |
-| Supplier | ⬜ Chưa bắt đầu | |
-| Shipping | ⬜ Chưa bắt đầu | |
+| Hạ tầng DB & Migration | ✅ Xong + có test | Postgres Primary/Replica + PgBouncer local. Migration `20260713065626_first` tạo 42 bảng, replication hoạt động. |
+| Core (Auth/RBAC) | ✅ Xong + có test | Auth Controller, JWT, Refresh Token Rotation, Role Guards. `auth.service.spec.ts` 12/12. |
+| Catalog | ✅ Xong + có test | CRUD Category/Product/Variant, EAV chuẩn Vendure. `product.service.spec.ts` 5/5. |
+| Sales | ✅ Xong + có test | Cart/Order/VNPay. `order` 20, `vnpay` 6, customer/admin 20 → 46 tests. Chờ test thật VNPay sandbox. |
+| Warehouse | ✅ Xong + có test | InventoryService atomic. `inventory.service.spec.ts` 2 + admin-warehouse 2 → 4. |
+| Accounting | ✅ Có + test | InvoiceService `8/8`; revenue report/controller chưa có test. |
+| Marketing | ✅ Có + test | Coupon 10, Banner 7, Blog 8 → 25. Coupon chưa nối vào checkout. |
+| Supplier | ✅ Có + test | Supplier 9 + PurchaseOrder 12 → 21. |
+| Shipping | ✅ Có + test | Carrier 8 + Shipment 15... `@Roles('ADMIN')` uppercase bug đã sửa. |
+| Admin (module 9) | ⚠️ Không có test | Dashboard có controller/service nhưng 0 spec. |
+
+Tổng: **18 suites / 136 unit tests** (toàn bộ unit test mock Prisma, chưa có e2e).
 
 Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / ⚠️ Có vấn đề cần xem lại
 
@@ -46,6 +49,16 @@ Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / 
 - **Redis Permission Cache**: Cần triển khai cơ chế cache quyền hạn vào Redis (key: `permissions:{userId}`, TTL 15 phút) tại các NestJS Guards để giảm tải truy vấn DB và tránh lỗi thời khi dùng JWT payload quá lớn.
 - **Test thật VNPay sandbox**: Chưa test thật VNPay sandbox — thực hiện sau khi có Storefront tối thiểu để đóng open item cuối cùng của Sales module.
 - **Compensating Saga Error Check**: Cơ chế compensating saga trong `order-created.listener.ts` đang dùng `error.message.includes()` để tìm `failedItemIndex` — dễ bị lỗi (fragile) khi format lỗi thay đổi. Cần refactor sang custom `InsufficientStockException` có chứa field `variantId` riêng sau khi hoàn thành các module còn lại.
+- **Rotate secrets (đang chờ chủ dự án)**: JWT_ACCESS/REFRESH_SECRET và VNPay HASH_SECRET/TMN_CODE trong `.env` là giá trị sandbox thật/guessable. Cần rotate bằng `openssl rand -hex 64` + đổi trong VNPay dashboard. `.env.example` đã bổ sung đầy đủ keys (08/08/2026).
+- **Saga fire-and-forget không bền**: `checkout` trả về trước khi `order.created→allocate` xong; `payment.confirmed→deduct` có thể chạy trước allocate → rò stock. Cần outbox/idempotency key. `shipment.delivered` chưa có listener → đơn không tự DELIVERED; `order.confirmed` không ai emit → `order-confirmed.listener.ts` chết.
+- **Coupon/Shipping chưa wire**: `order.service.ts` hardcode `discountAmount=0, shippingFee=0`; `coupon.service.ts` không được gọi từ checkout.
+- **Nhiều DTO thiếu validator**: e.g. `CreateCarrierDto` không có `@IsString()` → POST luôn 400 (whitelist+forbidNonWhitelisted). Cần bổ sung validator decorator.
+- **Revenue 2 nguồn khác nhau**: accounting (lọc 1000 invoices) vs dashboard (aggregate orders).
+- **Chưa có ConfigModule**: 28+ chỗ đọc `process.env` trực tiếp; env thiếu fail-silent.
+- **Controller làm business/Prisma trực tiếp** (product/order/accounting/customer...) — vi phạm layering.
+- **Test chưa phủ vùng rủi ro**: guards (jwt-auth/roles), CSRF middleware, inventory allocate/release/deduct, listeners saga — 0 test. Admin module 0 test. Chưa có e2e/CI.
+- **Đã sửa Đợt 1 (08/08/2026)**: `@Roles('ADMIN')`→`admin,staff`; IDOR shipment (ownership fail-closed); upload extension allowlist + ép đuôi theo MIME; bỏ fake product data (rating/soldCount/hardcode health text) → tính từ DB; cache category invalidation đúng key; `.gitignore` + untrack file rác (log/cookies/seed.js/migration_lock); **CSRF fail-closed** (request có dấu browser/Origin hoặc có csrf cookie mà không khớp x-csrf-token → 403; client trần không cookie được qua). Đã verify runtime bằng ma trận 6 case.
+- **Frontend phải gửi header `x-csrf-token`**: CSRF cookie `csrf_token` là `httpOnly:false` — frontend (localhost:3000, cross-origin same-site) phải đọc từ `document.cookie` và gửi kèm mọi POST/PATCH/DELETE, nếu không bị 403. Đây là hành vi từ trước nhưng giờ fail-closed chặt hơn.
 
 ## 6. Lịch sử quyết định quan trọng (ADR rút gọn)
 | Ngày | Quyết định | Lý do |
