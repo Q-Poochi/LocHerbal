@@ -24,15 +24,21 @@
 | Warehouse | ✅ Xong + có test | InventoryService atomic. `inventory.service.spec.ts` 2 + admin-warehouse 2 → 4. |
 | Accounting | ✅ Có + test | InvoiceService `8/8`; revenue report/controller chưa có test. |
 | Marketing | ✅ Có + test | Coupon 10, Banner 7, Blog 8 → 25. Coupon chưa nối vào checkout. |
+| Settings (module 10) | ✅ Xong + test | `CompanySettings` model + SettingsModule, GET /settings/company (public) + PATCH admin. Admin form + Footer live. |
+| Consultation (module 11) | ✅ Xong + test | `ConsultationLead` (preferredDate/preferredTime/confirmedAt) + LeadStatus thêm CONFIRMED/CANCELLED. Booking public theo giờ làm việc (T2-T6 08-17, T7 08-12, CN nghỉ), admin list + status flow. 13 test. |
 | Supplier | ✅ Có + test | Supplier 9 + PurchaseOrder 12 → 21. |
 | Shipping | ✅ Có + test | Carrier 8 + Shipment 15... `@Roles('ADMIN')` uppercase bug đã sửa. |
 | Admin (module 9) | ⚠️ Không có test | Dashboard có controller/service nhưng 0 spec. |
 
-Tổng: **18 suites / 136 unit tests** (toàn bộ unit test mock Prisma, chưa có e2e).
+Tổng: **22 suites / 188 unit tests** (toàn bộ unit test mock Prisma, chưa có e2e).
 
 Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / ⚠️ Có vấn đề cần xem lại
 
 ## 3. Việc đang làm dở (để phiên sau tiếp tục đúng chỗ)
+- **Hoàn tất 3 phase xây dựng tính năng mới (09/08/2026):**
+  - **Phase 1 — Marketing (commit `73518ac`)**: Admin CRUD Banner/Blog/Coupon (list + form + ImageUploader + ConfirmDialog), homepage wire public banners/blog/coupons. Fix: banner create nhận `isActive`, blog status lowercase + auto `publishedAt`.
+  - **Phase 2 — Settings (commit `0ed635c`)**: `CompanySettings` (default row `company-default`), GET /settings/company public, admin GET/PATCH, `/admin/settings` form, Footer live (hotline, address, email, workingHours), /ve-chung-toi + /lien-he client pages.
+  - **Phase 3 — Consultation booking (commit backend + frontend 09/08/2026)**: ConsultaLead → `preferredDate/preferredTime/confirmedAt`; LeadStatus + `CONFIRMED`/`CANCELLED`; migration `20260809110243_add_consultation_preferred_slot`; POST /consultations (public, validate giờ: T2-T6 08:00-17:00, T7 08:00-12:00, CN nghỉ, max 14 ngày), admin GET (filter status + pagination) + PATCH /:id/status (CONFIRMED/CONVERTED ghi confirmedAt). Frontend: storefront ConsultationForm (date picker 14 ngày, Sunday disabled, slot grid), Admin /admin/consultations (filter, tìm kiếm, chuyển trạng thái), sidebar VẬN HÀNH → Lịch tư vấn. Verified Playwright: booking UI + admin confirm flow.
 - Backend Core hoàn tất.
 - Storefront (Next.js): đang thực hiện Phase B — Convert HTML → React, từng file build pass mới chuyển tiếp.
   - File 1 (Design system / Tailwind config): ✅ Xong — đã xác minh 13/13 class đúng màu.
@@ -97,4 +103,28 @@ Ví dụ: `text-body-lg md:text-headline-md` cho tên sản phẩm ở sidebar.
 - `NEXT_PUBLIC_API_URL=http://localhost:4000`
 - Swagger docs: `http://localhost:4000/api/docs`
 
+### Consultation API (Phase 3, module mới)
+```
+GET   /consultations/slots?date=YYYY-MM-DD   ← @Public, khung giờ theo ngày (CN → [])
+POST  /consultations                        ← @Public, đặt lịch (fullName, phone, preferredDate, preferredTime, email?, note?, productId?)
+GET   /consultations?status=&page=&limit=   ← admin/staff, list + filter
+GET   /consultations/:id                    ← admin/staff
+PATCH /consultations/:id/status             ← admin/staff, body {status}; CONFIRMED/CONVERTED ghi confirmedAt
+PATCH /consultations/:id/assign             ← admin, body {assigneeId}
+```
+- Giờ làm việc: T2-T6 08:00→16:00 (slot giờ chẵn, 9 slot), T7 08:00→11:00 (4 slot), CN nghỉ. Max 14 ngày tới. Config: `src/modules/consultation/slot-config.ts`.
+
+### Settings API (Phase 2)
+```
+GET    /settings/company          ← Public, company info (name, hotline, email, address, workingHours, ...)
+GET    /settings/company/admin    ← admin/staff
+PATCH  /settings/company          ← admin, body {field: value}
+```
+- Auto-create default row `id=company-default` khi module init.
+
 **Verify:** curl POST `/auth/login` trả về `Set-Cookie: refresh_token=...; Path=/auth/refresh; HttpOnly; SameSite=Strict` ✅
+
+### Ghi chú vận hành Phase 3 (09/08/2026)
+- DB test có 2 lead demo: "Nguyen Van A" (CONFIRMED), "Nguyen Thi PW" (đã chuyển CONFIRMED khi verify UI) — có thể xóa khỏi `consultation_leads` khi cần dữ liệu sạch.
+- `LeadStatus` enum mới: `NEW | CONTACTED | CONFIRMED | CONVERTED | CANCELLED | CLOSED`.
+- Backend build sau khi sửa BE: `npx nest build` + restart process port 4000. `prisma generate` dễ EPERM nếu backend đang chạy — dừng trước khi generate/migrate.
