@@ -3,6 +3,7 @@
 import Navbar from '../../components/storefront/layout/Navbar';
 import Footer from '../../components/storefront/layout/Footer';
 import HeroBanner from '../../components/storefront/home/HeroBanner';
+import BannerCarousel from '../../components/storefront/home/BannerCarousel';
 import TrustBar from '../../components/storefront/home/TrustBar';
 import CategoryGrid from '../../components/storefront/home/CategoryGrid';
 import FeaturedProducts from '../../components/storefront/home/FeaturedProducts';
@@ -38,7 +39,8 @@ export default function HomePage() {
     <>
       <Navbar />
       <main className="pb-16 md:pb-0">
-        <HeroBanner banners={heroBanners} />
+        <HeroBanner />
+        <BannerCarousel banners={heroBanners} />
         <TrustBar />
         <CategoryGrid />
         <FeaturedProducts products={products} />

@@ -75,7 +75,7 @@ export default function ConsultationForm() {
     };
 
     return (
-    <section className="w-full py-16 md:py-20 bg-primary-50">
+    <section id="consultation" className="w-full py-16 md:py-20 bg-primary-50">
       <div className="max-w-[1280px] mx-auto px-4 md:px-10">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
