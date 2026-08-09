@@ -58,7 +58,9 @@ enum AgentStatus {
 enum LeadStatus {
   NEW
   CONTACTED
+  CONFIRMED
   CONVERTED
+  CANCELLED
   CLOSED
 }
 
@@ -537,15 +539,19 @@ model AgentCommission {
 }
 
 model ConsultationLead {
-  id         String     @id @default(uuid())
-  fullName   String     @map("full_name")
-  phone      String
-  note       String?
-  productId  String?    @map("product_id")
-  customerId String?    @map("customer_id")
-  status     LeadStatus @default(NEW)
-  assignedTo String?    @map("assigned_to")
-  createdAt  DateTime   @default(now()) @map("created_at")
+  id             String     @id @default(uuid())
+  fullName       String     @map("full_name")
+  phone          String
+  email          String?
+  note           String?
+  productId      String?    @map("product_id")
+  customerId     String?    @map("customer_id")
+  preferredDate  DateTime?  @map("preferred_date")
+  preferredTime  String?    @map("preferred_time")
+  confirmedAt    DateTime?  @map("confirmed_at")
+  status         LeadStatus @default(NEW)
+  assignedTo     String?    @map("assigned_to")
+  createdAt      DateTime   @default(now()) @map("created_at")
 
   assignee User?     @relation("LeadAssignee", fields: [assignedTo], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])
