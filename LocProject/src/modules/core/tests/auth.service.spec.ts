@@ -4,6 +4,7 @@ process.env.JWT_REFRESH_SECRET = 'test_refresh_secret';
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../services/auth.service';
+import { OtpService } from '../services/otp.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -17,8 +18,12 @@ describe('AuthService', () => {
   const mockPrismaService = {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+    },
+    customer: {
+      create: jest.fn(),
     },
     userSession: {
       create: jest.fn(),
@@ -26,7 +31,17 @@ describe('AuthService', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    otpCode: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
     $transaction: jest.fn(),
+  };
+
+  const mockOtpService = {
+    generateAndSendOtp: jest.fn(),
+    verifyOtp: jest.fn(),
   };
 
   function mockUser(overrides: Record<string, any> = {}) {
@@ -50,6 +65,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: OtpService, useValue: mockOtpService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
       ],
@@ -257,6 +273,93 @@ describe('AuthService', () => {
 
       await expect(service.logout('valid_token')).resolves.not.toThrow();
       expect(mockPrismaService.userSession.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('OTP request', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should reject when purpose=login but phone not registered', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      await expect(service.requestOtp('0912345678', 'login')).rejects.toThrow(
+        'Số điện thoại chưa đăng ký, vui lòng đăng ký trước',
+      );
+      expect(mockOtpService.generateAndSendOtp).not.toHaveBeenCalled();
+    });
+
+    it('should reject when purpose=register but phone already registered', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(mockUser({ phone: '0912345678' }));
+
+      await expect(service.requestOtp('0912345678', 'register')).rejects.toThrow(
+        'Số điện thoại đã được đăng ký',
+      );
+      expect(mockOtpService.generateAndSendOtp).not.toHaveBeenCalled();
+    });
+
+    it('should send OTP when purpose=login and phone exists', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(mockUser({ phone: '0912345678' }));
+      mockOtpService.generateAndSendOtp.mockResolvedValue('123456');
+
+      const result = await service.requestOtp('0912345678', 'login');
+      expect(result).toBe('123456');
+      expect(mockOtpService.generateAndSendOtp).toHaveBeenCalledWith('0912345678', 'login');
+    });
+
+    it('should reject invalid phone format', async () => {
+      await expect(service.requestOtp('12345', 'login')).rejects.toThrow('không đúng định dạng');
+      expect(mockPrismaService.user.findFirst).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('OTP verify', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockJwtService.sign.mockReturnValue('otp_access_token');
+      mockPrismaService.userSession.create.mockResolvedValue({ id: 'sess' });
+    });
+
+    it('purpose=login: should issue tokens for existing user', async () => {
+      mockOtpService.verifyOtp.mockResolvedValue(true);
+      mockPrismaService.user.findFirst.mockResolvedValue(mockUser({ phone: '0912345678' }));
+
+      const result = await service.verifyOtp('0912345678', '123456', 'login');
+      expect(result.accessToken).toBe('otp_access_token');
+      expect(result.user.email).toBe('test@test.com');
+      expect(mockPrismaService.userSession.create).toHaveBeenCalled();
+    });
+
+    it('purpose=login: phone not registered → error', async () => {
+      mockOtpService.verifyOtp.mockResolvedValue(true);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      await expect(service.verifyOtp('0912345678', '123456', 'login')).rejects.toThrow(
+        'Số điện thoại chưa đăng ký',
+      );
+    });
+
+    it('purpose=register: creates User + Customer in one transaction', async () => {
+      mockOtpService.verifyOtp.mockResolvedValue(true);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.create.mockResolvedValue(
+        mockUser({ id: 'new-user-1', email: '0912345678@locherbal.local', phone: '0912345678' }),
+      );
+
+      const tx = {
+        user: mockPrismaService.user,
+        customer: mockPrismaService.customer,
+      };
+      mockPrismaService.$transaction.mockImplementation(async (cb: any) => cb(tx));
+
+      const result = await service.verifyOtp('0912345678', '123456', 'register');
+      expect(result.accessToken).toBe('otp_access_token');
+      expect(mockPrismaService.user.create).toHaveBeenCalled();
+      expect(mockPrismaService.customer.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ userId: 'new-user-1' }) }),
+      );
     });
   });
 });

@@ -10,6 +10,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
+import { OtpService } from './services/otp.service';
+
 @Module({
   imports: [
     PassportModule,
@@ -25,6 +27,7 @@ import { RolesGuard } from './guards/roles.guard';
   ],
   providers: [
     AuthService,
+    OtpService,
     HealthService,
     JwtStrategy,
     {

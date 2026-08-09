@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { OtpService } from './otp.service';
 
 /**
  * Helper: lấy biến môi trường bắt buộc, throw ngay nếu thiếu.
@@ -24,6 +25,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly otpService: OtpService,
   ) { }
 
   async register(dto: RegisterDto) {
@@ -57,6 +59,81 @@ export class AuthService {
     });
 
     return { id: user.id, email: user.email, fullName: user.fullName };
+  }
+
+  async requestOtp(phone: string, purpose: 'login' | 'register') {
+    const phoneRegex = /^0[3-9]\d{8}$/;
+    if (!phoneRegex.test(phone)) {
+      throw new BadRequestException('Số điện thoại không đúng định dạng Việt Nam');
+    }
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: { phone },
+    });
+
+    if (purpose === 'register' && existingUser) {
+      throw new BadRequestException('Số điện thoại đã được đăng ký');
+    }
+
+    if (purpose === 'login' && !existingUser) {
+      throw new BadRequestException('Số điện thoại chưa đăng ký, vui lòng đăng ký trước');
+    }
+
+    return this.otpService.generateAndSendOtp(phone, purpose);
+  }
+
+  async verifyOtp(phone: string, code: string, purpose: 'login' | 'register') {
+    await this.otpService.verifyOtp(phone, code, purpose);
+
+    let user = await this.prisma.user.findFirst({
+      where: { phone },
+    });
+
+    if (purpose === 'login') {
+      if (!user) {
+        throw new BadRequestException('Số điện thoại chưa đăng ký, vui lòng đăng ký trước');
+      }
+    } else {
+      if (!user) {
+        const dummyEmail = `${phone}@locherbal.local`;
+        
+        const emailCheck = await this.prisma.user.findUnique({ where: { email: dummyEmail } });
+        if (emailCheck) {
+          throw new BadRequestException('Email đăng ký tự động đã tồn tại, vui lòng liên hệ admin');
+        }
+
+        const passwordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+        user = await this.prisma.$transaction(async (tx) => {
+          const newUser = await tx.user.create({
+            data: {
+              email: dummyEmail,
+              passwordHash,
+              fullName: `SĐT ${phone}`,
+              phone,
+            },
+          });
+
+          await tx.customer.create({
+            data: {
+              userId: newUser.id,
+              fullName: newUser.fullName,
+              email: newUser.email,
+              phone: newUser.phone,
+            },
+          });
+
+          return newUser;
+        });
+      }
+    }
+
+    const { accessToken, refreshToken } = await this.generateTokens(user.id);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.toUserDto(user),
+    };
   }
 
   async login(dto: LoginDto) {

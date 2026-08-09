@@ -10,6 +10,7 @@ import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { Public } from '../decorators/public.decorator';
+import { RequestOtpDto, VerifyOtpDto } from '../dto/otp.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -35,6 +36,34 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Email hoặc mật khẩu không chính xác' })
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const { accessToken, refreshToken, user } = await this.authService.login(dto);
+
+    this.setRefreshTokenCookie(response, refreshToken);
+
+    return { accessToken, user };
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 600000 } })
+  @Post('otp/request')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Yêu cầu gửi mã OTP qua SĐT' })
+  @ApiResponse({ status: 200, description: 'Yêu cầu gửi mã thành công' })
+  async requestOtp(@Body() dto: RequestOtpDto) {
+    const code = await this.authService.requestOtp(dto.phone, dto.purpose);
+    return {
+      message: 'Mã OTP đã được gửi thành công',
+      ...(code ? { code } : {}),
+    };
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('otp/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Xác thực OTP và đăng nhập/đăng ký SĐT' })
+  @ApiResponse({ status: 200, description: 'Xác thực thành công, trả về accessToken' })
+  async verifyOtp(@Body() dto: VerifyOtpDto, @Res({ passthrough: true }) response: Response) {
+    const { accessToken, refreshToken, user } = await this.authService.verifyOtp(dto.phone, dto.code, dto.purpose);
 
     this.setRefreshTokenCookie(response, refreshToken);
 
