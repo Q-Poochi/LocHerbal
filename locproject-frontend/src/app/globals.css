@@ -46,6 +46,52 @@
   --color-warning: #d4830a;
   --color-info:    #2471a3;
 
+  /* ═══ MATERIAL DESIGN TOKENS — phong cách Material (alias cho các component dùng sẵn) ═══ */
+
+  /* Primary container */
+  --color-on-primary: #ffffff;
+  --color-primary-container: #166b42;       /* nút CTA chính, sidebar admin, viền focus */
+  --color-on-primary-container: #ffffff;
+  --color-primary-fixed: #dcf5e6;
+  --color-on-primary-fixed: #145535;
+  --color-on-primary-fixed-variant: #ffffff;
+
+  /* Secondary — vàng đất */
+  --color-secondary: #c8973a;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fdf6e3;
+  --color-on-secondary-container: #8a6720;
+
+  /* Tertiary — nâu vàng dược liệu */
+  --color-tertiary: #9a7b4f;
+  --color-tertiary-container: #f7efdf;
+  --color-tertiary-fixed: #faf0e0;
+  --color-on-tertiary-fixed-variant: #6b4f28;
+
+  /* Neutral / surfaces */
+  --color-on-surface: #1a1a17;
+  --color-on-surface-variant: #5a5a52;
+  --color-surface-white: #ffffff;
+  --color-surface-bg: #fafaf8;
+  --color-surface-container: #f4f4f0;
+  --color-surface-container-low: #f7f7f3;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-high: #ecece5;
+  --color-surface-variant: #f4f4f0;
+
+  /* Outline */
+  --color-outline: #b9b9ae;
+  --color-outline-variant: #e8e8e2;
+
+  /* Trạng thái / cảnh báo */
+  --color-error-container: #fdecea;
+  --color-on-error-container: #c0392b;
+  --color-on-error: #ffffff;
+  --color-error-alert: #d64541;
+  --color-success-leaf: #166b42;
+  --color-success-leaf-dark: #0e5233;
+  --color-warning-container: #fdf3dd;
+
   /* ═══ TYPOGRAPHY ═══ */
   --font-display:   var(--font-display), sans-serif;
   --font-body:      var(--font-body), sans-serif;
@@ -211,6 +257,10 @@ h1, h2, h3, h4, h5, h6 {
   border-bottom: 2px solid #166b42;
   color: #166b42;
   font-weight: 600;
+}
+
+.active-nav-border {
+  box-shadow: inset 3px 0 0 #f0d99a;
 }
 
 .table-shadow {
