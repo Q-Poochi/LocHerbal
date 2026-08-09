@@ -5,6 +5,7 @@ import { ReactQueryProvider } from '../lib/providers/query-provider';
 import { ToastProvider } from '../lib/providers/toast-provider';
 import { AuthBootstrap } from '../lib/providers/auth-bootstrap';
 import CartDrawer from '../components/storefront/CartDrawer';
+import AuthDrawer from '../components/storefront/AuthDrawer';
 import MobileBottomNav from '@/components/storefront/layout/MobileBottomNav';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -35,7 +36,7 @@ export default function RootLayout({
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
           rel="stylesheet"
         />
       </head>
@@ -45,6 +46,7 @@ export default function RootLayout({
             <AuthBootstrap />
             {children}
             <CartDrawer />
+            <AuthDrawer />
             <MobileBottomNav />
           </ToastProvider>
         </ReactQueryProvider>

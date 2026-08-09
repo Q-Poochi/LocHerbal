@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCartCount } from '../../../lib/hooks/useProducts';
 import { useAuthStore } from '../../../lib/store/auth.store';
 import { useCartStore } from '../../../lib/store/cart.store';
+import { useAuthDrawerStore } from '../../../lib/store/auth-drawer.store';
 import { apiClient } from '../../../lib/api/client';
 import { useToast } from '../../../lib/providers/toast-provider';
 import type { Product } from '@/types/api.types';
@@ -254,6 +255,7 @@ export default function Navbar() {
   const { user, logout } = useAuthStore();
   const toast = useToast();
   const { openDrawer } = useCartStore();
+  const openAuthDrawer = useAuthDrawerStore((s) => s.openDrawer);
 
   /* States */
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -544,14 +546,15 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link
-                href="/login"
+              <button
+                type="button"
+                onClick={openAuthDrawer}
                 className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary-700 text-white
                            text-sm font-medium hover:bg-primary-800 transition-all duration-150 shadow-sm hover:shadow"
               >
                 <span className="material-symbols-outlined text-base">login</span>
                 Đăng nhập
-              </Link>
+              </button>
             )}
           </div>
         </div>
@@ -651,15 +654,15 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="p-4 border-t border-border">
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
+            <button
+              type="button"
+              onClick={() => { setMobileMenuOpen(false); openAuthDrawer(); }}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
                          bg-primary-700 text-white text-sm font-medium hover:bg-primary-800 transition-colors"
             >
               <span className="material-symbols-outlined text-base">login</span>
               Đăng nhập / Đăng ký
-            </Link>
+            </button>
           </div>
         )}
       </div>
@@ -675,7 +678,9 @@ export default function Navbar() {
           { href: '/products', label: 'Danh mục', icon: 'category' },
           { href: '#search', label: 'Tìm kiếm', icon: 'search', action: () => setSearchOpen(true) },
           { href: '/cart', label: 'Giỏ hàng', icon: 'shopping_cart', badge: cartCount },
-          { href: user ? '/account' : '/login', label: user ? 'Tài khoản' : 'Đăng nhập', icon: user ? 'person' : 'login' },
+          user
+            ? { href: '/account', label: 'Tài khoản', icon: 'person' }
+            : { href: '#', label: 'Đăng nhập', icon: 'login', action: () => openAuthDrawer() },
         ].map(({ href, label, icon, badge, action }) =>
           action ? (
             <button
