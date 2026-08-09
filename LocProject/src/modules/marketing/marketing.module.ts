@@ -6,10 +6,11 @@ import { CouponService } from './services/coupon.service';
 import { CouponController } from './controllers/coupon.controller';
 import { BlogPostService } from './services/blog-post.service';
 import { BlogPostController } from './controllers/blog-post.controller';
+import { PublicMarketingController } from './controllers/public-marketing.controller';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [BannerController, CouponController, BlogPostController],
+  controllers: [BannerController, CouponController, BlogPostController, PublicMarketingController],
   providers: [BannerService, CouponService, BlogPostService],
   exports: [BannerService, CouponService, BlogPostService],
 })

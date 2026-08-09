@@ -11,9 +11,12 @@ import BlogSection from '../../components/storefront/home/BlogSection';
 import ConsultationForm from '../../components/storefront/home/ConsultationForm';
 import { useEffect, useState } from 'react';
 import { apiClient } from '../../lib/api/client';
+import { usePublicBanners, usePublicBlogPosts } from '../../lib/hooks/useMarketing';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
+  const { data: banners = [] } = usePublicBanners();
+  const { data: blogPosts = [] } = usePublicBlogPosts();
 
   useEffect(() => {
     async function fetchData() {
@@ -29,16 +32,18 @@ export default function HomePage() {
     fetchData();
   }, []);
 
+  const heroBanners = banners.filter((b) => b.position === 'home');
+
   return (
     <>
       <Navbar />
       <main className="pb-16 md:pb-0">
-        <HeroBanner />
+        <HeroBanner banners={heroBanners} />
         <TrustBar />
         <CategoryGrid />
         <FeaturedProducts products={products} />
         <PromoBanner />
-        <BlogSection posts={[]} />
+        <BlogSection posts={blogPosts} />
         <ConsultationForm />
       </main>
       <Footer />

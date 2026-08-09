@@ -70,6 +70,27 @@ export class CouponService {
         });
     }
 
+    async findByCode(code: string) {
+        return this.prisma.coupon.findUnique({
+            where: { code: code.toUpperCase() },
+        });
+    }
+
+    /**
+     * Danh sách coupon đang hoạt động (isActive + trong thời hạn) — cho storefront.
+     */
+    async findAllActive() {
+        const now = new Date();
+        return this.prisma.coupon.findMany({
+            where: {
+                isActive: true,
+                startDate: { lte: now },
+                endDate: { gte: now },
+            },
+            orderBy: { endDate: 'asc' },
+        });
+    }
+
     async findAll() {
         return this.prisma.coupon.findMany({
             include: {

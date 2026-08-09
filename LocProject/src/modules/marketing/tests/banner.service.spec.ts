@@ -73,7 +73,7 @@ describe('BannerService', () => {
         const result = await service.create(createData);
         expect(result).toEqual(createdBanner);
         expect(prisma.banner.create).toHaveBeenCalledWith({
-            data: { ...createData, sortOrder: 0 },
+            data: { ...createData, sortOrder: 0, isActive: true },
         });
     });
 

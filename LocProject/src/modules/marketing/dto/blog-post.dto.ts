@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreateBlogPostDto {
     @IsString()
@@ -10,7 +10,8 @@ export class CreateBlogPostDto {
     @IsString()
     content: string;
 
-    @IsUrl()
+    // Dùng IsString như Product DTO (không IsUrl) vì upload nội bộ trả về localhost URL
+    @IsString()
     @IsOptional()
     thumbnailUrl?: string;
 
@@ -38,7 +39,7 @@ export class UpdateBlogPostDto {
     @IsOptional()
     content?: string;
 
-    @IsUrl()
+    @IsString()
     @IsOptional()
     thumbnailUrl?: string;
 

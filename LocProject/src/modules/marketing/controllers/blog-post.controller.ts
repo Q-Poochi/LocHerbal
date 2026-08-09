@@ -15,9 +15,9 @@ export class BlogPostController {
 
     @Get()
     @Roles('admin', 'staff')
-    @ApiOperation({ summary: 'Danh sách bài viết blog' })
+    @ApiOperation({ summary: 'Danh sách bài viết blog (admin — gồm cả draft)' })
     findAll() {
-        return this.blogPostService.findAll();
+        return this.blogPostService.findAllAdmin();
     }
 
     @Get('slug/:slug')

@@ -5,8 +5,22 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 export class BannerService {
     constructor(private readonly prisma: PrismaService) { }
 
+    /**
+     * Danh sách CHỈ banner active — dùng cho storefront (homepage carousel).
+     */
     async findAll(position?: string) {
         const where = position ? { position, isActive: true } : { isActive: true };
+        return this.prisma.banner.findMany({
+            where,
+            orderBy: { sortOrder: 'asc' },
+        });
+    }
+
+    /**
+     * Danh sách TẤT CẢ banner (kể cả inactive) — dùng cho admin để quản lý.
+     */
+    async findAllAdmin(position?: string) {
+        const where = position ? { position } : {};
         return this.prisma.banner.findMany({
             where,
             orderBy: { sortOrder: 'asc' },
@@ -29,6 +43,7 @@ export class BannerService {
         linkUrl?: string;
         position: string;
         sortOrder?: number;
+        isActive?: boolean;
     }) {
         return this.prisma.banner.create({
             data: {
@@ -37,6 +52,7 @@ export class BannerService {
                 linkUrl: data.linkUrl,
                 position: data.position,
                 sortOrder: data.sortOrder ?? 0,
+                isActive: data.isActive ?? true,
             },
         });
     }

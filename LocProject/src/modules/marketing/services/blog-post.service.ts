@@ -5,9 +5,12 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 export class BlogPostService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async findAll() {
+    /**
+     * Danh sách CHỈ bài đã publish (hoặc draft nếu muốn xem) — dùng cho storefront.
+     */
+    async findAll(publishedOnly = true) {
         return this.prisma.blogPost.findMany({
-            where: { status: 'published' },
+            where: publishedOnly ? { status: 'published' } : {},
             include: {
                 author: {
                     select: {
@@ -18,6 +21,13 @@ export class BlogPostService {
             },
             orderBy: { publishedAt: 'desc' },
         });
+    }
+
+    /**
+     * Danh sách TẤT CẢ bài (kể cả draft) — dùng cho admin quản lý.
+     */
+    async findAllAdmin() {
+        return this.findAll(false);
     }
 
     async findById(id: string) {
@@ -65,6 +75,8 @@ export class BlogPostService {
         status?: string;
         publishedAt?: Date;
     }) {
+        const status = (data.status || 'draft').toLowerCase();
+        const publishedAt = status === 'published' ? (data.publishedAt ?? new Date()) : undefined;
         return this.prisma.blogPost.create({
             data: {
                 title: data.title,
@@ -72,8 +84,8 @@ export class BlogPostService {
                 content: data.content,
                 thumbnailUrl: data.thumbnailUrl,
                 authorId: data.authorId,
-                status: data.status || 'draft',
-                publishedAt: data.publishedAt,
+                status,
+                publishedAt,
             },
             include: {
                 author: {
@@ -96,7 +108,16 @@ export class BlogPostService {
     }) {
         const post = await this.prisma.blogPost.update({
             where: { id },
-            data,
+            data: {
+                ...data,
+                status: data.status ? data.status.toLowerCase() : undefined,
+                publishedAt:
+                    data.status === 'published'
+                        ? (data.publishedAt ?? new Date())
+                        : data.status !== undefined && data.status !== 'published'
+                          ? null
+                          : data.publishedAt,
+            },
             include: {
                 author: {
                     select: {

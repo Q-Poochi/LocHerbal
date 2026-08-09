@@ -8,6 +8,8 @@ interface BlogPostCard {
     title: string;
     excerpt: string;
     readTime: string;
+    thumbnail?: string;
+    slug?: string;
 }
 
 interface BlogPostInput {
@@ -17,6 +19,8 @@ interface BlogPostInput {
     excerpt?: string;
     content?: string;
     readTime?: string;
+    thumbnailUrl?: string;
+    slug?: string;
 }
 
 export default function BlogSection({ posts = [] }: { posts: BlogPostInput[] }) {
@@ -26,6 +30,8 @@ export default function BlogSection({ posts = [] }: { posts: BlogPostInput[] }) 
         title: post.title,
         excerpt: post.excerpt || post.content?.slice(0, 120) || '',
         readTime: post.readTime || `${Math.max(1, Math.ceil((post.content?.length || 0) / 1500))} phút đọc`,
+        thumbnail: post.thumbnailUrl,
+        slug: post.slug,
     }));
 
     return (
@@ -57,19 +63,28 @@ export default function BlogSection({ posts = [] }: { posts: BlogPostInput[] }) 
                     </div>
                 ) : (
                     <div className="grid md:grid-cols-3 gap-6 stagger-children">
-                        {items.map((post, idx) => (
+                        {items.map((post) => (
                             <article
                                 key={post.id}
                                 className="group bg-white rounded-2xl border border-border overflow-hidden
                                          hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                             >
                                 <div className="aspect-video bg-primary-50 flex items-center justify-center relative overflow-hidden">
-                                    <span
-                                        className="material-symbols-outlined text-primary-200 group-hover:scale-110 transition-transform duration-400"
-                                        style={{ fontSize: '64px', fontVariationSettings: "'FILL' 1" }}
-                                    >
-                                        {['favorite', 'accessibility_new', 'bedtime'][idx % 3]}
-                                    </span>
+                                    {post.thumbnail ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                            src={post.thumbnail}
+                                            alt={post.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-400"
+                                        />
+                                    ) : (
+                                        <span
+                                            className="material-symbols-outlined text-primary-200 group-hover:scale-110 transition-transform duration-400"
+                                            style={{ fontSize: '64px', fontVariationSettings: "'FILL' 1" }}
+                                        >
+                                            favorite
+                                        </span>
+                                    )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent" />
                                 </div>
                                 <div className="p-5">

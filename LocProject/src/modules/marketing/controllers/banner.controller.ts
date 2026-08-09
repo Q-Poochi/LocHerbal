@@ -15,10 +15,10 @@ export class BannerController {
 
     @Get()
     @Roles('admin', 'staff')
-    @ApiOperation({ summary: 'Danh sách banner (lọc theo vị trí)' })
+    @ApiOperation({ summary: 'Danh sách banner (admin — gồm cả inactive)' })
     findAll(@Request() req: any) {
         const position = req.query.position as string | undefined;
-        return this.bannerService.findAll(position);
+        return this.bannerService.findAllAdmin(position);
     }
 
     @Get(':id')

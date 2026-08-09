@@ -1,13 +1,14 @@
-import { IsString, IsUrl, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean } from 'class-validator';
 
 export class CreateBannerDto {
     @IsString()
     title: string;
 
-    @IsUrl()
+    // Dùng IsString như Product DTO (không IsUrl) vì upload nội bộ trả về localhost URL
+    @IsString()
     imageUrl: string;
 
-    @IsUrl()
+    @IsString()
     @IsOptional()
     linkUrl?: string;
 
@@ -17,6 +18,10 @@ export class CreateBannerDto {
     @IsNumber()
     @IsOptional()
     sortOrder?: number;
+
+    @IsBoolean()
+    @IsOptional()
+    isActive?: boolean;
 }
 
 export class UpdateBannerDto {
@@ -24,11 +29,11 @@ export class UpdateBannerDto {
     @IsOptional()
     title?: string;
 
-    @IsUrl()
+    @IsString()
     @IsOptional()
     imageUrl?: string;
 
-    @IsUrl()
+    @IsString()
     @IsOptional()
     linkUrl?: string;
 
