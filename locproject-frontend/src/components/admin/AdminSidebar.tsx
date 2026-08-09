@@ -45,6 +45,7 @@ const menuGroups = [
     {
         label: 'VẬN HÀNH',
         items: [
+            { href: '/admin/consultations', icon: 'event_available', label: 'Lịch tư vấn' },
             { href: '/admin/support', icon: 'support_agent', label: 'Hỗ trợ' },
         ],
     },
