@@ -11,6 +11,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { WarehouseModule } from './modules/warehouse/warehouse.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { MarketingModule } from './modules/marketing/marketing.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { SupplierModule } from './modules/supplier/supplier.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
@@ -32,6 +33,7 @@ import { AuditService } from './shared/services/audit.service';
     WarehouseModule,
     AccountingModule,
     MarketingModule,
+SettingsModule,
     ShippingModule,
     SupplierModule,
   ],

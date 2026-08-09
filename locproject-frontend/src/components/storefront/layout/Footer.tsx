@@ -1,4 +1,17 @@
+'use client';
+
+import { usePublicCompanySettings } from '@/lib/hooks/useSettings';
+
 export default function Footer() {
+  const { data: settings } = usePublicCompanySettings();
+  const companyName = settings?.companyName || 'LocHerbal';
+  const description = settings?.description || 'Giải pháp thảo dược hiện đại cho sức khỏe truyền thống người Việt. Chúng tôi kết hợp tinh hoa y học dân tộc với công nghệ bào chế tiên tiến.';
+  const socials = [
+    { icon: 'chat_bubble', label: 'Facebook', href: settings?.facebookUrl || '#' },
+    { icon: 'play_circle', label: 'YouTube', href: settings?.youtubeUrl || '#' },
+    { icon: 'phone_in_talk', label: 'Zalo', href: settings?.zaloUrl || '#' },
+  ];
+
   return (
     <footer className="bg-[#166b42] text-white mt-16 border-t border-primary-800">
       {/* Main footer content */}
@@ -9,18 +22,14 @@ export default function Footer() {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-3xl text-accent-gold-light" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
-              <span className="font-display font-bold text-xl tracking-tight">LocHerbal</span>
+              <span className="font-display font-bold text-xl tracking-tight">{companyName}</span>
             </div>
             <p className="text-white/80 text-sm leading-relaxed max-w-sm">
-              Giải pháp thảo dược hiện đại cho sức khỏe truyền thống người Việt. Chúng tôi kết hợp tinh hoa y học dân tộc với công nghệ bào chế tiên tiến.
+              {description}
             </p>
             {/* Social icons dùng Material Symbols */}
             <div className="flex gap-3 pt-1">
-              {[
-                { icon: 'chat_bubble', label: 'Facebook', href: '#' },
-                { icon: 'play_circle', label: 'YouTube', href: '#' },
-                { icon: 'phone_in_talk', label: 'Zalo', href: '#' },
-              ].map(({ icon, label, href }) => (
+              {socials.map(({ icon, label, href }) => (
                 <a
                   key={label}
                   href={href}
@@ -37,12 +46,23 @@ export default function Footer() {
           <div>
             <h3 className="font-display font-bold text-base mb-4 tracking-wide text-accent-gold-light uppercase">Về chúng tôi</h3>
             <ul className="space-y-3 text-sm text-white/80">
-              {['Giới thiệu công ty', 'Hệ thống phân phối', 'Tuyển dụng', 'Liên hệ'].map(item => (
-                <li key={item}>
-                  <a href="#" className="hover:text-accent-gold-light hover:underline transition-colors">{item}</a>
+              {[
+                { label: 'Giới thiệu công ty', href: '/ve-chung-toi' },
+                { label: 'Hệ thống phân phối', href: '/ve-chung-toi' },
+                { label: 'Tuyển dụng', href: '/ve-chung-toi' },
+                { label: 'Liên hệ', href: '/lien-he' },
+              ].map(item => (
+                <li key={item.label}>
+                  <a href={item.href} className="hover:text-accent-gold-light hover:underline transition-colors">{item.label}</a>
                 </li>
               ))}
             </ul>
+            {settings?.hotline && (
+              <p className="mt-4 text-sm text-white/80 flex items-center gap-2">
+                <span className="material-symbols-outlined text-accent-gold-light text-base">support_agent</span>
+                Hotline: <a href={`tel:${settings.hotline}`} className="hover:text-accent-gold-light font-semibold">{settings.hotline}</a>
+              </p>
+            )}
           </div>
 
           {/* Cột 3: Chính sách */}
@@ -73,17 +93,27 @@ export default function Footer() {
               </div>
             </div>
             <div className="space-y-3">
-              <h3 className="font-display font-bold text-base tracking-wide text-accent-gold-light uppercase">Nhận tin khuyến mãi</h3>
-              <div className="flex overflow-hidden rounded-xl border border-white/20 focus-within:border-accent-gold-light transition-colors">
-                <input
-                  type="email"
-                  placeholder="Email của bạn"
-                  className="flex-1 px-3 py-2.5 bg-white/10 placeholder:text-white/50 text-sm text-white focus:outline-none min-w-0"
-                />
-                <button className="px-4 py-2.5 bg-white text-[#166b42] font-semibold text-sm hover:bg-accent-gold-light hover:text-white transition-colors flex-shrink-0">
-                  Gửi
-                </button>
-              </div>
+              <h3 className="font-display font-bold text-base tracking-wide text-accent-gold-light uppercase">Liên hệ</h3>
+              <ul className="space-y-2 text-sm text-white/80">
+                {settings?.address && (
+                  <li className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-accent-gold-light text-base mt-0.5">location_on</span>
+                    {settings.address}
+                  </li>
+                )}
+                {settings?.email && (
+                  <li className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-accent-gold-light text-base">mail</span>
+                    <a href={`mailto:${settings.email}`} className="hover:text-accent-gold-light">{settings.email}</a>
+                  </li>
+                )}
+                {settings?.workingHours && (
+                  <li className="flex items-start gap-2">
+                    <span className="material-symbols-outlined text-accent-gold-light text-base mt-0.5">schedule</span>
+                    <span className="whitespace-pre-line">{settings.workingHours}</span>
+                  </li>
+                )}
+              </ul>
             </div>
           </div>
 
@@ -94,10 +124,10 @@ export default function Footer() {
       <div className="border-t border-white/10 bg-[#0f5432]">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-white/70 text-xs md:text-sm">
-            © 2024 LocHerbal. Bảo lưu mọi quyền.
+            © {new Date().getFullYear()} {companyName}. Bảo lưu mọi quyền.
           </p>
           <p className="text-white/50 text-[11px] md:text-xs tracking-wider uppercase font-semibold">
-            Được cấp phép bởi Bộ Y Tế Việt Nam
+            {settings?.businessLicense ? `ĐKKD số ${settings.businessLicense}` : 'Được cấp phép bởi Bộ Y Tế Việt Nam'}
           </p>
         </div>
       </div>

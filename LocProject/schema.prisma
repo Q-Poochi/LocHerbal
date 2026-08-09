@@ -197,6 +197,33 @@ model SystemConfig {
 }
 
 // ==========================================================================
+// MODULE: COMPANY/SETTINGS — thông tin công ty (single-row), render Footer
+// & các trang tĩnh (Về chúng tôi, Liên hệ). Admin cập nhật qua Settings.
+// ==========================================================================
+
+model CompanySettings {
+  id             String  @id @default(uuid())
+  companyName    String  @map("company_name")
+  tagline        String?
+  description    String?
+  about          String?
+  address        String?
+  phone          String?
+  hotline        String?
+  email          String?
+  workingHours   String? @map("working_hours")
+  facebookUrl    String? @map("facebook_url")
+  youtubeUrl     String? @map("youtube_url")
+  zaloUrl        String? @map("zalo_url")
+  websiteUrl     String? @map("website_url")
+  taxCode        String? @map("tax_code")
+  businessLicense String? @map("business_license")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("company_settings")
+}
+
+// ==========================================================================
 // MODULE: CATALOG — Product, Category, thuộc tính động
 // ==========================================================================
 

@@ -48,6 +48,12 @@ const menuGroups = [
             { href: '/admin/support', icon: 'support_agent', label: 'Hỗ trợ' },
         ],
     },
+    {
+        label: 'HỆ THỐNG',
+        items: [
+            { href: '/admin/settings', icon: 'settings', label: 'Cài đặt chung' },
+        ],
+    },
 ];
 
 export default function AdminSidebar() {
