@@ -6,6 +6,7 @@ import { useCreateBanner, useUpdateBanner, type AdminBanner } from '@/lib/hooks/
 import { useToast } from '@/lib/providers/toast-provider';
 import { getErrorMessage } from '@/lib/utils/error';
 import ImageUploader from '@/components/admin/products/image-uploader/ImageUploader';
+import { storeLinkGroups } from '@/lib/constants/store-links';
 
 interface UploadedImage {
     url: string;
@@ -43,6 +44,10 @@ export default function BannerForm({ banner }: BannerFormProps) {
         }
     }, [banner]);
 
+    const linkGroups = storeLinkGroups();
+    const currentLink = banner?.linkUrl ?? '';
+    const hasCustomLink = !!currentLink && !linkGroups.some((o) => o.href === currentLink);
+
     const createMutation = useCreateBanner();
     const updateMutation = useUpdateBanner();
     const isPending = createMutation.isPending || updateMutation.isPending;
@@ -56,7 +61,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
         }
         const payload = {
             title: title.trim(),
-            linkUrl: linkUrl.trim() || undefined,
+            linkUrl: linkUrl || undefined,
             imageUrl,
             position,
             sortOrder,
@@ -111,13 +116,20 @@ export default function BannerForm({ banner }: BannerFormProps) {
                         <label htmlFor="banner-link" className={label}>
                             Đường dẫn (tùy chọn)
                         </label>
-                        <input
+                        <select
                             id="banner-link"
                             value={linkUrl}
                             onChange={(e) => setLinkUrl(e.target.value)}
-                            placeholder="/products"
-                            className="w-full bg-surface-container-low border border-border rounded-xl px-4 py-3 text-body-md text-primary placeholder:text-text-tertiary focus:outline-none focus:border-primary transition-colors"
-                        />
+                            className="w-full bg-surface-container-low border border-border rounded-xl px-4 py-3 text-body-md text-primary focus:outline-none focus:border-primary transition-colors"
+                        >
+                            <option value="">— Không có đường dẫn —</option>
+                            {hasCustomLink && (
+                                <option value={currentLink}>Đường dẫn hiện tại — {currentLink}</option>
+                            )}
+                            {linkGroups.map((o) => (
+                                <option key={o.href} value={o.href}>{o.group} — {o.label}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useHeroBanner, useUpsertHeroBanner, useDeleteHeroBanner } from '@/lib/hooks/useMarketing';
 import { useToast } from '@/lib/providers/toast-provider';
 import { getErrorMessage } from '@/lib/utils/error';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ImageUploader from '@/components/admin/products/image-uploader/ImageUploader';
+import { storeLinkGroups } from '@/lib/constants/store-links';
 
 interface UploadedImage {
     url: string;
@@ -27,10 +28,21 @@ export default function AdminHeroBanner() {
     const [images, setImages] = useState<UploadedImage[]>([]);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
+    useEffect(() => {
+        if (hero) {
+            setTitle(hero.title);
+            setLinkUrl(hero.linkUrl ?? '');
+        }
+    }, [hero]);
+
     const currentImageUrl = hero?.imageUrl ?? '';
 
     const heroImageUrl = images[0]?.url ?? currentImageUrl;
     const heroTitle = title || hero?.title || 'Ảnh Hero';
+
+    const linkGroups = storeLinkGroups();
+    const currentLink = hero?.linkUrl ?? '';
+    const hasCustomLink = !!currentLink && !linkGroups.some((o) => o.href === currentLink);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,7 +55,7 @@ export default function AdminHeroBanner() {
             await upsertMutation.mutateAsync({
                 title: title.trim(),
                 imageUrl,
-                linkUrl: linkUrl.trim() || undefined,
+                linkUrl: linkUrl || undefined,
                 isActive: true,
             });
             toast.success('Đã lưu ảnh hero');
@@ -117,13 +129,20 @@ export default function AdminHeroBanner() {
 
                         <div className="space-y-2">
                             <label htmlFor="hero-link" className={label}>Đường dẫn (tùy chọn)</label>
-                            <input
+                            <select
                                 id="hero-link"
                                 value={linkUrl}
                                 onChange={(e) => setLinkUrl(e.target.value)}
-                                placeholder="/products"
                                 className={inputCls}
-                            />
+                            >
+                                <option value="">— Không có đường dẫn —</option>
+                                {hasCustomLink && (
+                                    <option value={currentLink}>Đường dẫn hiện tại — {currentLink}</option>
+                                )}
+                                {linkGroups.map((o) => (
+                                    <option key={o.href} value={o.href}>{o.group} — {o.label}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="space-y-2">
