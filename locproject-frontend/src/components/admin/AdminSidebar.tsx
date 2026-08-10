@@ -30,7 +30,8 @@ const menuGroups = [
     {
         label: 'NỘI DUNG & KHUYẾN MÃI',
         items: [
-            { href: '/admin/banners', icon: 'view_carousel', label: 'Banner' },
+            { href: '/admin/hero-banner', icon: 'image', label: 'Ảnh Hero' },
+            { href: '/admin/banners', icon: 'view_carousel', label: 'Banner Carousel' },
             { href: '/admin/blog', icon: 'article', label: 'Bài viết' },
             { href: '/admin/coupons', icon: 'sell', label: 'Ưu đãi' },
         ],

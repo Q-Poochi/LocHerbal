@@ -1,18 +1,43 @@
 'use client';
 
+// ⚠️ CHỈ dùng GET /banners?position=home (mảng nhiều banner — carousel slider)
+// ⚠️ TUYỆT ĐỐI KHÔNG gọi GET /hero-banner ở file này
+
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import type { StorefrontBanner } from '@/lib/hooks/useMarketing';
+import { apiClient } from '@/lib/api/client';
 
-interface BannerCarouselProps {
-    banners?: StorefrontBanner[];
+interface StorefrontBanner {
+    id: string;
+    title: string;
+    imageUrl: string;
+    linkUrl?: string;
 }
 
-export default function BannerCarousel({ banners = [] }: BannerCarouselProps) {
+export default function BannerCarousel() {
+    const [banners, setBanners] = useState<StorefrontBanner[]>([]);
     const [activeIdx, setActiveIdx] = useState(0);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const items = banners.filter((b) => !b.linkUrl?.startsWith('/admin')).slice(0, 5);
+    // game: CHỈ fetch position='home' (server filter) — KHÔNG lấy hết rồi tự lọc.
+    useEffect(() => {
+        let cancelled = false;
+        apiClient
+            .get<StorefrontBanner[]>('/banners', { params: { position: 'home' } })
+            .then((res) => {
+                if (!cancelled) {
+                    setBanners((res.data ?? []).filter((b) => !b.linkUrl?.startsWith('/admin')).slice(0, 5));
+                }
+            })
+            .catch(() => {
+                if (!cancelled) setBanners([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const items = banners;
 
     useEffect(() => {
         if (items.length < 2) return;

@@ -13,6 +13,7 @@ interface UploadedImage {
     uploading?: boolean;
 }
 
+// Vị trí CHỈ dành cho carousel trang chủ — không còn lựa chọn chọn nhầm 'hero'.
 const POSITIONS = ['home', 'promo'];
 
 interface BannerFormProps {
@@ -90,7 +91,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
                 <span className="text-primary font-semibold">{isEdit ? `Chỉnh sửa banner` : 'Tạo banner mới'}</span>
             </nav>
             <h2 className="font-headline-lg text-headline-lg text-primary mb-8">{isEdit ? 'Chỉnh sửa Banner' : 'Tạo Banner mới'}</h2>
-            <p className="text-sm text-text-tertiary -mt-4 mb-8">Vị trí &ldquo;Trang chủ — Hero&rdquo; hiển thị slider đầu trang, &ldquo;Trang chủ — Khuyến mãi&rdquo; hiển thị mục ưu đãi.</p>
+            <p className="text-sm text-text-tertiary -mt-4 mb-8">Banner &ldquo;Carousel trang chủ&rdquo; hiển thị slider đầu trang. Ảnh Hero (thay icon chày cối) quản lý riêng tại mục &ldquo;Ảnh Hero&rdquo;.</p>
 
             <section className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,8 +137,8 @@ export default function BannerForm({ banner }: BannerFormProps) {
 onChange={(e) => setPosition(e.target.value)}
                             className={selectCls}
                         >
-                            <option value="home">Trang chủ — Hero</option>
-                            <option value="promo">Trang chủ — Khuyến mãi</option>
+                            <option value="home">Carousel trang chủ</option>
+                            <option value="promo">Khuyến mãi</option>
                         </select>
                     </div>
                     <div className="space-y-2">

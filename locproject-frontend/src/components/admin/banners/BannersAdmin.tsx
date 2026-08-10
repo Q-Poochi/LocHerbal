@@ -8,8 +8,9 @@ import { getErrorMessage } from '@/lib/utils/error';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const POSITION_LABELS: Record<string, string> = {
-    homepage: 'Trang chủ',
+    home: 'Carousel trang chủ',
     promo: 'Khuyến mãi',
+    hero: 'Ảnh Hero',
 };
 
 export default function BannersAdmin() {

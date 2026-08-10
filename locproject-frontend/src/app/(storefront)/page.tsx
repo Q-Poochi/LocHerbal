@@ -2,8 +2,8 @@
 
 import Navbar from '../../components/storefront/layout/Navbar';
 import Footer from '../../components/storefront/layout/Footer';
-import HeroBanner from '../../components/storefront/home/HeroBanner';
-import BannerCarousel from '../../components/storefront/home/BannerCarousel';
+import HeroSection from '../../components/storefront/HeroSection';
+import BannerCarousel from '../../components/storefront/BannerCarousel';
 import TrustBar from '../../components/storefront/home/TrustBar';
 import CategoryGrid from '../../components/storefront/home/CategoryGrid';
 import FeaturedProducts from '../../components/storefront/home/FeaturedProducts';
@@ -12,11 +12,10 @@ import BlogSection from '../../components/storefront/home/BlogSection';
 import ConsultationForm from '../../components/storefront/home/ConsultationForm';
 import { useEffect, useState } from 'react';
 import { apiClient } from '../../lib/api/client';
-import { usePublicBanners, usePublicBlogPosts } from '../../lib/hooks/useMarketing';
+import { usePublicBlogPosts } from '../../lib/hooks/useMarketing';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
-  const { data: banners = [] } = usePublicBanners();
   const { data: blogPosts = [] } = usePublicBlogPosts();
 
   useEffect(() => {
@@ -33,14 +32,12 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  const heroBanners = banners.filter((b) => b.position === 'home');
-
   return (
     <>
       <Navbar />
       <main className="pb-16 md:pb-0">
-        <HeroBanner />
-        <BannerCarousel banners={heroBanners} />
+        <HeroSection />
+        <BannerCarousel />
         <TrustBar />
         <CategoryGrid />
         <FeaturedProducts products={products} />

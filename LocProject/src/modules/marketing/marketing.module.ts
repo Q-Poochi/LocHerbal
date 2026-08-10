@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
 import { BannerService } from './services/banner.service';
 import { BannerController } from './controllers/banner.controller';
+import { HeroBannerController, AdminHeroBannerController, PublicBannersController } from './controllers/hero-banner.controller';
 import { CouponService } from './services/coupon.service';
 import { CouponController } from './controllers/coupon.controller';
 import { BlogPostService } from './services/blog-post.service';
@@ -10,7 +11,7 @@ import { PublicMarketingController } from './controllers/public-marketing.contro
 
 @Module({
   imports: [PrismaModule],
-  controllers: [BannerController, CouponController, BlogPostController, PublicMarketingController],
+  controllers: [BannerController, HeroBannerController, AdminHeroBannerController, PublicBannersController, CouponController, BlogPostController, PublicMarketingController],
   providers: [BannerService, CouponService, BlogPostService],
   exports: [BannerService, CouponService, BlogPostService],
 })

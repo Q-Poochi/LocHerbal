@@ -212,6 +212,57 @@ export interface StorefrontBanner {
     isActive: boolean;
 }
 
+// ⚠️ HERO BANNER — CHỈ 1 object (hoặc null), KHÔNG PHẢI mảng.
+export interface StorefrontHeroBanner {
+    id: string;
+    title: string;
+    imageUrl: string;
+    linkUrl?: string;
+    isActive: boolean;
+}
+
+// ⚠️ CHỈ dùng cho HeroSection — GET /hero-banner (1 object, không mảng).
+export function useHeroBanner() {
+    return useQuery({
+        queryKey: ['hero-banner'],
+        queryFn: async () => {
+            const { data } = await apiClient.get<StorefrontHeroBanner | null>('/hero-banner');
+            return data ?? null;
+        },
+        staleTime: 60000,
+    });
+}
+
+// ⚠️ CHỈ dùng cho AdminHeroBanner — set/update hero banner (PUT /admin/hero-banner).
+export function useUpsertHeroBanner() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: { title: string; imageUrl: string; linkUrl?: string; isActive?: boolean }) => {
+            const { data } = await apiClient.put('/admin/hero-banner', payload);
+            return data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['hero-banner'] });
+            qc.invalidateQueries({ queryKey: ['admin-banners'] });
+        },
+    });
+}
+
+// ⚠️ CHỈ dùng cho AdminHeroBanner — xoá hero banner (DELETE /admin/hero-banner).
+export function useDeleteHeroBanner() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async () => {
+            const { data } = await apiClient.delete('/admin/hero-banner');
+            return data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['hero-banner'] });
+            qc.invalidateQueries({ queryKey: ['admin-banners'] });
+        },
+    });
+}
+
 export interface StorefrontBlogPost {
     id: string;
     title: string;
@@ -221,17 +272,6 @@ export interface StorefrontBlogPost {
     author?: { id: string; fullName: string } | null;
     status: string;
     publishedAt?: string;
-}
-
-export function usePublicBanners() {
-    return useQuery({
-        queryKey: ['public-banners'],
-        queryFn: async () => {
-            const { data } = await apiClient.get<StorefrontBanner[]>('/public/marketing/banners');
-            return data;
-        },
-        staleTime: 60000,
-    });
 }
 
 export function usePublicBlogPosts() {
