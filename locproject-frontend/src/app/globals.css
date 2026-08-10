@@ -96,7 +96,31 @@
   --font-display:   var(--font-display), sans-serif;
   --font-body:      var(--font-body), sans-serif;
 
-  /* Type scale */
+  /* Font-family roles (đồng bộ PROJECT_CONTEXT typography convention) */
+  --font-display-lg:    var(--font-display), sans-serif;
+  --font-headline-sm:   var(--font-display), sans-serif;
+  --font-headline-md:   var(--font-display), sans-serif;
+  --font-headline-lg:   var(--font-display), sans-serif;
+  --font-body-sm:       var(--font-body), sans-serif;
+  --font-body-md:       var(--font-body), sans-serif;
+  --font-body-lg:       var(--font-body), sans-serif;
+  --font-caption:       var(--font-body), sans-serif;
+  --font-label:         var(--font-body), sans-serif;
+  --font-label-bold:    var(--font-body), sans-serif;
+
+  /* Type scale (semantic, dùng text-body-* / text-headline-* / text-display-*) */
+  --text-caption:     0.75rem;    /* 12px — footnote / meta */
+  --text-body-sm:     0.875rem;   /* 14px — label / tag / badge */
+  --text-body-md:     1rem;       /* 16px */
+  --text-body-lg:     1.125rem;   /* 18px */
+  --text-label-bold:  0.875rem;   /* 14px */
+  --text-headline-sm: 1.25rem;    /* 20px */
+  --text-headline-md: 1.5rem;     /* 24px */
+  --text-headline-lg: 2rem;       /* 32px */
+  --text-display-lg:      2.5rem; /* 40px — heading trang */
+  --text-display-lg-mobile: 2rem; /* 32px */
+
+  /* Type scale (đã có sẵn) */
   --text-xs:   0.75rem;   /* 12px */
   --text-sm:   0.875rem;  /* 14px */
   --text-base: 1rem;      /* 16px */
