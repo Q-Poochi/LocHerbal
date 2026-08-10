@@ -145,6 +145,18 @@
   --space-20: 5rem;      /* 80px */
   --space-24: 6rem;      /* 96px */
 
+  /* Layout tokens (đã dùng rộng rãi: max-w-container-max, px-margin-mobile,
+     -mx-margin-mobile, px-margin-desktop, gap-gutter, py-stack-lg, mb-stack-lg,
+     p-margin-mobile …). maxWidth/maxHeight extend từ spacing namespace (v4),
+     nên container-max phải đặt trong --spacing-* để class max-w-container-max sinh. */
+  --spacing-container-max: 1280px;   /* 1280px — max-w-container-max + w-container-max */
+  --spacing-margin-mobile:  1rem;    /* 16px — padding mobile */
+  --spacing-margin-desktop: 2.5rem;  /* 40px — padding desktop */
+  --spacing-gutter:    1.5rem;       /* 24px */
+  --spacing-stack-sm:  0.5rem;       /* 8px */
+  --spacing-stack-md:  1rem;         /* 16px */
+  --spacing-stack-lg:  2rem;         /* 32px */
+
   /* ═══ BORDER RADIUS ═══ */
   --radius-sm:   0.375rem;  /* 6px */
   --radius-md:   0.75rem;   /* 12px */
@@ -177,6 +189,10 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Chặn tràn ngang toàn trang (vd: icon font chưa load làm rộng nav). Dùng clip
+     thay hidden để không tạo scroll container => sticky header vẫn hoạt động,
+     và Playwright/auto-scroll đo vị trí theo viewport không bị lệch. */
+  overflow-x: clip;
 }
 
 body {
@@ -184,6 +200,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-body), sans-serif;
   min-height: max(884px, 100dvh);
+  overflow-x: clip;
 }
 
 h1, h2, h3, h4, h5, h6 {

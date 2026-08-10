@@ -10,7 +10,7 @@ import { Suspense } from 'react';
 
 export default function SearchPage() {
     return (
-        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8">
+        <div className="max-w-container-max mx-auto w-full min-w-0 px-margin-mobile md:px-margin-desktop py-8">
             <h1 className="font-headline-lg text-headline-lg text-primary mb-2">Tìm kiếm sản phẩm</h1>
             <Suspense fallback={<ProductCardSkeleton count={4} />}>
                 <SearchContent />

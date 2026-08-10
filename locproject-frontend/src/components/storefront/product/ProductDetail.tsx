@@ -29,7 +29,7 @@ export default async function ProductDetail({ slug }: { slug: string }) {
 
     if (!product) {
         return (
-            <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8">
+            <main className="max-w-container-max mx-auto w-full min-w-0 px-margin-mobile md:px-margin-desktop py-8">
                 <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
                     <span className="material-symbols-outlined text-[48px] text-error mb-4">error</span>
                     <h1 className="font-headline-md text-headline-md text-primary mb-2">Không tìm thấy sản phẩm</h1>

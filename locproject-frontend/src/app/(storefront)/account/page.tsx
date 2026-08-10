@@ -133,6 +133,13 @@ export default function AccountPage() {
         }
     }, [activeTab, user]);
 
+    /* ── Warm up sidebar counters (orders/addresses count) ── */
+    useEffect(() => {
+        if (!user) return;
+        apiClient.get('/orders').then(({ data }) => setOrders(data.data || data || [])).catch(() => setOrders([]));
+        apiClient.get('/customers/addresses').then(({ data }) => setAddresses(data.data || data || [])).catch(() => setAddresses([]));
+    }, [user]);
+
     /* ── Load provinces ── */
     useEffect(() => {
         if (showAddressModal) {
@@ -240,7 +247,7 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg">
+        <div className="max-w-container-max mx-auto w-full min-w-0 px-margin-mobile md:px-margin-desktop py-stack-lg">
             <h1 className="font-headline-lg text-headline-lg text-primary mb-6">Tài khoản của tôi</h1>
 
             {/* ── Mobile tabs (horizontal scroll) ── */}
@@ -254,7 +261,7 @@ export default function AccountPage() {
                                 else setActiveTab(item.key as Tab);
                             }}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-body-sm font-label-bold whitespace-nowrap transition-all ${activeTab === item.key
-                                    ? 'bg-primary text-on-primary shadow-sm'
+                                    ? 'bg-primary-100 text-primary-800'
                                     : 'bg-surface-white text-on-surface-variant border border-outline-variant/30 hover:bg-surface-container-low'
                                 }`}
                         >
@@ -270,11 +277,27 @@ export default function AccountPage() {
                 <aside className="hidden md:block w-[240px] flex-shrink-0 md:sticky md:top-24">
                     <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-6">
                         <div className="flex flex-col items-center text-center mb-4">
-                            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[24px] mb-3">
-                                {initials}
+                            <div className="relative mb-3">
+                                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[24px]">
+                                    {initials}
+                                </div>
+                                <button type="button" title="Đổi ảnh"
+                                    className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-surface-white border border-outline-variant flex items-center justify-center text-primary shadow-sm hover:bg-surface-container-low transition-colors">
+                                    <span className="material-symbols-outlined text-[13px]">photo_camera</span>
+                                </button>
                             </div>
                             <p className="font-label-bold text-label-bold text-primary">{user.fullName}</p>
                             <p className="text-caption text-on-surface-variant mt-0.5">{user.email}</p>
+                            <div className="grid grid-cols-2 gap-2 w-full mt-4">
+                                <div className="px-2 py-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-center">
+                                    <p className="font-label-bold text-label-bold text-primary">{ordersLoading ? '…' : orders.length}</p>
+                                    <p className="text-caption text-on-surface-variant">Đơn hàng</p>
+                                </div>
+                                <div className="px-2 py-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-center">
+                                    <p className="font-label-bold text-label-bold text-primary">{addressesLoading ? '…' : addresses.length}</p>
+                                    <p className="text-caption text-on-surface-variant">Địa chỉ</p>
+                                </div>
+                            </div>
                         </div>
                         <hr className="border-outline-variant/30 mb-3" />
                         <nav className="space-y-1">
@@ -285,9 +308,9 @@ export default function AccountPage() {
                                         if (item.key === 'logout') handleLogout();
                                         else setActiveTab(item.key as Tab);
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-body-sm font-label-bold transition-all ${activeTab === item.key
-                                            ? 'bg-primary text-on-primary'
-                                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-primary'
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-body-sm transition-all ${activeTab === item.key
+                                            ? 'bg-primary-100 text-primary-800 font-medium'
+                                            : 'text-on-surface-variant hover:bg-primary-50 hover:text-primary-800'
                                         }`}
                                 >
                                     <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -297,7 +320,7 @@ export default function AccountPage() {
                             <hr className="border-outline-variant/30 my-2" />
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-body-sm font-label-bold text-error hover:bg-error-container transition-all"
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-body-sm font-medium text-error hover:bg-error-container transition-all"
                             >
                                 <span className="material-symbols-outlined text-[20px]">logout</span>
                                 Đăng xuất
@@ -326,10 +349,11 @@ export default function AccountPage() {
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Email</label>
-                                        <div className="flex items-center gap-3">
-                                            <input className="flex-1 px-4 py-3 border border-outline-variant rounded-xl font-body-md bg-surface-container-low text-on-surface-variant outline-none" value={user.email} readOnly />
-                                            <span className="px-3 py-1.5 bg-green-100 text-green-700 text-[11px] font-bold rounded-full">Đã xác thực</span>
-                                        </div>
+                                        <input className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md bg-surface-container-low text-on-surface-variant cursor-not-allowed outline-none" value={user.email} readOnly />
+                                        <p className="flex items-center gap-1 mt-1.5 text-[12px] font-medium text-success-leaf">
+                                            <span className="material-symbols-outlined text-[14px]">verified</span>
+                                            Đã xác thực
+                                        </p>
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Số điện thoại</label>
@@ -352,10 +376,14 @@ export default function AccountPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-3 pt-6 border-t border-outline-variant/20">
+                            <div className="flex flex-col gap-3 pt-6 border-t border-outline-variant/30">
                                 {profileMsg && <p className="text-success-leaf text-body-sm font-bold text-right">{profileMsg}</p>}
                                 {profileError && <p className="text-error text-body-sm text-right">{profileError}</p>}
-                                <div className="flex justify-end">
+                                <div className="flex justify-end gap-3">
+                                    <button onClick={() => { setProfileFullName(user.fullName || ''); setProfilePhone(user.phone || ''); setProfileMsg(''); setProfileError(''); }}
+                                        className="px-8 py-3 rounded-xl border border-outline-variant text-on-surface-variant font-label-bold hover:bg-surface-container-low transition-all">
+                                        Hủy
+                                    </button>
                                     <button onClick={handleSaveProfile} disabled={savingProfile}
                                         className="bg-primary text-on-primary px-8 py-3 rounded-xl font-label-bold hover:opacity-90 transition-all shadow-sm shadow-primary/20 disabled:opacity-50">
                                         {savingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}
@@ -450,7 +478,7 @@ export default function AccountPage() {
                                 </div>
                             ) : addresses.length === 0 ? (
                                 <div className="text-center py-16">
-                                    <span className="material-symbols-outlined text-5xl text-outline mb-4 block">location_off</span>
+                                    <span className="material-symbols-outlined text-5xl text-outline mb-4 block">location_on</span>
                                     <p className="text-body-lg text-on-surface-variant mb-1">Chưa có địa chỉ nào</p>
                                     <p className="text-body-sm text-on-surface-variant mb-6">Thêm địa chỉ để thuận tiện cho việc đặt hàng</p>
                                     <button onClick={() => setShowAddressModal(true)}
