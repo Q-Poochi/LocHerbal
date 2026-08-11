@@ -32,7 +32,7 @@ Settings → Secrets and variables → Actions → New repository secret
 - [ ] PRODUCTION_REDIS_URL
 
 ### Deploy (điền sau khi chọn provider)
-- [ ] RAILWAY_TOKEN               (nếu dùng Railway — `railway login` → token từ Railway dashboard)
+- [x] RAILWAY_API_TOKEN            (Account token — Railway dashboard → Account Settings → Tokens; dùng cho CLI CI)
 - [ ] RAILWAY_BACKEND_SERVICE_ID  (Service ID của backend trên Railway)
 - [ ] RAILWAY_FRONTEND_SERVICE_ID (Service ID của frontend trên Railway)
 - [ ] RAILWAY_ENVIRONMENT_ID      (Environment ID của project trên Railway)
