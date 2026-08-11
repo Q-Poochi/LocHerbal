@@ -29,7 +29,7 @@ jobs:
 
       - name: Typecheck
         working-directory: LocProject
-        run: npx tsc --noEmit
+        run: npx tsc --noEmit -p tsconfig.build.json
 
       - name: Install Railway CLI
         run: curl -fsSL https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
