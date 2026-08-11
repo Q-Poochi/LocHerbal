@@ -32,7 +32,7 @@ jobs:
         run: npx tsc --noEmit -p tsconfig.build.json
 
       - name: Install Railway CLI
-        run: curl -fsSL https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
+        run: npm install -g @railway/cli
 
       - name: Deploy backend to Railway
         working-directory: LocProject
@@ -87,7 +87,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Install Railway CLI
-        run: curl -fsSL https://raw.githubusercontent.com/railwayapp/cli/master/install.sh | sh
+        run: npm install -g @railway/cli
 
       - name: Deploy frontend to Railway
         working-directory: locproject-frontend
