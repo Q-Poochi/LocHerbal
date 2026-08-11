@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCreatedEvent } from '../events/order-created.event';
@@ -8,6 +8,8 @@ import { OrderStatus, PaymentStatus, Coupon, Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
@@ -180,12 +182,31 @@ export class OrderService {
       return newOrder;
     });
 
-    // 5. Emit event báo cho Warehouse module xử lý allocate
+    // 5. Emit (AWAIT) event báo cho Warehouse module xử lý allocate.
+    //    Dùng emitAsync thay emit để checkout KHÔNG trả về trước khi allocate xong —
+    //    loại bỏ race: payment.confirmed (deduct) không bao giờ chạy trước allocate.
     const eventItems = itemsWithCurrentPrice.map((item) => ({
       productVariantId: item.productVariantId,
       qty: item.qty,
     }));
-    this.eventEmitter.emit('order.created', new OrderCreatedEvent(order.id, eventItems));
+    const allocationResults = await this.eventEmitter.emitAsync(
+      'order.created',
+      new OrderCreatedEvent(order.id, eventItems),
+    );
+
+    // Nếu warehouse báo allocate thất bại (thiếu tồn kho), đơn sẽ bị compensating
+    // cancelOrder. Chặn luôn từ checkout để frontend hiển thị lỗi đúng.
+    const failedAllocation = (allocationResults || []).find(
+      (r: any) => r && typeof r === 'object' && r.success === false,
+    );
+    if (failedAllocation) {
+      this.logger.warn(
+        `Checkout thất bại: allocate tồn kho cho đơn ${order.id} không đủ — ${failedAllocation.reason || 'thiếu tồn kho'}`,
+      );
+      throw new BadRequestException(
+        `Không đủ tồn kho cho một số sản phẩm. Đơn hàng đã được hủy tự động. (${failedAllocation.reason || ''})`,
+      );
+    }
 
     return order;
   }

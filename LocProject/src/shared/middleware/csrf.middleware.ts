@@ -3,6 +3,15 @@ import * as crypto from 'crypto';
 
 export const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
+// Các đường dẫn webhook server-to-server (GHN/GHTK/VNPay IPN): nhà cung cấp bên
+// ngoài gọi POST trực tiếp, không có CSRF cookie — được bỏ qua kiểm tra CSRF.
+const CSRF_EXEMPT_PATHS = ['/api/v1/shipping/webhooks/ghn', '/api/v1/shipping/webhooks/ghtk'];
+
+function isCsrfExempt(req: Request): boolean {
+  const path = (req as any)?.path ?? '';
+  return CSRF_EXEMPT_PATHS.some((p) => path === p || path.startsWith(p + '/'));
+}
+
 /**
  * CSRF token cookie middleware: tạo cookie nếu chưa có (chạy TRƯỚC CSRF check).
  */
@@ -24,6 +33,7 @@ export function setCsrfCookie(req: Request, res: Response, next: NextFunction) {
  */
 export function csrfGuard(req: Request, res: Response, next: NextFunction) {
   if (SAFE_METHODS.includes(req.method)) return next();
+  if (isCsrfExempt(req)) return next();
 
   const secFetchSite = req.headers['sec-fetch-site'] as string | undefined;
   if (secFetchSite === 'same-origin' || secFetchSite === 'none') return next();

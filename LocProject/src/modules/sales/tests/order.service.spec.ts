@@ -32,6 +32,7 @@ describe('OrderService', () => {
 
   const mockEventEmitter = {
     emit: jest.fn(),
+    emitAsync: jest.fn().mockResolvedValue([{ success: true }]),
   };
 
   const mockCouponService = {
@@ -179,13 +180,70 @@ describe('OrderService', () => {
       expect(order.customerId).toBe('customer-1');
 
       // Verify event được emit
-      expect(eventEmitter.emit).toHaveBeenCalledWith(
+      expect(eventEmitter.emitAsync).toHaveBeenCalledWith(
         'order.created',
         expect.objectContaining({
           orderId: 'order-1',
           items: [{ productVariantId: 'variant-1', qty: 2 }],
         }),
       );
+    });
+
+    it('should throw BadRequestException when inventory allocation fails', async () => {
+      const mockCart = {
+        id: 'cart-1',
+        items: [{ productVariantId: 'variant-1', qty: 10, priceSnapshot: 1000 }],
+      };
+      mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        {
+          id: 'variant-1',
+          sku: 'SKU-001',
+          name: 'Size L',
+          price: 1500,
+          productId: 'product-1',
+          product: { name: 'Tra Herbal' },
+        },
+      ]);
+      mockPrisma.customerAddress.findUnique.mockResolvedValue({
+        id: 'address-1',
+        customerId: 'customer-1',
+      });
+      mockEventEmitter.emitAsync.mockResolvedValue([
+        { success: false, reason: 'Không đủ tồn kho khả dụng' },
+      ]);
+
+      await expect(
+        service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should not create order when allocation result is empty (no listener)', async () => {
+      // emitAsync không có listener nào đăng ký -> trả [] — đơn không nên bị chặn oan
+      const mockCart = {
+        id: 'cart-1',
+        items: [{ productVariantId: 'variant-1', qty: 1, priceSnapshot: 1000 }],
+      };
+      mockPrisma.cart.findUnique.mockResolvedValue(mockCart);
+      mockPrisma.productVariant.findMany.mockResolvedValue([
+        {
+          id: 'variant-1',
+          sku: 'SKU-001',
+          name: 'Size L',
+          price: 1500,
+          productId: 'product-1',
+          product: { name: 'Tra Herbal' },
+        },
+      ]);
+      mockPrisma.customerAddress.findUnique.mockResolvedValue({
+        id: 'address-1',
+        customerId: 'customer-1',
+      });
+      mockEventEmitter.emitAsync.mockResolvedValue([]);
+
+      const order = await service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1');
+      expect(order.id).toBe('order-1');
+      expect(order.totalAmount).toBe(1500);
     });
 
     it('should apply coupon discount and record usage when couponCode provided', async () => {

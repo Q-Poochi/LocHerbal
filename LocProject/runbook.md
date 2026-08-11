@@ -4,6 +4,41 @@ Tài liệu hướng dẫn xử lý sự cố hạ tầng Database và quy trìn
 
 ---
 
+## 0. Rotation Secrets (JWT + VNPay) — quy trình bắt buộc trước production
+
+> [!WARNING]
+> JWT_ACCESS/REFRESH_SECRET và VNPay HASH_SECRET/TMN_CODE trong `.env` là giá trị
+> sandbox/guessable. **Bắt buộc rotate bằng `openssl rand -hex 64`** trước khi nhận
+> traffic thật. Không dùng chung một secret giữa dev/staging/production.
+
+### Sinh secret mới
+```bash
+# JWT — sinh 2 secret riêng biệt
+openssl rand -hex 64   # dùng cho JWT_ACCESS_SECRET
+openssl rand -hex 64   # dùng cho JWT_REFRESH_SECRET
+```
+
+### 1) Backend (LocProject/.env)
+- Cập nhật `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `VNP_TMN_CODE`, `VNP_HASH_SECRET`.
+- Restart backend process port 4000.
+
+### 2) Frontend (locproject-frontend/.env.local)
+- **BẮT BUỘC đổi `JWT_REFRESH_SECRET` cùng giá trị với backend** rồi restart frontend.
+- Quên 1 trong 2 → `proxy.ts` (Edge proxy) verify sai `refresh_token` bằng
+  `process.env.JWT_REFRESH_SECRET` → redirect nhầm user hợp lệ về `/login` dù backend
+  token vẫn còn hạn — dễ nhầm thành bug khác.
+
+### 3) VNPay dashboard
+- Vào VNPay dashboard tạo **bộ khóa mới** (TMN_CODE + HASH_SECRET) rồi cập nhật `.env`.
+- Test lại flow thanh toán sandbox trước khi lên production.
+
+### 4) Staging/Production (Railway)
+- Cập nhật qua GitHub Secrets (`STAGING_JWT_*`, `STAGING_VNP_*`) hoặc Railway Variable UI.
+- Deploy lại bằng workflow `deploy-staging.yml`.
+
+---
+
+
 ## 1. Khi Database Down thì làm gì?
 
 Khi hệ thống giám sát cảnh báo Database Down hoặc ứng dụng báo lỗi kết nối liên tục (`ETIMEDOUT`, `Connection refused`), thực hiện các bước sau:

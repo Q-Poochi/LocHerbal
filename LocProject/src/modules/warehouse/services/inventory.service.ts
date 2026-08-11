@@ -138,6 +138,35 @@ export class InventoryService {
   }
 
   /**
+   * Xác minh đơn hàng đã được allocate đủ trước khi deduct (defense-in-depth).
+   * Đếm StockMovement RESERVED theo referenceId=orderId, trừ RELEASED (nếu đơn đã
+   * bị hủy một phần). Trả false nếu tổng reserve < tổng qty cần — lúc đó KHÔNG
+   * được deduct (rò stock).
+   */
+  async isOrderFullyAllocated(orderId: string, items: { qty: number }[]): Promise<boolean> {
+    if (!items.length) return false;
+
+    const movements = await this.prisma.stockMovement.findMany({
+      where: {
+        referenceType: 'ORDER',
+        referenceId: orderId,
+        type: { in: ['RESERVED', 'RELEASED'] },
+      },
+      select: { type: true, qty: true },
+    });
+
+    let totalReserved = 0;
+    let totalReleased = 0;
+    for (const m of movements) {
+      if (m.type === 'RESERVED') totalReserved += m.qty;
+      if (m.type === 'RELEASED') totalReleased += m.qty;
+    }
+
+    const needed = items.reduce((sum, i) => sum + i.qty, 0);
+    return totalReserved - totalReleased >= needed;
+  }
+
+  /**
    * Nhập kho thực tế khi nhận hàng từ nhà cung cấp (Purchase Order).
    * Upsert StockItem (tạo mới nếu chưa có với qty_on_hand/qty_reserved = 0),
    * sau đó cộng qty_on_hand bằng UPDATE atomic, và ghi StockMovement INBOUND.

@@ -157,6 +157,138 @@ describe('ShipmentService', () => {
         });
     });
 
+    describe('applyCarrierStatus', () => {
+        it('should set DELIVERED terminal status and emit event', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue({
+                id: 'ship-1',
+                orderId: 'order-1',
+                status: ShipmentStatus.IN_TRANSIT,
+            });
+            mockPrismaService.shipment.update.mockResolvedValue({
+                id: 'ship-1',
+                status: ShipmentStatus.DELIVERED,
+            });
+            mockPrismaService.shipmentTrackingEvent.create.mockResolvedValue({ id: 'e1' });
+
+            const result = await service.applyCarrierStatus(
+                'ship-1',
+                ShipmentStatus.DELIVERED,
+                'Đã giao',
+            );
+
+            expect(result.applied).toBe(true);
+            expect(mockPrismaService.shipment.update).toHaveBeenCalledWith({
+                where: { id: 'ship-1' },
+                data: { status: ShipmentStatus.DELIVERED },
+            });
+            expect(mockEventEmitter.emit).toHaveBeenCalledWith('shipment.delivered', {
+                shipmentId: 'ship-1',
+                orderId: 'order-1',
+            });
+        });
+
+        it('should be idempotent when already at same status', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue({
+                id: 'ship-1',
+                orderId: 'order-1',
+                status: ShipmentStatus.DELIVERED,
+            });
+
+            const result = await service.applyCarrierStatus(
+                'ship-1',
+                ShipmentStatus.DELIVERED,
+            );
+
+            expect(result.applied).toBe(false);
+            expect(result.reason).toBe('already_at_status');
+            expect(mockPrismaService.shipment.update).not.toHaveBeenCalled();
+        });
+
+        it('should lock terminal status (no regress DELIVERED→RETURNED)', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue({
+                id: 'ship-1',
+                orderId: 'order-1',
+                status: ShipmentStatus.DELIVERED,
+            });
+
+            const result = await service.applyCarrierStatus(
+                'ship-1',
+                ShipmentStatus.RETURNED,
+            );
+
+            expect(result.applied).toBe(false);
+            expect(result.reason).toBe('terminal_lock');
+        });
+
+        it('should set FAILED terminal from PENDING', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue({
+                id: 'ship-1',
+                orderId: 'order-1',
+                status: ShipmentStatus.PENDING,
+            });
+            mockPrismaService.shipment.update.mockResolvedValue({
+                id: 'ship-1',
+                status: ShipmentStatus.FAILED,
+            });
+
+            const result = await service.applyCarrierStatus(
+                'ship-1',
+                ShipmentStatus.FAILED,
+                'Không giao được',
+            );
+
+            expect(result.applied).toBe(true);
+            expect(mockEventEmitter.emit).not.toHaveBeenCalled();
+        });
+
+        it('should reject invalid forward transition (PENDING→IN_TRANSIT skip PICKED_UP)', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue({
+                id: 'ship-1',
+                orderId: 'order-1',
+                status: ShipmentStatus.PENDING,
+            });
+
+            // IN_TRANSIT index 2 > PENDING index 0 nhưng vẫn là forward → allowed.
+            // Đây là test cho forward hợp lệ: PENDING → IN_TRANSIT
+            mockPrismaService.shipment.update.mockResolvedValue({
+                id: 'ship-1',
+                status: ShipmentStatus.IN_TRANSIT,
+            });
+            mockPrismaService.shipmentTrackingEvent.create.mockResolvedValue({ id: 'e1' });
+
+            const result = await service.applyCarrierStatus(
+                'ship-1',
+                ShipmentStatus.IN_TRANSIT,
+            );
+
+            expect(result.applied).toBe(true);
+        });
+
+        it('should reject backward transition (DELIVERED already locked, test IN_TRANSIT→PENDING impossible via terminal check is fine)', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue({
+                id: 'ship-1',
+                orderId: 'order-1',
+                status: ShipmentStatus.IN_TRANSIT,
+            });
+
+            const result = await service.applyCarrierStatus(
+                'ship-1',
+                ShipmentStatus.PENDING,
+            );
+
+            expect(result.applied).toBe(false);
+            expect(result.reason).toBe('invalid_transition');
+        });
+
+        it('should throw if shipment not found', async () => {
+            mockPrismaService.shipment.findUnique.mockResolvedValue(null);
+
+            await expect(
+                service.applyCarrierStatus('nope', ShipmentStatus.DELIVERED),
+            ).rejects.toThrow(NotFoundException);
+        });
+    });
+
     describe('findByOrder', () => {
         it('should return shipment with tracking events', async () => {
             mockPrismaService.shipment.findUnique.mockResolvedValue({

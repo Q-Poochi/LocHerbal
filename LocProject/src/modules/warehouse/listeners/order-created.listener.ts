@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
+import { AllocationStatus } from '@prisma/client';
 import { OrderCreatedEvent } from '../../sales/events/order-created.event';
 import { InventoryService } from '../services/inventory.service';
 import { InventoryAllocationFailedEvent } from '../events/inventory-allocation-failed.event';
 import { InsufficientStockException } from '../exceptions/insufficient-stock.exception';
+import { PrismaService } from '../../../shared/prisma/prisma.service';
 
 @Injectable()
 export class OrderCreatedListener {
@@ -12,16 +14,24 @@ export class OrderCreatedListener {
   constructor(
     private readonly inventoryService: InventoryService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly prisma: PrismaService,
   ) { }
 
   @OnEvent('order.created')
-  async handleOrderCreatedEvent(event: OrderCreatedEvent) {
+  async handleOrderCreatedEvent(event: OrderCreatedEvent): Promise<{ success: boolean; reason?: string }> {
     this.logger.log(`Handling order.created event for order: ${event.orderId}`);
     try {
       for (let i = 0; i < event.items.length; i++) {
         const item = event.items[i];
         await this.inventoryService.allocate(item.productVariantId, item.qty, event.orderId);
       }
+
+      // Ghi idempotency key — payment-confirmed (deduct) chỉ chạy khi ALLOCATED
+      await this.prisma.order.update({
+        where: { id: event.orderId },
+        data: { allocationStatus: AllocationStatus.ALLOCATED },
+      });
+      return { success: true };
     } catch (error) {
       const failedItemIndex = this.findFailedItemIndex(error, event.items);
       const failedVariantId = failedItemIndex >= 0 ? event.items[failedItemIndex].productVariantId : 'unknown';
@@ -52,6 +62,21 @@ export class OrderCreatedListener {
           failedItemIndex,
         ),
       );
+
+      // Ghi idempotency key FAILED — payment-confirmed (deduct) KHÔNG được chạy
+      try {
+        await this.prisma.order.update({
+          where: { id: event.orderId },
+          data: { allocationStatus: AllocationStatus.FAILED },
+        });
+      } catch (updateError) {
+        this.logger.error(
+          `Failed to mark order ${event.orderId} allocation FAILED: ${(updateError as any).message}`,
+        );
+      }
+
+      // Trả về failure để OrderService (checkout) biết và chặn đơn đang thiếu tồn kho
+      return { success: false, reason: (error as any).message || 'Không đủ tồn kho khả dụng' };
     }
   }
 

@@ -3,10 +3,10 @@ name: Backend CI
 on:
   push:
     branches: [main, develop]
-    paths: ['LOCPROJECT/**']
+    paths: ['LocProject/**']
   pull_request:
     branches: [main]
-    paths: ['LOCPROJECT/**']
+    paths: ['LocProject/**']
 
 jobs:
   test:
@@ -43,16 +43,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: LOCPROJECT/package-lock.json
+          cache-dependency-path: LocProject/package-lock.json
 
       - name: Install dependencies
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npm ci
 
       - name: Setup test environment
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: |
           cp .env.example .env
           echo "DATABASE_URL=postgresql://postgres:postgres_password@localhost:5432/ecommerce_test" >> .env
@@ -63,14 +63,14 @@ jobs:
           echo "REDIS_PORT=6379" >> .env
 
       - name: Run migrations
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
           DIRECT_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
 
       - name: Run tests
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npm test -- --forceExit
         env:
           NODE_ENV: test
@@ -81,6 +81,21 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
 
+      - name: Run e2e saga tests
+        working-directory: LocProject
+        run: npx jest --config test/jest-e2e.json --forceExit
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
+          DIRECT_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
+          JWT_ACCESS_SECRET: ci_access_secret_not_for_production
+          JWT_REFRESH_SECRET: ci_refresh_secret_not_for_production
+          VNP_TMN_CODE: CI_TEST
+          VNP_HASH_SECRET: ci_vnp_hash_not_for_production
+          VNP_URL: https://sandbox.vnpayment.vn/
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
       - name: Build
-        working-directory: LOCPROJECT
+        working-directory: LocProject
         run: npm run build

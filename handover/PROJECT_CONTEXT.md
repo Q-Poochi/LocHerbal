@@ -33,16 +33,17 @@
 | | Accounting | ✅ Xong + test | 8/8 unit test pass | Invoice, PaymentTransaction, revenue report, payment.confirmed listener |
 | | Marketing | ✅ Xong + test | 26/26 unit test pass | Banner, Coupon, BlogPost CRUD |
 | | Supplier | ✅ Xong + test | 2 suite (supplier.service + purchase-order.service) | Supplier CRUD, Purchase Order, receive-items → restock event |
-| | Shipping | ✅ Xong + test | 2 suite (carrier.service + shipment.service) | Carrier, Shipment, tracking events, order-confirmed listener |
+| | Shipping | ✅ Xong + test | 5 suite (carrier + shipment + 2 listeners + **carrier-webhook**) | Carrier, Shipment, tracking events, order-confirmed listener, **webhook GHN/GHTK** |
 | | Admin Dashboard | ✅ Xong (chưa có test riêng) | GET /admin/dashboard/* controllers | KPI stats, revenue-by-day, top-products, CSV export (client) |
 
-**Tổng test backend: 120/120 pass (14 suites)** — verified lại 04/08/2026
+**Tổng test backend: 229/229 pass (32 suites, unit) + 1 e2e saga (32 suites) — verified lại 11/08/2026**
 **API endpoints mới:**
 - **Accounting:** GET /accounting/revenue, GET /accounting/invoices, GET /accounting/invoices/:orderId, GET /accounting/transactions/:orderId
 - **Marketing:** GET/POST/PATCH/DELETE /marketing/banners, GET/POST/PATCH/DELETE /marketing/coupons, POST /marketing/coupons/validate, GET/POST/PATCH/DELETE /marketing/blog-posts
 - **Admin Dashboard:** GET /admin/dashboard/stats, GET /admin/dashboard/revenue-by-day?days=, GET /admin/dashboard/top-products?limit= (@Roles('admin','staff'))
 - **Supplier:** GET/POST /supplier, GET/PATCH/DELETE /supplier/:id (admin/staff)
 - **Shipping:** GET /api/v1/shipping/shipments/order/:orderId (@Public), POST /api/v1/shipping/shipments, PATCH /api/v1/shipping/shipments/:id/status, POST /api/v1/shipping/shipments/:id/tracking (ADMIN)
+- **Shipping webhook:** POST /api/v1/shipping/webhooks/ghn?token= (@Public, GHN status → ShipmentStatus, idempotent), POST /api/v1/shipping/webhooks/ghtk?hash= (@Public, GHTK status_id → ShipmentStatus, idempotent). Token xác thực: `GHN_WEBHOOK_TOKEN` / `GHTK_WEBHOOK_TOKEN`. Nếu để trống → mọi request bị 403. Đã exempt khỏi CSRF guard + nhận cả form-urlencoded.
 
 
 ---
@@ -291,6 +292,8 @@ src/components/admin/products/
 **PHASE E — End-to-end testing & VNPay sandbox**
 - ✅ Test thật VNPay sandbox — **HOÀN TẤT** (04/08/2026): `GET /payment/vnpay-url?orderId=` trả URL sandbox hợp lệ, IPN flow CONFIRMED|PAID verified, đã fix typo `VNP_HASH_SECRET` (`NJPO`→`NJP0`)
 - ✅ E2E mua hàng qua API + curl frontend — **HOÀN TẤT** (04/08/2026): thêm giỏ → checkout COD/VNPay → order success → /orders/:id (xem Task 3 nhật ký)
+- ✅ **E2E backend saga test — HOÀN TẤT 11/08/2026**: `test/order-saga.e2e-spec.ts` — checkout (emitAsync allocate) → payment.confirmed (deduct) → shipment DELIVERED. Chạy: `npx jest --config test/jest-e2e.json` (cần DATABASE_URL trỏ DB `ecommerce_test` đã migrate). Config `test/jest-e2e.json`, DB test tạo thủ công (port 5434).
+- ✅ **Webhook GHN/GHTK — HOÀN TẤT 11/08/2026** (code + unit test 37/37 shipping, chưa live vì thiếu sandbox token): POST /api/v1/shipping/webhooks/ghn + /ghtk, map status idempotent, dùng `applyCarrierStatus` (khác updateStatus: chấp nhận FAILED/RETURNED terminal, không regress).
 - ⬜ E2E test Playwright: luồng mua hàng đầu đến cuối trên browser — **CẦN MODEL MẠNH**
 - ⬜ Load test k6: 500 concurrent users trên /products và checkout (baseline k6 đã có, xem §12)
 
@@ -299,8 +302,9 @@ src/components/admin/products/
   - GET/POST /customers/addresses
   - PATCH /customers/addresses/:id/default
   - DELETE /customers/addresses/:id
+- ✅ **CI/CD + Railway config — RÀ SOÁT & FIX 11/08/2026** (chưa deploy thật): `railway.json` + `Dockerfile` + `deploy-staging.yml` đã có. Đã fix: backend-ci dùng path `LOCPROJECT` (case-sensitive sai trên Linux → `LocProject`), deploy-staging dùng biến `RAILWAY_BACKEND_SERVICE_ID`/`RAILWAY_FRONTEND_SERVICE_ID` chưa khai báo (đổi thành `$RAILWAY_SERVICE_ID`), thêm e2e step vào backend-ci, thêm GHN/GHTK webhook tokens + đồng bộ Node 22. Secrets cần set: xem `.github/SECRETS_CHECKLIST.md` + mục 0 trong `LocProject/DEPLOYMENT_CHECKLIST.md`.
 - Bước 2: E2E test Playwright cho luồng mua hàng (cần model mạnh trước)
-- Bước 3: CI/CD pipeline GitHub Actions (có thể làm song song nếu chưa có model)
+- Bước 3: CI/CD pipeline GitHub Actions (đã có config, cần set secrets + push thử)
 - Bước 4: Đổi bitnamilegacy → managed DB (Azure/Supabase)
 - Bước 5: Deploy staging
 

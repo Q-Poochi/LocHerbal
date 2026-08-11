@@ -13,6 +13,16 @@ const mockLead = {
     preferredTime: '14:00',
 };
 
+/** Ngày tới có getUTCDay = targetDay (0=CN..6=T7), luôn ở tương lai — tránh hardcode. */
+function nextWeekdayDate(targetDay: number): string {
+    const now = new Date();
+    const delta = (targetDay - now.getUTCDay() + 7) % 7;
+    const next = new Date(now);
+    next.setUTCDate(now.getUTCDate() + (delta === 0 ? 7 : delta));
+    next.setUTCHours(12, 0, 0, 0); // trưa UTC: tránh lệch ngày theo timezone
+    return next.toISOString().slice(0, 10);
+}
+
 describe('ConsultationService', () => {
     let service: ConsultationService;
     const prisma = {
@@ -42,19 +52,19 @@ describe('ConsultationService', () => {
 
     describe('getSlots', () => {
         it('returns empty slots for Sunday', async () => {
-            const result = await service.getSlots('2026-08-09');
+            const result = await service.getSlots(nextWeekdayDate(0));
             expect(result.preferredHours).toEqual([]);
         });
 
         it('returns 08:00..16:00 for Monday', async () => {
-            const result = await service.getSlots('2026-08-10');
+            const result = await service.getSlots(nextWeekdayDate(1));
             expect(result.preferredHours).toHaveLength(9);
             expect(result.preferredHours[0].label).toBe('08:00');
             expect(result.preferredHours[8].label).toBe('16:00');
         });
 
         it('returns 08:00..11:00 for Saturday', async () => {
-            const result = await service.getSlots('2026-08-15');
+            const result = await service.getSlots(nextWeekdayDate(6));
             expect(result.preferredHours.map((s) => s.label)).toEqual(['08:00', '09:00', '10:00', '11:00']);
         });
 

@@ -27,14 +27,26 @@
 | Settings (module 10) | ✅ Xong + test | `CompanySettings` model + SettingsModule, GET /settings/company (public) + PATCH admin. Admin form + Footer live. |
 | Consultation (module 11) | ✅ Xong + test | `ConsultationLead` (preferredDate/preferredTime/confirmedAt) + LeadStatus thêm CONFIRMED/CANCELLED. Booking public theo giờ làm việc (T2-T6 08-17, T7 08-12, CN nghỉ), admin list + status flow. 13 test. |
 | Supplier | ✅ Có + test | Supplier 9 + PurchaseOrder 12 → 21. |
-| Shipping | ✅ Có + test | Carrier 8 + Shipment 15... `@Roles('ADMIN')` uppercase bug đã sửa. |
+| Shipping | ✅ Có + test | Carrier 8 + Shipment 15 + webhook GHN/GHTK 19 → 37 test. `@Roles('ADMIN')` uppercase bug đã sửa. |
 | Admin (module 9) | ⚠️ Không có test | Dashboard có controller/service nhưng 0 spec. |
 
-Tổng: **22 suites / 188 unit tests** (toàn bộ unit test mock Prisma, chưa có e2e).
+Tổng: **32 suites / 234 unit tests** (toàn bộ unit test mock Prisma) + **1 e2e saga** (`test/order-saga.e2e-spec.ts`: checkout→allocate→deduct→delivered, chạy `npx jest --config test/jest-e2e.json` với DB `ecommerce_test`).
 
 Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / ⚠️ Có vấn đề cần xem lại
 
 ## 3. Việc đang làm dở (để phiên sau tiếp tục đúng chỗ)
+- **Saga hardening + webhook GHN/GHTK + CI/CD (11/08/2026, G2-7→G2-9):**
+  - **G1-1**: OrderCreatedListener đổi sang `emitAsync` — checkout `await` allocate xong mới trả về.
+  - **G1-2**: VNPay IPN idempotent + retry chain; **G1-3**: checkout tách subdomain + gộp cart; **G1-4**: bỏ direct POST /orders; **G1-5**: README rules.
+  - **G2-7**: e2e saga test (`test/order-saga.e2e-spec.ts`) PASS — checkout allocate 2 đơn vị, payment deduct, shipment DELIVERED.
+  - **G2-8**: webhook GHN (`/api/v1/shipping/webhooks/ghn?token=`) + GHTK (`/api/v1/shipping/webhooks/ghtk?hash=`) — map status idempotent qua `ShipmentService.applyCarrierStatus`, exempt CSRF, nhận form-urlencoded, unit test 19. Chưa live vì thiếu sandbox token.
+  - **G2-9**: rà soát Railway/CI-CD — fix case-sensitive `LOCPROJECT`→`LocProject` (backend-ci), fix biến `RAILWAY_*_SERVICE_ID` chưa khai báo (deploy-staging), thêm e2e step, Node 22, secrets GHN/GHTK. Hướng dẫn: mục 0 `DEPLOYMENT_CHECKLIST.md` + `.github/SECRETS_CHECKLIST.md`.
+- **W1 — P0 idempotency `allocationStatus` cho saga allocate/deduct (11/08/2026):** ✅ Xong + có test.
+  - Migration `20260811000000_add_order_allocation_status`: enum `AllocationStatus` (PENDING|ALLOCATED|FAILED) + cột `orders.allocation_status` default PENDING.
+  - `order-created.listener`: set `ALLOCATED` sau khi allocate đủ hết items; set `FAILED` (try/catch không che lỗi gốc) + emit `inventory.allocation.failed` + trả `{success:false}` để checkout chặn đơn.
+  - `payment-confirmed.listener`: đọc `allocationStatus` qua `waitForAllocation()` — `ALLOCATED`→deduct, `PENDING`→retry đọc lại DB (max 3 lần, delay 200ms), `FAILED`/hết retry/không thấy order→KHÔNG deduct + ghi audit `orderStatusHistory` (changedBy `WAREHOUSE_AUDIT`). Giữ `isOrderFullyAllocated` như lớp defense-in-depth cuối.
+  - Test: `payment-confirmed.listener.spec.ts` 7 case (ALLOCATED deduct / PENDING→ALLOCATED retry deduct / PENDING hết retry không deduct / FAILED không deduct / order không tồn tại / reserve thiếu / deduct fail audit); `order-created.listener.spec.ts` 4 case (ALLOCATED, FAILED + compensation, FAILED không release, lỗi DB không che lỗi gốc).
+- **Báo cáo đánh giá tổng thể (11/08/2026)**: `REPORT_DANH_GIA_HE_THONG.md` (repo root) — rà soát toàn bộ điểm yếu với file:line xác minh + khuyến nghị P0-P3. Mục 5 §5 đã đồng bộ theo báo cáo này. P0 đã đóng (idempotency `allocationStatus` cho `payment.confirmed` + spec 8 listener saga & Admin dashboard). Ưu tiên tiếp theo: unit test revenue report/controller (accounting), webhook GHN/GHTK live test với sandbox token.
 - **Hoàn tất 3 phase xây dựng tính năng mới (09/08/2026):**
   - **Phase 1 — Marketing (commit `73518ac`)**: Admin CRUD Banner/Blog/Coupon (list + form + ImageUploader + ConfirmDialog), homepage wire public banners/blog/coupons. Fix: banner create nhận `isActive`, blog status lowercase + auto `publishedAt`.
   - **Phase 2 — Settings (commit `0ed635c`)**: `CompanySettings` (default row `company-default`), GET /settings/company public, admin GET/PATCH, `/admin/settings` form, Footer live (hotline, address, email, workingHours), /ve-chung-toi + /lien-he client pages.
@@ -56,16 +68,17 @@ Trạng thái: ⬜ Chưa bắt đầu / 🟨 Đang làm / ✅ Xong + có test / 
 - **Prisma Pinned to v6.x (v6.19.3)**: Dự án đang ghim phiên bản Prisma ở `6.19.3` để tránh độ phức tạp cấu hình của Prisma 7 (driver adapters, config file mới). Cần lên kế hoạch nâng cấp lên Prisma 7 khi hệ sinh thái ổn định hơn và cấu hình driver adapter được tích hợp mượt mà.
 - **Redis Permission Cache**: Cần triển khai cơ chế cache quyền hạn vào Redis (key: `permissions:{userId}`, TTL 15 phút) tại các NestJS Guards để giảm tải truy vấn DB và tránh lỗi thời khi dùng JWT payload quá lớn.
 - **Test thật VNPay sandbox**: Chưa test thật VNPay sandbox — thực hiện sau khi có Storefront tối thiểu để đóng open item cuối cùng của Sales module.
-- **Compensating Saga Error Check**: Cơ chế compensating saga trong `order-created.listener.ts` đang dùng `error.message.includes()` để tìm `failedItemIndex` — dễ bị lỗi (fragile) khi format lỗi thay đổi. Cần refactor sang custom `InsufficientStockException` có chứa field `variantId` riêng sau khi hoàn thành các module còn lại.
 - **Rotate secrets (đang chờ chủ dự án)**: JWT_ACCESS/REFRESH_SECRET và VNPay HASH_SECRET/TMN_CODE trong `.env` là giá trị sandbox thật/guessable. Cần rotate bằng `openssl rand -hex 64` + đổi trong VNPay dashboard. `.env.example` đã bổ sung đầy đủ keys (08/08/2026).
   - **GHI CHÚ VẬN HÀNH (rotate JWT_REFRESH_SECRET)**: Phải đổi **đồng thời, cùng giá trị** ở cả 2 nơi, rồi restart cả 2 service: (1) Backend `LocProject/.env`, (2) Frontend `locproject-frontend/.env.local`. Quên 1 trong 2 sẽ khiến `proxy.ts` (Edge middleware) verify sai `refresh_token` bằng `process.env.JWT_REFRESH_SECRET` → redirect nhầm user hợp lệ về `/login` dù backend token vẫn còn hạn — dễ nhầm thành bug khác.
-- **Saga fire-and-forget không bền**: `checkout` trả về trước khi `order.created→allocate` xong; `payment.confirmed→deduct` có thể chạy trước allocate → rò stock. Cần outbox/idempotency key. `shipment.delivered` chưa có listener → đơn không tự DELIVERED; `order.confirmed` không ai emit → `order-confirmed.listener.ts` chết.
-- **Coupon/Shipping chưa wire**: `order.service.ts` hardcode `discountAmount=0, shippingFee=0`; `coupon.service.ts` không được gọi từ checkout.
-- **Nhiều DTO thiếu validator**: e.g. `CreateCarrierDto` không có `@IsString()` → POST luôn 400 (whitelist+forbidNonWhitelisted). Cần bổ sung validator decorator.
+- **Saga fire-and-forget không bền (ĐÃ ĐÓNG 11/08/2026)**: `checkout` trả về trước khi `order.created→allocate` xong; `payment.confirmed→deduct` chạy không kiểm tra allocate đã xong → rò stock. Đã fix bằng 2 lớp: (1) checkout dùng `emitAsync` chờ allocate xong; (2) cột idempotency `orders.allocation_status` (W1) — deduct chỉ chạy khi `ALLOCATED`, retry nếu `PENDING`, chặn nếu `FAILED`, kèm `isOrderFullyAllocated` defense-in-depth. [Các ghi chú cũ khác đã đóng trước đó: `shipment.delivered` giờ CÓ listener tự chuyển DELIVERED (`shipment-delivered.listener.ts`) và `order.confirmed` CÓ emit từ admin + VNPay IPN → `order-confirmed.listener.ts` sống, chỉ còn TODO tích GHN/GHTK.]
+- **Shipping chưa tính phí**: `order.service.ts:102` hardcode `shippingFee=0` — Carrier đã có model nhưng chưa wire vào checkout (Coupon thì ĐÃ wire: validate + ghi CouponUsage + usedCount atomic trong cùng transaction).
+- **1 DTO thiếu validator**: `add-tracking-event.dto.ts` (shipping) không có bất kỳ `@Is*()` nào — `whitelist` sẽ chặn các field payload. (CreateCarrierDto đã có validator đầy đủ.)
 - **Revenue 2 nguồn khác nhau**: accounting (lọc 1000 invoices) vs dashboard (aggregate orders).
-- **Chưa có ConfigModule**: 28+ chỗ đọc `process.env` trực tiếp; env thiếu fail-silent.
-- **Controller làm business/Prisma trực tiếp** (product/order/accounting/customer...) — vi phạm layering.
-- **Test chưa phủ vùng rủi ro**: guards (jwt-auth/roles), CSRF middleware, inventory allocate/release/deduct, listeners saga — 0 test. Admin module 0 test. Chưa có e2e/CI.
+- **ConfigService dùng chưa triệt để**: ConfigModule + `env.validation.ts` fail-fast (DATABASE_URL, JWT_*, VNP_*) ĐÃ có (08/2026) nhưng vẫn còn **32 chỗ đọc `process.env` trực tiếp** (`jwt.strategy.ts`, `otp.service.ts`, `auth.controller.ts`, `upload.controller.ts`, `catalog.module.ts` Redis, `vnpay.service.ts`, `app.module.ts` THROTTLE_LIMIT…). `AUTH_THROTTLE_LIMIT`, `SMS_PROVIDER_API_KEY`, `REDIS_HOST/PORT`, `API_URL`, CORS origins chưa được validate.
+- **CORS+base URL hardcode dev**: `main.ts` origin cố định `localhost:3000/3001/4000`; `upload.controller.ts` fallback `http://localhost:4000` — cần theo env cho staging/prod.
+- **Controller làm business/Prisma trực tiếp** (shipment, customer 12 chỗ, cart, payment, product, review, order, wishlist — 8 controller/27 chỗ) — vi phạm layering.
+- **Test chưa phủ vùng rủi ro (đã đóng đợt 11/08/2026)**: guards (jwt-auth 6, roles 7), CSRF middleware (8), inventory allocate/deduct/release (8), **8 listener saga (đã có spec: order-created, order-cancelled, payment-confirmed ×2, purchase-order-received, inventory-allocation-failed, order-confirmed, shipment-delivered), Admin dashboard 1 spec (`dashboard.service.spec.ts`), e2e saga (`test/order-saga.e2e-spec.ts`)**. Còn thiếu: unit test cho `revenue` report/controller (accounting), `carrier-webhook.controller` (service đã có 19 test).
+- **Deploy pipeline chưa thật**: `deploy-staging.yml` các bước deploy chỉ là `echo` TODO; frontend CI không chạy e2e/unit trong pipeline.
 - **Đã sửa Đợt 1 (08/08/2026)**: `@Roles('ADMIN')`→`admin,staff`; IDOR shipment (ownership fail-closed); upload extension allowlist + ép đuôi theo MIME; bỏ fake product data (rating/soldCount/hardcode health text) → tính từ DB; cache category invalidation đúng key; `.gitignore` + untrack file rác (log/cookies/seed.js/migration_lock); **CSRF fail-closed** (request có dấu browser/Origin hoặc có csrf cookie mà không khớp x-csrf-token → 403; client trần không cookie được qua). Đã verify runtime bằng ma trận 6 case.
 - **Frontend phải gửi header `x-csrf-token`**: CSRF cookie `csrf_token` là `httpOnly:false` — frontend (localhost:3000, cross-origin same-site) phải đọc từ `document.cookie` và gửi kèm mọi POST/PATCH/DELETE, nếu không bị 403. Đây là hành vi từ trước nhưng giờ fail-closed chặt hơn.
 

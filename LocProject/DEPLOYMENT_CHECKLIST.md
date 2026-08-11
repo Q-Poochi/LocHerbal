@@ -1,22 +1,70 @@
 # Triển khai LocHerbal — Checklist sản xuất
 
+## 0. Deploy lên Railway (recommended path)
+
+Config đã có sẵn trong repo:
+- `railway.json` — builder DOCKERFILE, start command `npx prisma migrate deploy && node dist/main`, healthcheck `/health`
+- `Dockerfile` — multi-stage Node 22, tự `prisma generate` + build
+- `.github/workflows/deploy-staging.yml` — CI/CD push `main` → Railway (backend + frontend)
+- `.github/workflows/backend-ci.yml`, `frontend-ci.yml` — test/build khi push
+
+### Bước 1 — Tạo project trên Railway
+```bash
+railway init   # tạo project mới, nhớ ghi lại Project ID
+```
+
+### Bước 2 — Tạo 2 service
+```bash
+# Backend (repo gốc LocProject/, dùng Dockerfile)
+railway add --name backend
+railway up --service backend
+
+# Frontend (repo locproject-frontend/)
+railway add --name frontend
+```
+
+### Bước 3 — Thêm GitHub Secrets (Settings → Secrets and variables → Actions)
+Xem danh sách đầy đủ trong `.github/SECRETS_CHECKLIST.md`. Bắt buộc:
+- `RAILWAY_TOKEN` — lấy từ Railway: Account Settings → Tokens
+- `RAILWAY_BACKEND_SERVICE_ID` — `railway status --service backend` (hoặc Dashboard → Service → Copy Service ID)
+- `RAILWAY_FRONTEND_SERVICE_ID`
+- `RAILWAY_ENVIRONMENT_ID` — `railway status` → Environment ID
+- `STAGING_DATABASE_URL` / `STAGING_DIRECT_URL` — Railway PostgreSQL plugin
+- `STAGING_JWT_ACCESS_SECRET` / `STAGING_JWT_REFRESH_SECRET` — `openssl rand -hex 64`
+- `STAGING_VNP_TMN_CODE` / `STAGING_VNP_HASH_SECRET` / `STAGING_VNP_URL`
+- `STAGING_GHN_WEBHOOK_TOKEN` / `STAGING_GHTK_WEBHOOK_TOKEN` (nếu dùng webhook GHN/GHTK)
+- `STAGING_API_URL` (secret) + vars `STAGING_FRONTEND_URL`
+
+### Bước 4 — Deploy
+Push lên `main` → workflow `Deploy Staging` tự chạy. Hoặc thủ công:
+```bash
+railway up --service backend --ci
+```
+
+### Bước 5 — Verify
+- `GET https://<backend>.up.railway.app/health` → `{ status: 'ok' }`
+- Đăng ký webhook GHN với URL:
+  `https://<backend>.up.railway.app/api/v1/shipping/webhooks/ghn?token=<GHN_WEBHOOK_TOKEN>`
+- GHTK webhook URL dùng tham số `?hash=`:
+  `https://<backend>.up.railway.app/api/v1/shipping/webhooks/ghtk?hash=<GHTK_WEBHOOK_TOKEN>`
+
 ## 1. Environment variables (.env production)
 | Variable | Mô tả | Bắt buộc |
 |----------|-------|----------|
 | `DATABASE_URL` | PostgreSQL connection string (nên dùng PgBouncer) | ✓ |
-| `JWT_SECRET` | Secret key cho JWT (>= 32 ký tự ngẫu nhiên) | ✓ |
-| `JWT_REFRESH_SECRET` | Secret key cho Refresh Token (>= 32 ký tự) | ✓ |
+| `JWT_ACCESS_SECRET` | Secret key cho JWT access token (>= 64 ký tự ngẫu nhiên) | ✓ |
+| `JWT_REFRESH_SECRET` | Secret key cho Refresh Token (>= 64 ký tự) | ✓ |
 | `PORT` | Cổng backend (mặc định 4000) | |
 | `NODE_ENV` | `production` | ✓ |
-| `FRONTEND_URL` | URL frontend (VD: `https://locherbal.com`) | ✓ |
-| `UPLOAD_DIR` | Thư mục lưu file upload (mặc định `./uploads`) | |
-| `UPLOAD_MAX_FILE_SIZE` | Dung lượng tối đa (bytes, mặc định 5MB) | |
-| `VNPAY_TMN_CODE` | Mã website VNPay | ✓ (nếu dùng VNPay) |
-| `VNPAY_HASH_SECRET` | Secret key VNPay | ✓ (nếu dùng VNPay) |
-| `VNPAY_URL` | URL VNPay sandbox/production | |
-| `VNPAY_RETURN_URL` | URL return VNPay | |
-| `REDIS_URL` | Redis connection string (nếu dùng cache) | |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Cấu hình email | |
+| `CORS_ORIGINS` | CSV các origin frontend cho phép | ✓ |
+| `VNP_TMN_CODE` | Mã website VNPay | ✓ (nếu dùng VNPay) |
+| `VNP_HASH_SECRET` | Secret key VNPay | ✓ (nếu dùng VNPay) |
+| `VNP_URL` | URL VNPay sandbox/production | |
+| `VNP_RETURN_URL` | URL return VNPay | |
+| `GHN_WEBHOOK_TOKEN` | Token xác thực webhook GHN | (nếu dùng GHN) |
+| `GHTK_WEBHOOK_TOKEN` | Token xác thực webhook GHTK (`?hash=`) | (nếu dùng GHTK) |
+| `REDIS_HOST` / `REDIS_PORT` | Redis (cache catalog) | |
+| `SMS_PROVIDER_API_KEY` | TrangSMS/ESMS — bắt buộc ở production | ✓ |
 
 Tạo file `.env.production` từ `.env.example` và điền đầy đủ values.
 

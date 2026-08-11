@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import express from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { setCsrfCookie, csrfGuard } from './shared/middleware/csrf.middleware';
@@ -9,16 +10,20 @@ import cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { parseCorsOrigins } from './shared/config/env.validation';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cookieParser());
+  // Webhook GHN/GHTK có thể gửi form-urlencoded (GHTK dùng application/x-www-form-urlencoded)
+  app.use(express.urlencoded({ extended: true }));
 
   // CORS phải đặt TRƯỚC các middleware khác để mọi response (kể cả lỗi) đều có CORS headers
+  // Origins lấy từ env CORS_ORIGINS (CSV) — không hardcode localhost ở production.
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:4000'],
+    origin: parseCorsOrigins(process.env.CORS_ORIGINS),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
     credentials: true,
