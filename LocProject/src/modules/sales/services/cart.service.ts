@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
 @Injectable()
@@ -133,7 +134,7 @@ export class CartService {
           cartId: cart.id,
           productVariantId,
           qty: newTotalQty,
-        },
+        } as Prisma.CartItemUncheckedCreateInput,
         include: {
           variant: {
             include: {

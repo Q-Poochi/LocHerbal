@@ -57,8 +57,7 @@ export class CartController {
         @Req() req: Request,
     ) {
         const customerId = await this.getCustomerId(req);
-        const cart = await this.cartService.getOrCreateCart(customerId, sessionId);
-        return this.cartService.addToCart(cart.id, body.productVariantId, body.qty);
+        return this.cartService.addToCart(customerId, sessionId, body.productVariantId, body.qty);
     }
 
     /**
@@ -76,8 +75,8 @@ export class CartController {
     ) {
         const customerId = await this.getCustomerId(req);
         const cart = await this.cartService.getOrCreateCart(customerId, sessionId);
-        await this.cartService.removeItem(cart.id, variantId);
-        return this.cartService.addToCart(cart.id, variantId, body.qty);
+        await this.cartService.removeItemByVariantId(cart.id, variantId);
+        return this.cartService.addToCart(customerId, sessionId, variantId, body.qty);
     }
 
     /**
@@ -93,7 +92,7 @@ export class CartController {
     ) {
         const customerId = await this.getCustomerId(req);
         const cart = await this.cartService.getOrCreateCart(customerId, sessionId);
-        return this.cartService.removeItem(cart.id, variantId);
+        return this.cartService.removeItemByVariantId(cart.id, variantId);
     }
 
     /**
