@@ -10,18 +10,30 @@ import { ReviewController } from './controllers/review.controller';
 import KeyvRedis from '@keyv/redis';
 import Keyv from 'keyv';
 
+function buildStore(): Keyv {
+  const redisUrl = process.env.REDIS_URL;
+  const redisHost = process.env.REDIS_HOST;
+  if (redisUrl || redisHost) {
+    return new Keyv(redisUrl
+      ? new KeyvRedis(redisUrl)
+      : new KeyvRedis({
+          socket: {
+            host: redisHost,
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        }));
+  }
+  // Không cấu hình Redis → fallback in-memory (không bị treo request).
+  return new Keyv();
+}
+
 @Module({
   controllers: [CategoryController, ProductController, UploadController, ReviewController],
   providers: [CategoryService, ProductService, ReviewService],
   exports: [ProductService, CategoryService],
   imports: [
     CacheModule.register({
-      stores: [new Keyv(new KeyvRedis({
-        socket: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
-        },
-      }))],
+      stores: [buildStore()],
       ttl: 3_600_000,
     }),
   ],
