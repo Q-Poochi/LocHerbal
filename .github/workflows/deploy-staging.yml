@@ -96,7 +96,7 @@ jobs:
           RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_FRONTEND_SERVICE_ID }}
         run: |
-          railway up --service "$RAILWAY_SERVICE_ID" --ci --build-env NEXT_PUBLIC_API_URL="${{ secrets.STAGING_API_URL }}"
+          railway up --service "$RAILWAY_SERVICE_ID" --detach
           railway variable set \
             --service "$RAILWAY_SERVICE_ID" \
             NEXT_PUBLIC_API_URL="${{ secrets.STAGING_API_URL }}" \
