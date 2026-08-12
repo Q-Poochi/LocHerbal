@@ -144,83 +144,83 @@ export class ProductService {
     return this.singleFlightCache(cacheKey, 900_000, async () => {
       // Build where clause for filtering
       const where: any = {
-      isPublished: true,
-    };
+        isPublished: true,
+      };
 
-    // Support both UUID and slug for categoryId
-    if (categoryId) {
-      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidPattern.test(categoryId)) {
-        where.categoryId = categoryId;
-      } else {
-        // Treat as slug - lookup category first
-        const category = await this.prisma.category.findUnique({
-          where: { slug: categoryId },
-          select: { id: true },
-        });
-        if (category) {
-          where.categoryId = category.id;
+      // Support both UUID and slug for categoryId
+      if (categoryId) {
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidPattern.test(categoryId)) {
+          where.categoryId = categoryId;
         } else {
-          // Category not found, return empty results
-          return [];
+          // Treat as slug - lookup category first
+          const category = await this.prisma.category.findUnique({
+            where: { slug: categoryId },
+            select: { id: true },
+          });
+          if (category) {
+            where.categoryId = category.id;
+          } else {
+            // Category not found, return empty results
+            return [];
+          }
         }
       }
-    }
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { slug: { contains: search, mode: 'insensitive' } },
-        { category: { name: { contains: search, mode: 'insensitive' } } },
-      ];
-    }
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+          { slug: { contains: search, mode: 'insensitive' } },
+          { category: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
 
-    // Build orderBy for sorting
-    let orderBy: any = { createdAt: 'desc' };
-    switch (sort) {
-      case 'price_asc':
-        orderBy = { variants: { _min: { price: 'asc' } } };
-        break;
-      case 'price_desc':
-        orderBy = { variants: { _min: { price: 'desc' } } };
-        break;
-      case 'newest':
-        orderBy = { createdAt: 'desc' };
-        break;
-      case 'popular':
-      default:
-        orderBy = { createdAt: 'desc' };
-    }
+      // Build orderBy for sorting
+      let orderBy: any = { createdAt: 'desc' };
+      switch (sort) {
+        case 'price_asc':
+          orderBy = { variants: { _min: { price: 'asc' } } };
+          break;
+        case 'price_desc':
+          orderBy = { variants: { _min: { price: 'desc' } } };
+          break;
+        case 'newest':
+          orderBy = { createdAt: 'desc' };
+          break;
+        case 'popular':
+        default:
+          orderBy = { createdAt: 'desc' };
+      }
 
-    // Price filter via variants relation
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      where.variants = {
-        some: {
-          ...(minPrice !== undefined && { price: { gte: minPrice } }),
-          ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
-        },
-      };
-    }
+      // Price filter via variants relation
+      if (minPrice !== undefined || maxPrice !== undefined) {
+        where.variants = {
+          some: {
+            ...(minPrice !== undefined && { price: { gte: minPrice } }),
+            ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
+          },
+        };
+      }
 
-    const products = await this.prisma.product.findMany({
-      where,
-      orderBy,
-      skip: (page - 1) * limit,
-      take: limit,
-      include: {
-        images: true,
-        variants: true,
-        category: true,
-        attributeValues: {
-          include: {
-            attribute: true,
+      const products = await this.prisma.product.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          images: true,
+          variants: true,
+          category: true,
+          attributeValues: {
+            include: {
+              attribute: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    const totalCount = await this.prisma.product.count({ where });
+      const totalCount = await this.prisma.product.count({ where });
 
       return {
         data: products,
@@ -244,7 +244,10 @@ export class ProductService {
     // Transform variants to include stock from StockItem
     const variantsWithStock = (product.variants || []).map((variant: any) => ({
       ...variant,
-      stock: variant.stockItems?.reduce((sum: number, item: any) => sum + (item.qtyOnHand || 0), 0) || 0,
+      stock: variant.stockItems?.reduce(
+        (sum: number, item: any) => sum + ((item.qtyOnHand || 0) - (item.qtyReserved || 0)),
+        0,
+      ) || 0,
     }));
 
     // Transform attributeValues to specifications

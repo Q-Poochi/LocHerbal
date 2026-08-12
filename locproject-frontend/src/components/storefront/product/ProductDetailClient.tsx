@@ -19,6 +19,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     const router = useRouter();
 
     const selectedVariant = product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
+    const availableStock = selectedVariant?.stock ?? 0;
 
     return (
         <>
@@ -65,13 +66,18 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                             className="w-12 text-center border-none focus:ring-0 font-bold"
                             type="number"
                             min={1}
+                            max={availableStock}
                             value={quantity}
                             readOnly
                         />
                         <button
                             type="button"
-                            className="px-4 hover:bg-surface-container transition-colors material-symbols-outlined"
-                            onClick={() => setQuantity(quantity + 1)}
+                            className={`px-4 transition-colors material-symbols-outlined ${quantity >= availableStock
+                                ? 'text-outline cursor-not-allowed'
+                                : 'hover:bg-surface-container'
+                                }`}
+                            onClick={() => setQuantity((prev) => Math.min(prev + 1, availableStock))}
+                            disabled={quantity >= availableStock}
                         >
                             add
                         </button>
