@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as crypto from 'crypto';
+import { parseCorsOrigins } from '../config/env.validation';
 
 export const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
@@ -10,6 +11,20 @@ const CSRF_EXEMPT_PATHS = ['/api/v1/shipping/webhooks/ghn', '/api/v1/shipping/we
 function isCsrfExempt(req: Request): boolean {
   const path = (req as any)?.path ?? '';
   return CSRF_EXEMPT_PATHS.some((p) => path === p || path.startsWith(p + '/'));
+}
+
+/**
+ * Cross-origin SPA deploy trên 2 subdomain (Railway: `*.up.railway.app` nằm trong
+ * Public Suffix List!) → frontend & backend là HAI SITE khác nhau → cookie
+ * SameSite=Strict (csrf_token, refresh_token) KHÔNG được browser gửi & không
+ * double-submit được. Ở topology này SameSite=Strict ĐÃ tự chặn CSRF (không có
+ * cookie ambient để bị lạm dụng), nên kiểm tra Origin against CORS allowlist là
+ * lớp phòng thủ chuẩn (OWASP): Origin do browser set, kẻ tấn công không giả được.
+ */
+function isTrustedOrigin(req: Request): boolean {
+  const origin = req.headers['origin'];
+  if (!origin) return false;
+  return parseCorsOrigins(process.env.CORS_ORIGINS).includes(origin);
 }
 
 /**
@@ -45,6 +60,10 @@ export function csrfGuard(req: Request, res: Response, next: NextFunction) {
   const csrfHeader = req.headers?.['x-csrf-token'] as string;
   const match = csrfCookie && csrfHeader && csrfCookie === csrfHeader;
   if (match) return next();
+
+  // Cross-site deploy: SameSite cookies không gửi được, double-submit bất khả thi.
+  // Chấp nhận request nếu Origin là origin frontend đã cho phép (CORS allowlist).
+  if (isTrustedOrigin(req)) return next();
 
   // Request có "dấu hiệu trình duyệt" (Sec-Fetch-Site / Origin) HOẶC có CSRF cookie
   // → phải khớp double-submit, nếu không thì TỪ CHỐI (fail-closed).

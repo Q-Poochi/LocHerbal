@@ -86,6 +86,41 @@ describe('CSRF middleware', () => {
     });
   });
 
+  describe('cross-site deploy (Railway PSL subdomains)', () => {
+    afterEach(() => {
+      delete process.env.CORS_ORIGINS;
+    });
+
+    it('should PASS cross-site browser POST from trusted CORS origin', () => {
+      process.env.CORS_ORIGINS = 'https://frontend-production-d58e.up.railway.app';
+      const req = makeReq({
+        headers: {
+          'sec-fetch-site': 'cross-site',
+          origin: 'https://frontend-production-d58e.up.railway.app',
+        },
+      });
+      const res = makeRes();
+      const next: NextFunction = jest.fn();
+      csrfGuard(req as Request, res as Response, next);
+      expect(next).toHaveBeenCalled();
+    });
+
+    it('should REJECT cross-site browser POST from untrusted origin', () => {
+      process.env.CORS_ORIGINS = 'https://frontend-production-d58e.up.railway.app';
+      const req = makeReq({
+        headers: {
+          'sec-fetch-site': 'cross-site',
+          origin: 'https://evil.com',
+        },
+      });
+      const res = makeRes();
+      const next: NextFunction = jest.fn();
+      csrfGuard(req as Request, res as Response, next);
+      expect(res.statusCode).toBe(403);
+      expect(next).not.toHaveBeenCalled();
+    });
+  });
+
   describe('API client (no cookie, no browser headers)', () => {
     it('should PASS bare POST from curl/k6 (no ambient session)', () => {
       const req = makeReq(); // no cookies, no sec-fetch-site, no origin
