@@ -129,11 +129,16 @@ export class CartService {
       return this.transformCartItemWithStock(updated);
     } else {
       // Thêm item mới
+      const variantPrice = await this.prisma.productVariant.findUnique({
+        where: { id: productVariantId },
+        select: { price: true },
+      });
       const created = await this.prisma.cartItem.create({
         data: {
           cartId: cart.id,
           productVariantId,
           qty: newTotalQty,
+          priceSnapshot: variantPrice?.price ?? 0,
         } as Prisma.CartItemUncheckedCreateInput,
         include: {
           variant: {
