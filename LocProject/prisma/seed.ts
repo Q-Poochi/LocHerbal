@@ -156,8 +156,9 @@ async function main() {
   // Categories
   const categoryMap: Record<string, string> = {}
   for (const cat of CATEGORIES) {
-    const created = await prisma.category.create({ data: cat })
-    categoryMap[cat.code] = created.id
+    const { code, ...data } = cat
+    const created = await prisma.category.create({ data })
+    categoryMap[code] = created.id
   }
 
   // Warehouse
