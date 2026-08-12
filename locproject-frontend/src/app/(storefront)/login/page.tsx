@@ -145,15 +145,14 @@ function LoginForm() {
                     </button>
                 </form>
 
-                {/* Divider */}
-                <div className="relative my-8 text-center">
+                {/* Google Login — chưa có backend OAuth, tạm ẩn cho tới khi hỗ trợ */}
+                {/* <div className="relative my-8 text-center">
                     <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-outline-variant"></div>
                     </div>
                     <span className="relative px-4 bg-surface-white font-body-sm text-body-sm text-on-surface-variant">hoặc</span>
                 </div>
 
-                {/* Google Login */}
                 <button className="w-full flex items-center justify-center gap-3 border border-outline text-on-surface font-label-bold text-label-bold py-3.5 rounded-lg hover:bg-surface-container-lowest hover:border-primary transition-all active:scale-[0.98]">
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
@@ -162,7 +161,7 @@ function LoginForm() {
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
                     </svg>
                     Tiếp tục với Google
-                </button>
+                </button> */}
 
                 {/* Footer Link */}
                 <p className="mt-8 text-center font-body-sm text-body-sm text-on-surface-variant">
