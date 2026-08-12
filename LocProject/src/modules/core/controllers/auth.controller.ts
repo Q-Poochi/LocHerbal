@@ -29,6 +29,19 @@ export class AuthController {
   }
 
   @Public()
+  @Get('csrf')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lấy CSRF token cho browser cross-origin' })
+  @ApiResponse({ status: 200, description: 'Trả csrf_token để gắn header x-csrf-token' })
+  /**
+   * setCsrfCookie middleware đã đảm bảo cookie csrf_token tồn tại trước khi vào đây.
+   * GET là SAFE_METHOD nên không bị chặn; SOP + CORS hạn chế origin → token an toàn.
+   */
+  async getCsrfToken(@Req() request: Request) {
+    return { csrfToken: request.cookies?.['csrf_token'] ?? '' };
+  }
+
+  @Public()
   @Get('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xác thực email qua link (token) gửi trong email' })

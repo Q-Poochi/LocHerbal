@@ -24,6 +24,9 @@ export function setCsrfCookie(req: Request, res: Response, next: NextFunction) {
       sameSite: 'strict',
       path: '/',
     });
+    // Gán luôn vào req.cookies để các handler tiếp theo (VD /auth/csrf) đọc được
+    // token vừa tạo ngay trong request này.
+    req.cookies = { ...req.cookies, csrf_token: token };
   }
   next();
 }

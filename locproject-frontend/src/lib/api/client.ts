@@ -8,18 +8,55 @@ export const apiClient = axios.create({
   withCredentials: true, // Để backend có thể đọc httpOnly cookie (refresh token)
 });
 
-// Request Interceptor: Gắn Access Token từ in-memory store + CSRF token từ cookie
+// CSRF double-submit cookie pattern yêu cầu cùng origin (cookie host-only của backend).
+// Cross-origin browser KHÔNG đọc được document.cookie của backend → phải lấy token
+// từ endpoint GET /auth/csrf (SOP + CORS hạn chế origin nên an toàn) và cache lại.
+let csrfTokenPromise: Promise<string> | null = null;
+
+async function fetchCsrfToken(): Promise<string> {
+  if (typeof document === 'undefined') return '';
+  try {
+    // Cookie csrf_token (không httpOnly) vẫn được browser tự gửi kèm với credentials
+    const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+    if (match?.[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    // Chưa có cookie → gọi backend để set + trả token
+    const { data } = await axios.get<{ csrfToken: string }>(`${API_URL}/auth/csrf`, {
+      withCredentials: true,
+    });
+    return data.csrfToken ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function getCsrfToken(): Promise<string> {
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = fetchCsrfToken().finally(() => {
+      csrfTokenPromise = null;
+    });
+  }
+  return csrfTokenPromise;
+}
+
+// Request Interceptor: Gắn Access Token từ in-memory store + CSRF token từ cookie/endpoint
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const { accessToken } = useAuthStore.getState();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    // CSRF double-submit: cookie csrf_token (không httpOnly) → header x-csrf-token
+    // CSRF double-submit: header x-csrf-token phải khớp cookie csrf_token
     if (typeof document !== 'undefined') {
       const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
       if (match?.[1]) {
         config.headers['x-csrf-token'] = decodeURIComponent(match[1]);
+      } else {
+        const token = await getCsrfToken();
+        if (token) {
+          config.headers['x-csrf-token'] = token;
+        }
       }
     }
     return config;

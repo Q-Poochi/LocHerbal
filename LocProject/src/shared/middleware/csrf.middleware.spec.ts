@@ -107,6 +107,8 @@ describe('CSRF middleware', () => {
         expect.any(String),
         expect.objectContaining({ httpOnly: false, sameSite: 'strict' }),
       );
+      // Token mới phải có sẵn trong req.cookies để handler (VD /auth/csrf) đọc ngay
+      expect(req.cookies?.['csrf_token']).toEqual(expect.any(String));
       expect(next).toHaveBeenCalled();
     });
 
