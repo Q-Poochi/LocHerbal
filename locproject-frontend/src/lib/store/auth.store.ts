@@ -16,6 +16,11 @@ interface AuthState {
   // để lấy accessToken mới.
   accessToken: string | null;
   user: User | null;
+  // false cho tới khi zustand persist rehydrate xong user từ localStorage.
+  // Route guard PHẢI chờ flag này true trước khi redirect, nếu không sẽ bị
+  // flash-redirect về /login khi reload (user chưa kịp load).
+  hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
   setAuth: (accessToken: string, user: User | null) => void;
   clearAuth: () => void;
   login: (email: string, password: string) => Promise<void>;
@@ -29,6 +34,9 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       accessToken: null,
       user: null,
+      hasHydrated: false,
+
+      setHasHydrated: (value) => set({ hasHydrated: value }),
 
       setAuth: (accessToken, user) => set({ accessToken, user }),
 
@@ -68,6 +76,10 @@ export const useAuthStore = create<AuthState>()(
       // CHỈ persist thông tin user (không nhạy cảm). accessToken KHÔNG bao giờ xuống localStorage.
       name: 'locherbal-auth',
       partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        // Đánh dấu hydrate xong để route guard có thể chạy an toàn
+        state?.setHasHydrated?.(true);
+      },
     },
   ),
 );

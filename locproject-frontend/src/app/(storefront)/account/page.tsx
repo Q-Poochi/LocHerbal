@@ -69,7 +69,7 @@ const statusLabel: Record<string, string> = {
 };
 
 export default function AccountPage() {
-    const { user, logout, clearAuth } = useAuthStore();
+    const { user, hasHydrated, logout, clearAuth } = useAuthStore();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [orders, setOrders] = useState<Order[]>([]);
@@ -111,12 +111,12 @@ export default function AccountPage() {
         }
     }, [user]);
 
-    /* ── Redirect if not logged in ── */
+    /* ── Redirect if not logged in (CHỈ sau khi zustand hydrate xong) ── */
     useEffect(() => {
-        if (!user) {
+        if (hasHydrated && !user) {
             router.replace('/login?redirect=/account');
         }
-    }, [user, router]);
+    }, [hasHydrated, user, router]);
 
     /* ── Fetch data ── */
     useEffect(() => {
@@ -232,6 +232,9 @@ export default function AccountPage() {
             setPasswordError(getErrorMessage(err, 'Đổi mật khẩu thất bại'));
         }
     });
+
+    // Chưa hydrate xong → render spinner, tránh flash-redirect về /login
+    if (!hasHydrated) return null;
 
     if (!user) return null;
 

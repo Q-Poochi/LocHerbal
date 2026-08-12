@@ -66,7 +66,7 @@ const paymentConfig: Record<string, { label: string; color: string }> = {
 const timelineOrder = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
 
 export default function OrderDetailPage() {
-    const { user } = useAuthStore();
+    const { user, hasHydrated } = useAuthStore();
     const router = useRouter();
     const { id } = useParams<{ id: string }>();
     const [order, setOrder] = useState<Order | null>(null);
@@ -76,16 +76,17 @@ export default function OrderDetailPage() {
     const [showCancelInput, setShowCancelInput] = useState(false);
 
     useEffect(() => {
-        if (!user) {
+        if (hasHydrated && !user) {
             router.replace('/login?redirect=/orders/' + id);
             return;
         }
+        if (!hasHydrated) return;
         apiClient.get(`/orders/${id}`).then(({ data }) => {
             setOrder(data.data || data);
         }).catch(() => {
             router.push('/account');
         }).finally(() => setLoading(false));
-    }, [id, user, router]);
+    }, [id, user, hasHydrated, router]);
 
     const handleCancel = async () => {
         setCancelling(true);

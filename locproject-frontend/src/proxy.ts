@@ -1,47 +1,28 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
 
-const REFRESH_SECRET = new TextEncoder().encode(process.env.JWT_REFRESH_SECRET);
-
-export async function proxy(request: NextRequest) {
-    const { pathname } = request.nextUrl;
-    const token = request.cookies.get('refresh_token')?.value;
-
-    const redirectToLogin = (redirectPath: string) => {
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('redirect', redirectPath);
-        return NextResponse.redirect(loginUrl);
-    };
-
-    // Không có token -> Redirect về /login, kèm redirect để sau login quay lại
-    if (!token) {
-        return redirectToLogin(pathname);
-    }
-
-    // Route admin bắt buộc phải là admin
-    if (pathname.startsWith('/admin')) {
-        try {
-            const { payload } = await jwtVerify(token, REFRESH_SECRET);
-            const roles: string[] = (payload.roles as string[] | undefined) || [];
-            if (!roles.includes('admin')) {
-                // Đã đăng nhập nhưng không phải admin -> về trang chủ
-                return NextResponse.redirect(new URL('/', request.url));
-            }
-        } catch {
-            // Token không hợp lệ / hết hạn -> đăng nhập lại
-            return redirectToLogin(pathname);
-        }
-    }
-
-    return NextResponse.next();
+/**
+ * Proxy (Next.js middleware) — hiện là pass-through vì không thể xác thực server-side
+ * trong topology cross-site (frontend & backend là 2 site khác nhau, VD Railway
+ * `*.up.railway.app` nằm trong Public Suffix List):
+ * - refresh_token cookie là host-only của BACKEND domain → browser không bao giờ gửi
+ *   nó lên FRONTEND server → đọc request.cookies.get('refresh_token') luôn undefined
+ *   → mọi route bảo vệ bị redirect về /login dù đã đăng nhập.
+ *
+ * Route protection được chuyển sang CLIENT-SIDE (guard component chờ zustand hydrate
+ * xong rồi mới redirect). Dữ liệu nhạy cảm vẫn được bảo vệ bởi backend (JWT + RolesGuard).
+ * Khi triển khai same-site (VD locherbal.com + Domain=.locherbal.com cho cookie), có thể
+ * khôi phục lại auth-gate server-side tại đây.
+ */
+export function proxy(_request: NextRequest) {
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: [
-        '/admin/:path*',
-        '/account/:path*',
-        '/checkout/:path*',
-        '/orders/:path*',
-    ],
+  matcher: [
+    '/admin/:path*',
+    '/account/:path*',
+    '/checkout/:path*',
+    '/orders/:path*',
+  ],
 };
