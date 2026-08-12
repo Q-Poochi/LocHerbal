@@ -7,6 +7,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { OtpService } from './otp.service';
+import { EmailService } from './email.service';
 
 /**
  * Helper: lấy biến môi trường bắt buộc, throw ngay nếu thiếu.
@@ -22,10 +23,13 @@ function requireEnv(name: string): string {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly otpService: OtpService,
+    private readonly emailService: EmailService,
   ) { }
 
   async register(dto: RegisterDto) {
@@ -35,6 +39,8 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = await this.prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -43,6 +49,9 @@ export class AuthService {
           passwordHash,
           fullName: dto.fullName,
           phone: dto.phone,
+          emailVerified: false,
+          emailVerificationToken,
+          emailVerificationExpiry,
         },
       });
 
@@ -58,7 +67,68 @@ export class AuthService {
       return newUser;
     });
 
+    // Gửi email xác thực. Nếu gửi thất bại (Resend lỗi tạm thời) vẫn giữ tài khoản
+    // đã tạo — user có thể bấm "gửi lại" sau. Không chặn đăng ký.
+    try {
+      await this.emailService.sendVerificationEmail(dto.email, dto.fullName, emailVerificationToken);
+    } catch (e) {
+      this.logger.error(`Không gửi được email xác thực tới ${dto.email}: ${(e as Error).message}`);
+    }
+
     return { id: user.id, email: user.email, fullName: user.fullName };
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { emailVerificationToken: token },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Link xác thực không hợp lệ');
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email đã được xác thực trước đó');
+    }
+
+    if (!user.emailVerificationExpiry || user.emailVerificationExpiry < new Date()) {
+      throw new BadRequestException('Link xác thực đã hết hạn. Vui lòng yêu cầu gửi lại.');
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpiry: null,
+      },
+    });
+
+    return { message: 'Xác thực email thành công' };
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Không lộ thông tin email đã tồn tại hay chưa
+      return { message: 'Nếu email tồn tại, link xác thực đã được gửi lại' };
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email đã được xác thực');
+    }
+
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerificationToken, emailVerificationExpiry },
+    });
+
+    await this.emailService.sendVerificationEmail(email, user.fullName, emailVerificationToken);
+
+    return { message: 'Link xác thực đã được gửi lại' };
   }
 
   async requestOtp(phone: string, purpose: 'login' | 'register') {

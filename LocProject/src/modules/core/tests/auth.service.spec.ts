@@ -5,6 +5,7 @@ process.env.JWT_REFRESH_SECRET = 'test_refresh_secret';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../services/auth.service';
 import { OtpService } from '../services/otp.service';
+import { EmailService } from '../services/email.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +15,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let prisma: PrismaService;
   let jwtService: JwtService;
+  let emailService: EmailService;
 
   const mockPrismaService = {
     user: {
@@ -44,6 +46,10 @@ describe('AuthService', () => {
     verifyOtp: jest.fn(),
   };
 
+  const mockEmailService = {
+    sendVerificationEmail: jest.fn(),
+  };
+
   function mockUser(overrides: Record<string, any> = {}) {
     return {
       id: 'user-1',
@@ -66,6 +72,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: OtpService, useValue: mockOtpService },
+        { provide: EmailService, useValue: mockEmailService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
       ],
@@ -74,6 +81,7 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
     prisma = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
+    emailService = module.get<EmailService>(EmailService);
   });
 
   afterEach(() => {
@@ -359,6 +367,162 @@ describe('AuthService', () => {
       expect(mockPrismaService.user.create).toHaveBeenCalled();
       expect(mockPrismaService.customer.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ userId: 'new-user-1' }) }),
+      );
+    });
+  });
+
+  describe('register (email/password)', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should reject if email already exists', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ email: 'dup@test.com' }));
+
+      await expect(
+        service.register({ email: 'dup@test.com', password: 'password123', fullName: 'Dup' }),
+      ).rejects.toThrow('Email đã được sử dụng');
+
+      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+    });
+
+    it('should create user + customer, and send verification email', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.create.mockResolvedValue(
+        mockUser({ id: 'new-user-1', email: 'new@test.com', fullName: 'New User' }),
+      );
+
+      const tx = {
+        user: mockPrismaService.user,
+        customer: mockPrismaService.customer,
+      };
+      mockPrismaService.$transaction.mockImplementation(async (cb: any) => cb(tx));
+
+      const result = await service.register({
+        email: 'new@test.com',
+        password: 'password123',
+        fullName: 'New User',
+      });
+
+      expect(result).toEqual({ id: 'new-user-1', email: 'new@test.com', fullName: 'New User' });
+
+      const createCall = mockPrismaService.user.create.mock.calls[0][0];
+      expect(createCall.data.emailVerified).toBe(false);
+      expect(createCall.data.emailVerificationToken).toBeTruthy();
+      expect(createCall.data.emailVerificationExpiry).toBeInstanceOf(Date);
+
+      expect(mockPrismaService.customer.create).toHaveBeenCalled();
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalledWith(
+        'new@test.com',
+        'New User',
+        expect.any(String),
+      );
+    });
+
+    it('should still return user if email sending fails (not block registration)', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.create.mockResolvedValue(mockUser({ id: 'new-user-1' }));
+      const tx = { user: mockPrismaService.user, customer: mockPrismaService.customer };
+      mockPrismaService.$transaction.mockImplementation(async (cb: any) => cb(tx));
+      mockEmailService.sendVerificationEmail.mockRejectedValue(new Error('Resend down'));
+
+      const result = await service.register({
+        email: 'new@test.com',
+        password: 'password123',
+        fullName: 'New User',
+      });
+      expect(result.id).toBe('new-user-1');
+    });
+  });
+
+  describe('verifyEmail', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should throw if token not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      await expect(service.verifyEmail('bad-token')).rejects.toThrow('Link xác thực không hợp lệ');
+    });
+
+    it('should throw if already verified', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({ emailVerified: true }),
+      );
+      await expect(service.verifyEmail('token')).rejects.toThrow('Email đã được xác thực trước đó');
+    });
+
+    it('should throw if expired', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({
+          emailVerified: false,
+          emailVerificationExpiry: new Date(Date.now() - 1000),
+        }),
+      );
+      await expect(service.verifyEmail('token')).rejects.toThrow('Link xác thực đã hết hạn');
+    });
+
+    it('should set emailVerified and clear token on success', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({
+          emailVerified: false,
+          emailVerificationExpiry: new Date(Date.now() + 60 * 60 * 1000),
+          emailVerificationToken: 'token',
+        }),
+      );
+      mockPrismaService.user.update.mockResolvedValue(mockUser());
+
+      const result = await service.verifyEmail('token');
+      expect(result).toEqual({ message: 'Xác thực email thành công' });
+      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: {
+          emailVerified: true,
+          emailVerificationToken: null,
+          emailVerificationExpiry: null,
+        },
+      });
+    });
+  });
+
+  describe('resendVerificationEmail', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return generic message if user not found (do not leak)', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      const result = await service.resendVerificationEmail('ghost@test.com');
+      expect(result.message).toContain('Nếu email tồn tại');
+      expect(mockPrismaService.user.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw if already verified', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ emailVerified: true }));
+      await expect(service.resendVerificationEmail('test@test.com')).rejects.toThrow(
+        'Email đã được xác thực',
+      );
+    });
+
+    it('should generate new token and send email', async () => {
+      mockEmailService.sendVerificationEmail.mockResolvedValue(undefined);
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({ emailVerified: false, fullName: 'Test User' }),
+      );
+      mockPrismaService.user.update.mockResolvedValue(mockUser());
+
+      const result = await service.resendVerificationEmail('test@test.com');
+      expect(result.message).toContain('được gửi lại');
+
+      const updateCall = mockPrismaService.user.update.mock.calls[0][0];
+      expect(updateCall.data.emailVerificationToken).toBeTruthy();
+      expect(updateCall.data.emailVerificationExpiry).toBeInstanceOf(Date);
+
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalledWith(
+        'test@test.com',
+        'Test User',
+        updateCall.data.emailVerificationToken,
       );
     });
   });

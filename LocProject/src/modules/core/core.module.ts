@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 
 import { OtpService } from './services/otp.service';
+import { EmailService } from './services/email.service';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { OtpService } from './services/otp.service';
   providers: [
     AuthService,
     OtpService,
+    EmailService,
     HealthService,
     JwtStrategy,
     {

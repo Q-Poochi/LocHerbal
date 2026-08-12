@@ -168,6 +168,10 @@ function LoginForm() {
                     Chưa có tài khoản?{' '}
                     <a className="text-primary font-bold hover:underline" href="/register">Đăng ký ngay</a>
                 </p>
+                <p className="mt-2 text-center font-body-sm text-body-sm text-on-surface-variant">
+                    Chưa nhận được email xác thực?{' '}
+                    <a className="text-primary font-medium hover:underline" href="/resend-verification">Gửi lại link</a>
+                </p>
             </main>
         </div>
     );

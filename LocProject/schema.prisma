@@ -101,14 +101,17 @@ enum AttributeDataType {
 // ==========================================================================
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
-  passwordHash String     @map("password_hash")
-  fullName     String     @map("full_name")
-  phone        String?
-  status       UserStatus @default(ACTIVE)
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id                          String     @id @default(uuid())
+  email                       String     @unique
+  passwordHash                String     @map("password_hash")
+  fullName                    String     @map("full_name")
+  phone                       String?
+  status                      UserStatus @default(ACTIVE)
+  emailVerified               Boolean    @default(false) @map("email_verified")
+  emailVerificationToken      String?    @unique @map("email_verification_token")
+  emailVerificationExpiry     DateTime?  @map("email_verification_expiry")
+  createdAt                   DateTime   @default(now()) @map("created_at")
+  updatedAt                   DateTime   @updatedAt @map("updated_at")
 
   roles          UserRole[]
   auditLogs      AuditLog[]

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '../../../lib/api/client';
-import { useAuthStore } from '../../../lib/store/auth.store';
 import { getErrorMessage } from '@/lib/utils/error';
 
 export default function RegisterPage() {
@@ -17,6 +16,9 @@ export default function RegisterPage() {
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [registeredEmail, setRegisteredEmail] = useState('');
+    const [isResending, setIsResending] = useState(false);
+    const [resendMessage, setResendMessage] = useState('');
 
     // Password strength calculation
     const getPasswordStrength = (pwd: string) => {
@@ -51,20 +53,33 @@ export default function RegisterPage() {
 
         try {
             const response = await apiClient.post('/auth/register', {
-                name,
+                fullName: name,
                 email,
                 password,
             });
 
             if (response.data) {
-                // Auto login after successful registration
-                await useAuthStore.getState().login(email, password);
-                router.push('/');
+                // Không auto-login — user phải xác thực email trước khi vào hệ thống
+                setRegisteredEmail(email);
             }
         } catch (err) {
             setError(getErrorMessage(err, 'Đăng ký thất bại. Vui lòng thử lại.'));
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        if (!registeredEmail) return;
+        setIsResending(true);
+        setResendMessage('');
+        try {
+            await apiClient.post('/auth/resend-verification', { email: registeredEmail });
+            setResendMessage('Link xác thực đã được gửi lại. Kiểm tra hộp thư (hoặc spam).');
+        } catch (err) {
+            setResendMessage(getErrorMessage(err, 'Không gửi lại được. Thử lại sau.'));
+        } finally {
+            setIsResending(false);
         }
     };
 
@@ -87,10 +102,44 @@ export default function RegisterPage() {
 
                     {/* Header Text */}
                     <div className="text-center mb-stack-lg">
-                        <h1 className="font-headline-md text-headline-md font-bold text-on-surface mb-2">Tạo tài khoản</h1>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant">Tham gia cùng hàng nghìn khách hàng tin dùng</p>
+                        <h1 className="font-headline-md text-headline-md font-bold text-on-surface mb-2">
+                            {registeredEmail ? 'Kiểm tra email của bạn' : 'Tạo tài khoản'}
+                        </h1>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant">
+                            {registeredEmail
+                                ? `Chúng tôi đã gửi link xác thực tới ${registeredEmail}`
+                                : 'Tham gia cùng hàng nghìn khách hàng tin dùng'}
+                        </p>
                     </div>
 
+                    {registeredEmail ? (
+                        <div className="w-full flex flex-col items-center gap-4 py-4">
+                            <span className="material-symbols-outlined text-success-leaf text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>mark_email_read</span>
+                            <p className="font-body-md text-body-md text-on-surface-variant text-center">
+                                Vui lòng mở email và bấm link <strong>Xác thực email</strong> để hoàn tất đăng ký.
+                                Link có hiệu lực trong 24 giờ.
+                            </p>
+                            {resendMessage && (
+                                <p className="font-body-sm text-body-sm text-on-surface-variant text-center">{resendMessage}</p>
+                            )}
+                            <button
+                                className="w-full bg-primary text-on-primary font-label-bold text-label-bold py-4 rounded-lg hover:bg-primary-container active:scale-[0.98] transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                type="button"
+                                disabled={isResending}
+                                onClick={handleResend}
+                            >
+                                {isResending ? 'Đang gửi...' : 'Gửi lại link xác thực'}
+                            </button>
+                            <button
+                                className="font-body-sm text-body-sm text-primary font-medium hover:underline"
+                                type="button"
+                                onClick={() => router.push('/login')}
+                            >
+                                Đã xác thực? Đăng nhập ngay
+                            </button>
+                        </div>
+                    ) : (
+                    <>
                     {/* Registration Form */}
                     <form className="w-full space-y-4" onSubmit={handleSubmit}>
                         {/* Họ và tên */}
@@ -226,6 +275,8 @@ export default function RegisterPage() {
                             Đã có tài khoản? <a className="text-primary font-bold hover:underline" href="/login">Đăng nhập</a>
                         </p>
                     </div>
+                    </>
+                    )}
                 </div>
             </main>
         </div>

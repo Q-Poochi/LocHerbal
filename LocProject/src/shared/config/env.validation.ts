@@ -71,6 +71,21 @@ class EnvironmentVariables {
   @IsString()
   SMS_PROVIDER_API_KEY?: string;
 
+  // Resend API key gửi email. Nếu NODE_ENV=production mà thiếu key này, app KHÔNG
+  // khởi động được (chặn dùng mock email ở production).
+  @IsOptional()
+  @IsString()
+  RESEND_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  EMAIL_FROM?: string;
+
+  // URL frontend dùng trong link xác thực email.
+  @IsOptional()
+  @IsString()
+  FRONTEND_URL?: string;
+
   @IsOptional()
   @IsString()
   REDIS_HOST?: string;

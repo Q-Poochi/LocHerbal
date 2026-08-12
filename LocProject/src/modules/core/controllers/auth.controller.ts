@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Req, Get, Patch, UseGuards, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req, Get, Patch, UseGuards, UnauthorizedException, BadRequestException, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Request, Response } from 'express';
@@ -11,6 +11,7 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { Public } from '../decorators/public.decorator';
 import { RequestOtpDto, VerifyOtpDto } from '../dto/otp.dto';
+import { ResendVerificationDto } from '../dto/resend-verification.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -25,6 +26,29 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Email đã được sử dụng' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Public()
+  @Get('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Xác thực email qua link (token) gửi trong email' })
+  @ApiResponse({ status: 200, description: 'Xác thực email thành công' })
+  @ApiResponse({ status: 400, description: 'Link không hợp lệ hoặc hết hạn' })
+  async verifyEmail(@Query('token') token?: string) {
+    if (!token) {
+      throw new BadRequestException('Thiếu token xác thực');
+    }
+    return this.authService.verifyEmail(token);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 1, ttl: 60000 } })
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Gửi lại link xác thực email (tối đa 1 lần/phút)' })
+  @ApiResponse({ status: 200, description: 'Link xác thực đã được gửi lại' })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.authService.resendVerificationEmail(dto.email);
   }
 
   @Public()
