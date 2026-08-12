@@ -166,18 +166,26 @@ export class AuthController {
     response.clearCookie('refresh_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       path: '/',
     });
 
     return { message: 'Đăng xuất thành công' };
   }
 
+  /**
+   * SPA + API deploy trên 2 subdomain khác nhau (VD Railway `*.up.railway.app`,
+   * nằm trong Public Suffix List) là 2 SITE khác nhau → cookie SameSite=Strict
+   * không được browser gửi cross-site → refresh token "bốc hơi". Khi NODE_ENV=production
+   * (HTTPS) phải dùng SameSite=None và dựa vào Origin check của csrfGuard để chặn CSRF.
+   * Trong dev (localhost:3000 → :4000 là cùng site) giữ Strict cho an toàn.
+   */
   private setRefreshTokenCookie(response: Response, token: string) {
+    const secure = process.env.NODE_ENV === 'production';
     response.cookie('refresh_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure,
+      sameSite: secure ? 'none' : 'strict',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
