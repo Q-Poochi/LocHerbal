@@ -137,9 +137,9 @@ export default function RecentOrdersTable({ orders = [] }: { orders?: RecentOrde
                                     <td className="px-4 py-4 text-sm text-right font-bold">
                                         {order.total.toLocaleString('vi-VN')}đ
                                     </td>
-                                    <td className="px-4 py-4">
+                                    <td className="px-4 py-4 align-middle whitespace-nowrap">
                                         <span
-                                            className={`px-2 py-1 text-[10px] font-bold rounded uppercase ${statusStyles[order.status]}`}
+                                            className={`inline-block px-2 py-1 text-[10px] font-bold rounded uppercase whitespace-nowrap ${statusStyles[order.status]}`}
                                         >
                                             {statusLabels[order.status]}
                                         </span>
