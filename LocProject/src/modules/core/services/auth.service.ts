@@ -209,6 +209,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: { roles: { include: { role: true } } },
     });
 
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
@@ -236,6 +237,7 @@ export class AuthService {
         ...(data.fullName !== undefined && { fullName: data.fullName }),
         ...(data.phone !== undefined && { phone: data.phone }),
       },
+      include: { roles: { include: { role: true } } },
     });
 
     // Cập nhật Customer tương ứng
@@ -285,6 +287,7 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      include: { roles: { include: { role: true } } },
     });
 
     if (!user) {
@@ -298,11 +301,15 @@ export class AuthService {
     id: string;
     email: string;
     fullName: string;
+    phone?: string | null;
+    roles?: { role: { name: string } }[];
   }) {
     return {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
+      ...(user.phone ? { phone: user.phone } : {}),
+      roles: (user.roles ?? []).map(ur => ur.role.name),
     };
   }
 

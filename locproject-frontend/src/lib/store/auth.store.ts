@@ -8,6 +8,7 @@ interface User {
   fullName: string;
   phone?: string;
   role?: string;
+  roles?: string[];
 }
 
 interface AuthState {

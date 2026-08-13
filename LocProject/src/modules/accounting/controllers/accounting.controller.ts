@@ -17,7 +17,7 @@ export class AccountingController {
     ) { }
 
     @Get('revenue')
-    @Roles('admin', 'staff')
+    @Roles('admin')
     @ApiOperation({ summary: 'Doanh thu theo khoảng thời gian' })
     async getRevenue(@Query('from') from?: string, @Query('to') to?: string) {
         const startDate = from ? new Date(from) : undefined;
@@ -26,7 +26,7 @@ export class AccountingController {
     }
 
     @Get('invoices')
-    @Roles('admin', 'staff')
+    @Roles('admin')
     @ApiOperation({ summary: 'Danh sách hoá đơn (có phân trang)' })
     async getInvoices(@Query('page') page?: string, @Query('limit') limit?: string) {
         const pageNum = page ? parseInt(page, 10) : 1;
@@ -35,14 +35,14 @@ export class AccountingController {
     }
 
     @Get('invoices/:orderId')
-    @Roles('admin', 'staff')
+    @Roles('admin')
     @ApiOperation({ summary: 'Hoá đơn theo đơn hàng' })
     async getInvoiceByOrderId(@Param('orderId') orderId: string) {
         return this.invoiceService.findByOrderId(orderId);
     }
 
     @Get('transactions/:orderId')
-    @Roles('admin', 'staff')
+    @Roles('admin')
     @ApiOperation({ summary: 'Giao dịch thanh toán theo đơn hàng' })
     async getTransactionsByOrderId(@Param('orderId') orderId: string) {
         return this.paymentTransactionService.findByOrderId(orderId);

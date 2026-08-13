@@ -38,6 +38,7 @@ const menuGroups = [
     },
     {
         label: 'TÀI CHÍNH',
+        adminOnly: true,
         items: [
             { href: '/admin/accounting', icon: 'bar_chart', label: 'Doanh thu' },
             { href: '/admin/invoices', icon: 'description', label: 'Hóa đơn' },
@@ -52,6 +53,7 @@ const menuGroups = [
     },
     {
         label: 'HỆ THỐNG',
+        adminOnly: true,
         items: [
             { href: '/admin/settings', icon: 'settings', label: 'Cài đặt chung' },
         ],
@@ -64,12 +66,19 @@ export default function AdminSidebar() {
     const logout = useAuthStore((s) => s.logout);
     const [collapsed, setCollapsed] = useState(false);
 
+    const isAdmin = user?.roles?.includes('admin') ?? user?.role === 'admin';
+
+    const visibleGroups = menuGroups
+        .map((group) => ({ ...group, items: group.items }))
+        .filter((group) => !group.adminOnly || isAdmin)
+        .filter((group) => group.items.length > 0);
+
     const isActive = (href: string) => {
         if (href === '/admin') return pathname === '/admin';
         return pathname.startsWith(href);
     };
 
-    const userRole = user?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên';
+    const userRole = isAdmin ? 'Quản trị viên' : 'Nhân viên';
 
     return (
         <aside
@@ -118,7 +127,7 @@ export default function AdminSidebar() {
             )}
 
             <nav className="flex-1 px-2 space-y-6">
-                {menuGroups.map((group) => (
+                {visibleGroups.map((group) => (
                     <div key={group.label}>
                         {!collapsed && (
                             <span className="px-4 text-[11px] font-bold uppercase tracking-widest text-on-primary-container opacity-40">

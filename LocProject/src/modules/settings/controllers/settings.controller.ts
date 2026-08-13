@@ -21,7 +21,7 @@ export class CompanySettingsController {
 
     @Get('company/admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin', 'staff')
+    @Roles('admin')
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Thông tin công ty (admin)' })
     getCompanyAdmin() {
