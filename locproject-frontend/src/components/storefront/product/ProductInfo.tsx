@@ -1,4 +1,5 @@
 import { ProductDetail } from '../../../types/api.types';
+import { getVariantPricing, formatDiscountDeadline } from '../../../lib/utils/discount';
 import ProductDetailClient from './ProductDetailClient';
 
 interface ProductInfoProps {
@@ -12,12 +13,12 @@ function formatPrice(price: number): string {
 export default function ProductInfo({ product }: ProductInfoProps) {
     // Pre-compute first variant price for SSR render
     const firstVariant = product.variants[0];
-    const discountPercent = firstVariant?.compareAtPrice
-        ? Math.round((1 - firstVariant.price / firstVariant.compareAtPrice) * 100)
+    const pricing = getVariantPricing(firstVariant);
+    const discountPercent = pricing.discountPercent ?? 0;
+    const savings = pricing.isDiscountActive
+        ? (pricing.compareAtPrice ?? 0) - pricing.price
         : 0;
-    const savings = firstVariant?.compareAtPrice
-        ? firstVariant.compareAtPrice - firstVariant.price
-        : 0;
+    const deadline = formatDiscountDeadline(pricing.discountEndAt);
 
     return (
         <div className="flex flex-col gap-6">
@@ -62,12 +63,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <div>
                 <div className="flex items-center gap-3 mt-2">
                     <span className="text-3xl font-bold text-[#1a8a54]">
-                        {formatPrice(firstVariant?.price || 0)}
+                        {formatPrice(pricing.price || 0)}
                     </span>
-                    {firstVariant?.compareAtPrice && (
+                    {pricing.isDiscountActive && pricing.compareAtPrice != null && (
                         <>
                             <span className="text-lg text-gray-400 line-through">
-                                {formatPrice(firstVariant.compareAtPrice)}
+                                {formatPrice(pricing.compareAtPrice)}
                             </span>
                             <span className="px-2 py-0.5 bg-red-100 text-red-600 text-sm font-medium rounded-full">
                                 -{discountPercent}%
@@ -79,6 +80,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     <p className="text-sm text-[#1a8a54] mt-1 flex items-center gap-1">
                         <span className="material-symbols-outlined text-base">bolt</span>
                         Tiết kiệm {formatPrice(savings)} cho mỗi sản phẩm
+                    </p>
+                )}
+                {pricing.isDiscountActive && deadline && (
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">schedule</span>
+                        {deadline}
                     </p>
                 )}
             </div>

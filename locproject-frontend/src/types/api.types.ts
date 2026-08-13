@@ -14,7 +14,14 @@ export interface Product {
   thumbnailUrl?: string;
   seq?: number;
   category: { name: string };
-  variants: { id?: string; price: number; compareAtPrice?: number }[];
+  variants: {
+    id?: string;
+    price: number;
+    compareAtPrice?: number;
+    isDiscountActive?: boolean;
+    discountPercent?: number;
+    discountEndAt?: string;
+  }[];
 }
 
 export interface BlogPost {
@@ -31,7 +38,13 @@ export interface ProductVariant {
   name: string;
   price: number;
   compareAtPrice?: number;
+  compareAtPriceRaw?: number;
+  priceRaw?: number;
   stock: number;
+  isDiscountActive?: boolean;
+  discountPercent?: number;
+  discountStartAt?: string;
+  discountEndAt?: string;
 }
 
 export interface ProductDetail {

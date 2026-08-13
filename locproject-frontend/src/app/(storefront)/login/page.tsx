@@ -117,7 +117,7 @@ function LoginForm() {
                             <input className="w-4 h-4 rounded border-outline text-primary-container focus:ring-primary-container transition-all" type="checkbox" />
                             <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-primary transition-colors">Ghi nhớ đăng nhập</span>
                         </label>
-                        <a className="font-body-sm text-body-sm text-primary font-medium hover:underline transition-all" href="#">Quên mật khẩu?</a>
+                        <a className="font-body-sm text-body-sm text-primary font-medium hover:underline transition-all" href="/forgot-password">Quên mật khẩu?</a>
                     </div>
 
                     {/* Error Message */}

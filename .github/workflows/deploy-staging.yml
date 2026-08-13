@@ -54,7 +54,11 @@ jobs:
             VNP_URL="${{ secrets.STAGING_VNP_URL }}" \
             VNP_RETURN_URL="${{ vars.STAGING_VNP_RETURN_URL }}" \
             VNP_IPN_URL="${{ secrets.STAGING_VNP_IPN_URL }}" \
+            SMS_PROVIDER="mock" \
             SMS_PROVIDER_API_KEY="${{ secrets.STAGING_SMS_PROVIDER_API_KEY }}" \
+            RESEND_API_KEY="${{ secrets.STAGING_RESEND_API_KEY }}" \
+            EMAIL_FROM="${{ secrets.STAGING_EMAIL_FROM }}" \
+            FRONTEND_URL="${{ vars.STAGING_FRONTEND_URL }}" \
             CORS_ORIGINS="${{ vars.STAGING_FRONTEND_URL }}" \
             GHN_WEBHOOK_TOKEN="${{ secrets.STAGING_GHN_WEBHOOK_TOKEN }}" \
             GHTK_WEBHOOK_TOKEN="${{ secrets.STAGING_GHTK_WEBHOOK_TOKEN }}" \

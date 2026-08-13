@@ -222,14 +222,54 @@ export class ProductService {
 
       const totalCount = await this.prisma.product.count({ where });
 
+      const data = products.map((p: any) => ({
+        ...p,
+        variants: (p.variants || []).map((v: any) => this.applyDiscountToVariant(v)),
+      }));
+
       return {
-        data: products,
+        data,
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
         page,
         limit,
       };
     });
+  }
+
+  private applyDiscountToVariant(variant: any) {
+    const now = Date.now();
+    const price = Number(variant.price);
+    const compareAtPrice = variant.compareAtPrice != null ? Number(variant.compareAtPrice) : null;
+
+    const startAt = variant.discountStartAt ? new Date(variant.discountStartAt).getTime() : null;
+    const endAt = variant.discountEndAt ? new Date(variant.discountEndAt).getTime() : null;
+
+    const isDiscountActive =
+      compareAtPrice !== null &&
+      compareAtPrice > price &&
+      (startAt === null || now >= startAt) &&
+      (endAt === null || now <= endAt);
+
+    const discountPercent = isDiscountActive
+      ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
+      : null;
+
+    const effectivePrice = isDiscountActive ? price : (compareAtPrice ?? price);
+
+    return {
+      ...variant,
+      // price/compareAtPrice là giá "đang áp dụng" cho storefront
+      price: effectivePrice,
+      compareAtPrice: isDiscountActive ? compareAtPrice : null,
+      // raw values để admin form luôn thấy giá trị gốc đã lưu
+      priceRaw: price,
+      compareAtPriceRaw: compareAtPrice,
+      isDiscountActive,
+      discountPercent,
+      discountStartAt: variant.discountStartAt ?? null,
+      discountEndAt: variant.discountEndAt ?? null,
+    };
   }
 
   private async getSoldCount(productId: string): Promise<number> {
@@ -241,9 +281,9 @@ export class ProductService {
   }
 
   private transformProductDetail(product: any, soldCount: number) {
-    // Transform variants to include stock from StockItem
+    // Transform variants to include stock from StockItem + discount state (tính động, không lưu cứng)
     const variantsWithStock = (product.variants || []).map((variant: any) => ({
-      ...variant,
+      ...this.applyDiscountToVariant(variant),
       stock: variant.stockItems?.reduce(
         (sum: number, item: any) => sum + ((item.qtyOnHand || 0) - (item.qtyReserved || 0)),
         0,
@@ -360,13 +400,55 @@ export class ProductService {
       }
     }
 
-    const updated = await this.prisma.product.update({
-      where: { id },
-      data: dto,
-      include: {
-        images: true,
-        variants: true,
-      },
+    const { variants, ...productData } = dto;
+
+    const updated = await this.prisma.$transaction(async (prisma) => {
+      const product = await prisma.product.update({
+        where: { id },
+        data: productData,
+        include: { images: true },
+      });
+
+      // Sync variants: update có id, create chưa có, xoá biến thể không còn trong payload
+      if (variants !== undefined) {
+        const keptIds = variants.filter((v) => v.id).map((v) => v.id as string);
+
+        const removed = await prisma.productVariant.findMany({
+          where: { productId: id, NOT: { id: { in: keptIds } } },
+          select: { id: true, sku: true },
+        });
+        for (const r of removed) {
+          const inUse = await prisma.orderItem.findFirst({ where: { variant: { id: r.id } } });
+          if (inUse) {
+            throw new BadRequestException(`Biến thể "${r.sku}" đã được đặt hàng, không thể xoá`);
+          }
+        }
+        if (removed.length > 0) {
+          await prisma.productVariant.deleteMany({ where: { id: { in: removed.map((r) => r.id) } } });
+        }
+
+        for (const v of variants) {
+          const data = {
+            sku: v.sku,
+            name: v.name,
+            price: v.price,
+            compareAtPrice: v.compareAtPrice,
+            discountStartAt: v.discountStartAt ? new Date(v.discountStartAt) : null,
+            discountEndAt: v.discountEndAt ? new Date(v.discountEndAt) : null,
+            optionValues: v.optionValues,
+          };
+          if (v.id) {
+            await prisma.productVariant.update({ where: { id: v.id }, data });
+          } else {
+            await prisma.productVariant.create({ data: { ...data, productId: id } });
+          }
+        }
+      }
+
+      return prisma.product.findUnique({
+        where: { id },
+        include: { images: true, variants: true },
+      });
     });
 
     await this.cacheManager.del(`catalog:product:${existingProduct.slug}`);

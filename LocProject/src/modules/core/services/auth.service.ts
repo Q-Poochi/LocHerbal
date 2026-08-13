@@ -35,7 +35,8 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) {
-      throw new BadRequestException('Email đã được sử dụng');
+      // Không lộ email đã đăng ký — trả message trung lập (pattern forgot-password)
+      return { message: 'Nếu email hợp lệ, hướng dẫn xác thực đã được gửi' };
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -115,7 +116,8 @@ export class AuthService {
     }
 
     if (user.emailVerified) {
-      throw new BadRequestException('Email đã được xác thực');
+      // Không lộ trạng thái đã xác thực — message trung lập giống case email không tồn tại
+      return { message: 'Nếu email tồn tại, link xác thực đã được gửi lại' };
     }
 
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
@@ -137,18 +139,7 @@ export class AuthService {
       throw new BadRequestException('Số điện thoại không đúng định dạng Việt Nam');
     }
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: { phone },
-    });
-
-    if (purpose === 'register' && existingUser) {
-      throw new BadRequestException('Số điện thoại đã được đăng ký');
-    }
-
-    if (purpose === 'login' && !existingUser) {
-      throw new BadRequestException('Số điện thoại chưa đăng ký, vui lòng đăng ký trước');
-    }
-
+    // Không phân biệt SĐT đã/chưa đăng ký để tránh enumeration — luôn gửi OTP.
     return this.otpService.generateAndSendOtp(phone, purpose);
   }
 
@@ -161,7 +152,7 @@ export class AuthService {
 
     if (purpose === 'login') {
       if (!user) {
-        throw new BadRequestException('Số điện thoại chưa đăng ký, vui lòng đăng ký trước');
+        throw new BadRequestException('Mã OTP hoặc số điện thoại không hợp lệ');
       }
     } else {
       if (!user) {
@@ -375,6 +366,61 @@ export class AuthService {
     } catch (e) {
       // Bỏ qua lỗi verify nếu token đã hết hạn khi logout
     }
+  }
+
+  async forgotPassword(email: string) {
+    // Message trung lập — KHÔNG lộ email có tồn tại hay không (chống enumeration).
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return { message: 'Nếu email tồn tại, hướng dẫn đã được gửi' };
+    }
+
+    const passwordResetToken = crypto.randomBytes(32).toString('hex');
+    // 15 phút — ngắn hơn email verify (24h) vì đặt lại mật khẩu nhạy cảm hơn.
+    const passwordResetExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetToken, passwordResetExpiry },
+    });
+
+    try {
+      await this.emailService.sendPasswordResetEmail(user.email, user.fullName, passwordResetToken);
+    } catch (e) {
+      this.logger.error(`Không gửi được email đặt lại mật khẩu tới ${user.email}: ${(e as Error).message}`);
+    }
+
+    return { message: 'Nếu email tồn tại, hướng dẫn đã được gửi' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { passwordResetToken: token },
+    });
+
+    if (!user || !user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
+      throw new BadRequestException('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Xóa token + expiry NGAY khi dùng → cùng token không reset được 2 lần.
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+      },
+    });
+
+    // Vô hiệu hóa mọi session đang hoạt động của user (mật khẩu đổi → token cũ vô hiệu).
+    await this.prisma.userSession.updateMany({
+      where: { userId: user.id, isRevoked: false },
+      data: { isRevoked: true },
+    });
+
+    return { message: 'Mật khẩu đã được đặt lại thành công' };
   }
 
   private async generateTokens(userId: string) {

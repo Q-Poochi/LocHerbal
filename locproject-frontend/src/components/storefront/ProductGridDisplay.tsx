@@ -7,6 +7,7 @@ import { useToast } from '../../lib/providers/toast-provider';
 import EmptyState from './EmptyState';
 import { resolveImageUrl } from '../../lib/utils/imageUrl';
 import { getErrorMessage } from '../../lib/utils/error';
+import { getVariantPricing } from '../../lib/utils/discount';
 
 interface ProductGridDisplayProps {
     products: Product[];
@@ -58,6 +59,8 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
             {products.map((product: Product, index: number) => {
                 const i = index + 1;
                 const mainVariant = product.variants?.[0];
+                const pricing = getVariantPricing(mainVariant);
+                const hasDiscount = pricing.isDiscountActive;
                 const isBestseller = i % 3 === 0;
 
                 return (
@@ -80,9 +83,9 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
                                 {product.category?.name}
                             </div>
 
-                            {mainVariant?.compareAtPrice && i === 1 && (
+                            {hasDiscount && i === 1 && (
                                 <div className="absolute top-3 right-3 bg-error text-white text-body-sm font-bold px-2 py-1 rounded">
-                                    -15%
+                                    -{pricing.discountPercent}%
                                 </div>
                             )}
 
@@ -108,12 +111,12 @@ export default function ProductGridDisplay({ products }: ProductGridDisplayProps
                             </Link>
 
                             <div className="flex items-center gap-2 mb-2">
-                                <span className={`${mainVariant?.compareAtPrice ? 'text-error' : 'text-primary'} font-bold text-body-lg`}>
-                                    {(mainVariant?.price ?? 0).toLocaleString('vi-VN')}đ
+                                <span className={`${hasDiscount ? 'text-error' : 'text-primary'} font-bold text-body-lg`}>
+                                    {pricing.price.toLocaleString('vi-VN')}đ
                                 </span>
-                                {mainVariant?.compareAtPrice && (
+                                {hasDiscount && pricing.compareAtPrice != null && (
                                     <span className="text-outline text-caption line-through">
-                                        {(mainVariant.compareAtPrice ?? 0).toLocaleString('vi-VN')}đ
+                                        {pricing.compareAtPrice.toLocaleString('vi-VN')}đ
                                     </span>
                                 )}
                             </div>

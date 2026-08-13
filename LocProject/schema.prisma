@@ -110,6 +110,8 @@ model User {
   emailVerified               Boolean    @default(false) @map("email_verified")
   emailVerificationToken      String?    @unique @map("email_verification_token")
   emailVerificationExpiry     DateTime?  @map("email_verification_expiry")
+  passwordResetToken          String?    @unique @map("password_reset_token")
+  passwordResetExpiry         DateTime?  @map("password_reset_expiry")
   createdAt                   DateTime   @default(now()) @map("created_at")
   updatedAt                   DateTime   @updatedAt @map("updated_at")
 
@@ -344,6 +346,8 @@ model ProductVariant {
   name           String?
   price          Decimal  @db.Decimal(12, 2)
   compareAtPrice Decimal? @db.Decimal(12, 2) @map("compare_at_price")
+  discountStartAt DateTime? @map("discount_start_at")
+  discountEndAt   DateTime? @map("discount_end_at")
   optionValues   Json?    @map("option_values")
   createdAt      DateTime @default(now()) @map("created_at")
 

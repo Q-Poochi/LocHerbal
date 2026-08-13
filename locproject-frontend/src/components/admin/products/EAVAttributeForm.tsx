@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api/client';
 
 interface AttributeDefinition {
+    id: string;
     key: string;
     label: string;
     dataType: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'SELECT';
@@ -11,9 +12,15 @@ interface AttributeDefinition {
     options?: string[];
 }
 
-export default function EAVAttributeForm({ categoryId }: { categoryId?: string }) {
+interface EAVAttributeFormProps {
+    categoryId?: string;
+    initialValues?: Record<string, string>;
+}
+
+export default function EAVAttributeForm({ categoryId, initialValues }: EAVAttributeFormProps) {
     const [definitions, setDefinitions] = useState<AttributeDefinition[]>([]);
     const [loading, setLoading] = useState(false);
+    const [values, setValues] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (!categoryId) {
@@ -30,6 +37,16 @@ export default function EAVAttributeForm({ categoryId }: { categoryId?: string }
             .catch(() => setDefinitions([]))
             .finally(() => setLoading(false));
     }, [categoryId]);
+
+    useEffect(() => {
+        if (initialValues) {
+            setValues(initialValues);
+        }
+    }, [initialValues]);
+
+    const setValue = (key: string, value: string) => {
+        setValues((prev) => ({ ...prev, [key]: value }));
+    };
 
     if (!categoryId) {
         return (
@@ -68,6 +85,8 @@ export default function EAVAttributeForm({ categoryId }: { categoryId?: string }
                             className="w-full rounded-lg border border-border focus:border-primary-700 focus:ring-1 focus:ring-primary-700/10 transition-all p-3"
                             placeholder={`Nhập ${def.label.toLowerCase()}...`}
                             type="text"
+                            value={values[def.key] ?? ''}
+                            onChange={(e) => setValue(def.key, e.target.value)}
                         />
                     )}
                     {def.dataType === 'NUMBER' && (
@@ -75,6 +94,8 @@ export default function EAVAttributeForm({ categoryId }: { categoryId?: string }
                             className="w-full rounded-lg border border-border focus:border-primary-700 focus:ring-1 focus:ring-primary-700/10 transition-all p-3"
                             placeholder="0"
                             type="number"
+                            value={values[def.key] ?? ''}
+                            onChange={(e) => setValue(def.key, e.target.value)}
                         />
                     )}
                     {def.dataType === 'BOOLEAN' && (
@@ -82,12 +103,18 @@ export default function EAVAttributeForm({ categoryId }: { categoryId?: string }
                             <input
                                 type="checkbox"
                                 className="rounded border-border text-primary-700 focus:ring-primary-700"
+                                checked={values[def.key] === 'true'}
+                                onChange={(e) => setValue(def.key, e.target.checked ? 'true' : 'false')}
                             />
                             <span className="text-sm text-text-tertiary">{def.label}</span>
                         </label>
                     )}
                     {def.dataType === 'SELECT' && (
-                        <select className="w-full rounded-lg border border-border focus:border-primary-700 focus:ring-1 focus:ring-primary-700/10 transition-all p-3">
+                        <select
+                            className="w-full rounded-lg border border-border focus:border-primary-700 focus:ring-1 focus:ring-primary-700/10 transition-all p-3"
+                            value={values[def.key] ?? ''}
+                            onChange={(e) => setValue(def.key, e.target.value)}
+                        >
                             <option value="">Chọn {def.label.toLowerCase()}...</option>
                             {def.options?.map((opt) => (
                                 <option key={opt} value={opt}>

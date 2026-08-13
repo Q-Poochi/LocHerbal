@@ -17,6 +17,11 @@ enum NodeEnv {
   Test = 'test',
 }
 
+enum SmsProvider {
+  Mock = 'mock',
+  Esms = 'esms',
+}
+
 const REQUIRED_KEYS = [
   'DATABASE_URL',
   'JWT_ACCESS_SECRET',
@@ -24,6 +29,7 @@ const REQUIRED_KEYS = [
   'VNP_TMN_CODE',
   'VNP_HASH_SECRET',
   'VNP_URL',
+  'SMS_PROVIDER',
 ] as const;
 
 // CORS origins cho phép — env lưu dạng CSV "https://a.com,https://b.com"
@@ -67,9 +73,21 @@ class EnvironmentVariables {
   @Max(1000)
   AUTH_THROTTLE_LIMIT?: number;
 
+  @IsEnum(SmsProvider)
+  SMS_PROVIDER: SmsProvider;
+
+  // Chỉ bắt buộc khi SMS_PROVIDER=esms — kiểm tra fail-fast bên dưới.
   @IsOptional()
   @IsString()
   SMS_PROVIDER_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  SMS_PROVIDER_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  SMS_BRANDNAME?: string;
 
   // Resend API key gửi email. Nếu NODE_ENV=production mà thiếu key này, app KHÔNG
   // khởi động được (chặn dùng mock email ở production).
@@ -137,6 +155,22 @@ export function validate(config: Record<string, unknown>) {
         ', ',
       )}. App không thể khởi động an toàn.`,
     );
+  }
+
+  // Nếu chọn provider SMS thật (esms) mà thiếu thông tin đăng nhập → fail-fast,
+  // KHÔNG cho phép ngầm quay về mock (tránh gửi "OTP giả" ngoài ý muốn).
+  if (config.SMS_PROVIDER === 'esms') {
+    const missingSms = ['SMS_PROVIDER_API_KEY', 'SMS_PROVIDER_SECRET_KEY', 'SMS_BRANDNAME'].filter(
+      (key) => {
+        const value = config[key];
+        return value === undefined || value === null || value === '';
+      },
+    );
+    if (missingSms.length > 0) {
+      throw new Error(
+        `[FATAL] SMS_PROVIDER=esms nhưng thiếu biến môi trường: ${missingSms.join(', ')}. App không thể khởi động.`,
+      );
+    }
   }
 
   // Chuyển giá trị number dạng chuỗi từ env trước khi validate

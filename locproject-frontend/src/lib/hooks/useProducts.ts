@@ -63,6 +63,18 @@ export function useProduct(slug: string) {
     });
 }
 
+/** Lấy chi tiết sản phẩm theo id (dùng cho admin edit form). Endpoint GET /products/:id là public. */
+export function useProductById(id?: string) {
+    return useQuery({
+        queryKey: ['product', 'by-id', id],
+        queryFn: async () => {
+            const { data } = await apiClient.get<ProductDetail>(`/products/${id}`);
+            return data;
+        },
+        enabled: !!id,
+    });
+}
+
 // Auth header được gắn tự động bởi interceptor. Guest dùng sessionId query param.
 function guestParams() {
     const { accessToken } = useAuthStore.getState();
@@ -157,10 +169,13 @@ export interface CreateProductPayload {
     isPublished?: boolean;
     images?: string[];
     variants?: {
+        id?: string;
         sku: string;
         name?: string;
         price: number;
         compareAtPrice?: number;
+        discountStartAt?: string;
+        discountEndAt?: string;
     }[];
 }
 

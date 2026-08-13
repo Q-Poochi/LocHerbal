@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { useAddToCart, AuthRequiredError } from '../../../lib/hooks/useProducts';
 import { useCartStore } from '../../../lib/store/cart.store';
 import { resolveImageUrl } from '../../../lib/utils/imageUrl';
+import { getVariantPricing } from '../../../lib/utils/discount';
 import type { Product } from '@/types/api.types';
 
 type BtnState = 'idle' | 'loading' | 'success' | 'error';
@@ -14,10 +15,11 @@ function ProductCard({ product }: { product: Product }) {
   const addToCartMutation = useAddToCart();
   const { openDrawer } = useCartStore();
 
-  const price = Number(product.variants?.[0]?.price ?? 0);
-  const compareAt = Number(product.variants?.[0]?.compareAtPrice ?? 0);
-  const hasDiscount = compareAt > price;
-  const discountPct = hasDiscount ? Math.round((1 - price / compareAt) * 100) : 0;
+  const pricing = getVariantPricing(product.variants?.[0]);
+  const price = pricing.price;
+  const compareAt = pricing.compareAtPrice ?? 0;
+  const hasDiscount = pricing.isDiscountActive;
+  const discountPct = pricing.discountPercent ?? 0;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();

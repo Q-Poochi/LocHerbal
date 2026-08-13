@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { useCategories, useCreateProduct, useUpdateProduct, CreateProductPayload } from '@/lib/hooks/useProducts';
+import { useCategories, useCreateProduct, useUpdateProduct, useProductById, CreateProductPayload } from '@/lib/hooks/useProducts';
 import { useToast } from '@/lib/providers/toast-provider';
 import { getErrorMessage } from '@/lib/utils/error';
-import VariantEditor from './VariantEditor';
+import VariantEditor, { Variant as VariantEditorVariant } from './VariantEditor';
 import EAVAttributeForm from './EAVAttributeForm';
 import PublishSidebar from './PublishSidebar';
 import ImageUploader from './image-uploader/ImageUploader';
@@ -36,6 +36,47 @@ export default function ProductForm() {
     const [categoryId, setCategoryId] = useState('');
     const [isPublished, setIsPublished] = useState(false);
     const [images, setImages] = useState<{ url: string; file?: File; uploading?: boolean }[]>([]);
+    const [variants, setVariants] = useState<VariantEditorVariant[]>([]);
+
+    const { data: product, isPending: productLoading } = useProductById(isEdit ? productId : undefined);
+
+    const initialVariants = useMemo(
+        () =>
+            (product?.variants ?? []).map((v) => ({
+                id: v.id || String(Date.now()),
+                sku: (v as { sku?: string }).sku || '',
+                name: v.name || '',
+                price: Number((v as any).priceRaw ?? v.price) || 0,
+                compareAtPrice: Number((v as any).compareAtPriceRaw) || 0,
+                stock: Number(v.stock) || 0,
+                marketPrice: 0,
+                marketPriceSource: '',
+                discountStartAt: (v as any).discountStartAt ? new Date((v as any).discountStartAt).toISOString().slice(0, 16) : '',
+                discountEndAt: (v as any).discountEndAt ? new Date((v as any).discountEndAt).toISOString().slice(0, 16) : '',
+            })),
+        [product],
+    );
+
+    const initialEavValues = useMemo(() => {
+        const map: Record<string, string> = {};
+        (product as any)?.attributeValues?.forEach((av: any) => {
+            const key = av.attribute?.key;
+            if (key) map[key] = String(av.value ?? '');
+        });
+        return map;
+    }, [product]);
+
+    useEffect(() => {
+        if (!product) return;
+        const p = product as any;
+        setName(p.name || '');
+        setSlug(p.slug || '');
+        setDescription(p.description || '');
+        setCategoryId(p.category?.id || '');
+        setIsPublished(!!p.isPublished);
+        setImages((p.images || []).map((img: { url: string }) => ({ url: img.url })));
+        setVariants(initialVariants);
+    }, [product, initialVariants]);
 
     const isPending = createMutation.isPending || updateMutation.isPending;
 
@@ -59,6 +100,15 @@ export default function ProductForm() {
             thumbnailUrl,
             isPublished: publish,
             images: images.filter((i) => !i.uploading).map((i) => i.url),
+            variants: variants.map((v) => ({
+                id: v.id,
+                sku: v.sku,
+                name: v.name,
+                price: v.price,
+                compareAtPrice: v.compareAtPrice > 0 ? v.compareAtPrice : undefined,
+                discountStartAt: v.discountStartAt ? new Date(v.discountStartAt).toISOString() : undefined,
+                discountEndAt: v.discountEndAt ? new Date(v.discountEndAt).toISOString() : undefined,
+            })),
         } as CreateProductPayload;
     };
 
@@ -72,7 +122,8 @@ export default function ProductForm() {
 
         try {
             if (isEdit) {
-                await updateMutation.mutateAsync(payload);
+                const { images: _ignoredImages, ...core } = payload;
+                await updateMutation.mutateAsync(core);
             } else {
                 await createMutation.mutateAsync(payload);
             }
@@ -200,14 +251,17 @@ export default function ProductForm() {
                     {/* Tab 2: Variants */}
                     {activeTab === 'variants' && (
                         <div className="p-6">
-                            <VariantEditor productName={name} />
+                            <VariantEditor productName={name} variants={variants} onChange={setVariants} />
                         </div>
                     )}
 
                     {/* Tab 3: EAV */}
                     {activeTab === 'eav' && (
                         <div className="p-6">
-                            <EAVAttributeForm categoryId={categoryId || undefined} />
+                            <EAVAttributeForm
+                                categoryId={categoryId || undefined}
+                                initialValues={initialEavValues}
+                            />
                         </div>
                     )}
 

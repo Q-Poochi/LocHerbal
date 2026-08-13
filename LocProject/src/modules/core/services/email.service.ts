@@ -90,4 +90,27 @@ export class EmailService {
 
     await this.provider.sendEmail(to, 'Xác thực email LocHerbal', html);
   }
+
+  async sendPasswordResetEmail(to: string, fullName: string, token: string): Promise<void> {
+    const url = `${this.frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #1b4332;">
+        <h2 style="margin: 0 0 12px;">Đặt lại mật khẩu</h2>
+        <p>Xin chào ${fullName},</p>
+        <p>
+          Bạn vừa yêu cầu đặt lại mật khẩu LocHerbal. Bấm nút bên dưới để tạo mật khẩu mới.
+          Link có hiệu lực trong <strong>15 phút</strong>.
+        </p>
+        <p style="text-align: center; margin: 24px 0;">
+          <a href="${url}" style="display: inline-block; padding: 12px 28px; background: #1b4332; color: #ffffff; text-decoration: none; border-radius: 8px;">Đặt lại mật khẩu</a>
+        </p>
+        <p style="font-size: 12px; color: #6b7c73;">
+          Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+          Nếu nút trên không hoạt động, sao chép link: ${url}
+        </p>
+      </div>
+    `;
+
+    await this.provider.sendEmail(to, 'Đặt lại mật khẩu LocHerbal', html);
+  }
 }

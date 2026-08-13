@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useToast } from '../../lib/providers/toast-provider';
 import { useCartStore } from '../../lib/store/cart.store';
 import { resolveImageUrl } from '../../lib/utils/imageUrl';
+import { getVariantPricing } from '../../lib/utils/discount';
 import type { Product } from '@/types/api.types';
 
 type BtnState = 'idle' | 'loading' | 'success' | 'error';
@@ -19,10 +20,12 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
   const toast = useToast();
   const openDrawer = useCartStore((s) => s.openDrawer);
 
-  const price = Number(product.variants?.[0]?.price ?? 0);
-  const compareAt = Number(product.variants?.[0]?.compareAtPrice ?? 0);
-  const hasDiscount = compareAt > price;
-  const discountPct = hasDiscount ? Math.round((1 - price / compareAt) * 100) : 0;
+  const firstVariant = product.variants?.[0];
+  const pricing = getVariantPricing(firstVariant);
+  const price = pricing.price;
+  const compareAt = pricing.compareAtPrice ?? 0;
+  const hasDiscount = pricing.isDiscountActive;
+  const discountPct = pricing.discountPercent ?? 0;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();

@@ -48,6 +48,7 @@ describe('AuthService', () => {
 
   const mockEmailService = {
     sendVerificationEmail: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
   };
 
   function mockUser(overrides: Record<string, any> = {}) {
@@ -289,30 +290,25 @@ describe('AuthService', () => {
       jest.clearAllMocks();
     });
 
-    it('should reject when purpose=login but phone not registered', async () => {
+    it('should not differentiate when purpose=login but phone not registered (anti-enumeration)', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.requestOtp('0912345678', 'login')).rejects.toThrow(
-        'Số điện thoại chưa đăng ký, vui lòng đăng ký trước',
-      );
-      expect(mockOtpService.generateAndSendOtp).not.toHaveBeenCalled();
+      await expect(service.requestOtp('0912345678', 'login')).resolves.not.toThrow();
+      expect(mockOtpService.generateAndSendOtp).toHaveBeenCalledWith('0912345678', 'login');
     });
 
-    it('should reject when purpose=register but phone already registered', async () => {
+    it('should not differentiate when purpose=register but phone already registered (anti-enumeration)', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(mockUser({ phone: '0912345678' }));
 
-      await expect(service.requestOtp('0912345678', 'register')).rejects.toThrow(
-        'Số điện thoại đã được đăng ký',
-      );
-      expect(mockOtpService.generateAndSendOtp).not.toHaveBeenCalled();
+      await expect(service.requestOtp('0912345678', 'register')).resolves.not.toThrow();
+      expect(mockOtpService.generateAndSendOtp).toHaveBeenCalledWith('0912345678', 'register');
     });
 
     it('should send OTP when purpose=login and phone exists', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(mockUser({ phone: '0912345678' }));
-      mockOtpService.generateAndSendOtp.mockResolvedValue('123456');
+      mockOtpService.generateAndSendOtp.mockResolvedValue(undefined);
 
-      const result = await service.requestOtp('0912345678', 'login');
-      expect(result).toBe('123456');
+      await service.requestOtp('0912345678', 'login');
       expect(mockOtpService.generateAndSendOtp).toHaveBeenCalledWith('0912345678', 'login');
     });
 
@@ -339,12 +335,12 @@ describe('AuthService', () => {
       expect(mockPrismaService.userSession.create).toHaveBeenCalled();
     });
 
-    it('purpose=login: phone not registered → error', async () => {
+    it('purpose=login: phone not registered → error (neutral message)', async () => {
       mockOtpService.verifyOtp.mockResolvedValue(true);
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
       await expect(service.verifyOtp('0912345678', '123456', 'login')).rejects.toThrow(
-        'Số điện thoại chưa đăng ký',
+        'Mã OTP hoặc số điện thoại không hợp lệ',
       );
     });
 
@@ -376,13 +372,16 @@ describe('AuthService', () => {
       jest.clearAllMocks();
     });
 
-    it('should reject if email already exists', async () => {
+    it('should return neutral message if email already exists (anti-enumeration)', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ email: 'dup@test.com' }));
 
-      await expect(
-        service.register({ email: 'dup@test.com', password: 'password123', fullName: 'Dup' }),
-      ).rejects.toThrow('Email đã được sử dụng');
+      const result = await service.register({
+        email: 'dup@test.com',
+        password: 'password123',
+        fullName: 'Dup',
+      });
 
+      expect(result).toEqual({ message: 'Nếu email hợp lệ, hướng dẫn xác thực đã được gửi' });
       expect(mockPrismaService.user.create).not.toHaveBeenCalled();
     });
 
@@ -498,11 +497,11 @@ describe('AuthService', () => {
       expect(mockPrismaService.user.update).not.toHaveBeenCalled();
     });
 
-    it('should throw if already verified', async () => {
+    it('should return neutral message if already verified (anti-enumeration)', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser({ emailVerified: true }));
-      await expect(service.resendVerificationEmail('test@test.com')).rejects.toThrow(
-        'Email đã được xác thực',
-      );
+      const result = await service.resendVerificationEmail('test@test.com');
+      expect(result.message).toContain('Nếu email tồn tại');
+      expect(mockPrismaService.user.update).not.toHaveBeenCalled();
     });
 
     it('should generate new token and send email', async () => {
@@ -524,6 +523,95 @@ describe('AuthService', () => {
         'Test User',
         updateCall.data.emailVerificationToken,
       );
+    });
+  });
+
+  describe('forgotPassword', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return neutral message if email not found (anti-enumeration)', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      const result = await service.forgotPassword('ghost@test.com');
+      expect(result.message).toContain('Nếu email tồn tại');
+      expect(mockPrismaService.user.update).not.toHaveBeenCalled();
+      expect(mockEmailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+
+    it('should generate token with 15-min expiry and send email', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({ fullName: 'Test User', email: 'test@test.com' }),
+      );
+      mockPrismaService.user.update.mockResolvedValue(mockUser());
+
+      const result = await service.forgotPassword('test@test.com');
+      expect(result.message).toContain('Nếu email tồn tại');
+
+      const updateCall = mockPrismaService.user.update.mock.calls[0][0];
+      expect(updateCall.data.passwordResetToken).toBeTruthy();
+      expect(updateCall.data.passwordResetExpiry).toBeInstanceOf(Date);
+      expect(updateCall.data.passwordResetExpiry.getTime() - Date.now()).toBeLessThan(16 * 60 * 1000);
+
+      expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        'test@test.com',
+        'Test User',
+        updateCall.data.passwordResetToken,
+      );
+    });
+
+    it('should still return neutral message if email sending fails', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser());
+      mockPrismaService.user.update.mockResolvedValue(mockUser());
+      mockEmailService.sendPasswordResetEmail.mockRejectedValue(new Error('Resend down'));
+
+      const result = await service.forgotPassword('test@test.com');
+      expect(result.message).toContain('Nếu email tồn tại');
+    });
+  });
+
+  describe('resetPassword', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should throw if token not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      await expect(service.resetPassword('bad-token', 'newpassword123')).rejects.toThrow(
+        'không hợp lệ hoặc đã hết hạn',
+      );
+    });
+
+    it('should throw if expired', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({ passwordResetExpiry: new Date(Date.now() - 1000) }),
+      );
+      await expect(service.resetPassword('token', 'newpassword123')).rejects.toThrow(
+        'không hợp lệ hoặc đã hết hạn',
+      );
+    });
+
+    it('should hash new password, clear token and revoke sessions', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(
+        mockUser({ passwordResetExpiry: new Date(Date.now() + 60 * 1000) }),
+      );
+      mockPrismaService.user.update.mockResolvedValue(mockUser());
+      mockPrismaService.userSession.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.resetPassword('token', 'newpassword123');
+      expect(result.message).toContain('thành công');
+
+      const updateCall = mockPrismaService.user.update.mock.calls[0][0];
+      expect(updateCall.data.passwordHash).toBeTruthy();
+      expect(updateCall.data.passwordHash).not.toBe('newpassword123');
+      expect(updateCall.data.passwordResetToken).toBeNull();
+      expect(updateCall.data.passwordResetExpiry).toBeNull();
+
+      expect(mockPrismaService.userSession.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1', isRevoked: false },
+        data: { isRevoked: true },
+      });
     });
   });
 });

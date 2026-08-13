@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ProductDetail } from '../../../types/api.types';
 import { resolveImageUrl } from '../../../lib/utils/imageUrl';
+import { getVariantPricing } from '../../../lib/utils/discount';
 
 interface RelatedProduct {
     id: string;
@@ -9,7 +10,16 @@ interface RelatedProduct {
     slug: string;
     thumbnailUrl?: string;
     category?: { name: string };
-    variants?: { price: number; compareAtPrice?: number }[];
+    variants?: {
+        price: number;
+        compareAtPrice?: number;
+        priceRaw?: number;
+        compareAtPriceRaw?: number;
+        discountStartAt?: string;
+        discountEndAt?: string;
+        isDiscountActive?: boolean;
+        discountPercent?: number;
+    }[];
 }
 
 interface ProductsResponse {
@@ -59,8 +69,9 @@ export default async function RelatedProducts({ product }: { product: ProductDet
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {related.map((rp) => {
-                        const price = Number(rp.variants?.[0]?.price ?? 0);
-                        const compareAt = Number(rp.variants?.[0]?.compareAtPrice ?? 0);
+                        const pricing = getVariantPricing(rp.variants?.[0]);
+                        const price = pricing.price;
+                        const compareAt = pricing.compareAtPrice ?? 0;
                         return (
                             <Link
                                 key={rp.id}
@@ -89,7 +100,7 @@ export default async function RelatedProducts({ product }: { product: ProductDet
                                         {price > 0 && (
                                             <>
                                                 <span className="text-primary-700 font-bold text-sm md:text-base">{formatPrice(price)}</span>
-                                                {compareAt > price && (
+                                                {pricing.isDiscountActive && compareAt > price && (
                                                     <span className="text-xs text-text-tertiary line-through">{formatPrice(compareAt)}</span>
                                                 )}
                                             </>

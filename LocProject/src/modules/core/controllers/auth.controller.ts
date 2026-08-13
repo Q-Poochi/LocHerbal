@@ -12,6 +12,8 @@ import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { Public } from '../decorators/public.decorator';
 import { RequestOtpDto, VerifyOtpDto } from '../dto/otp.dto';
 import { ResendVerificationDto } from '../dto/resend-verification.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -21,9 +23,9 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: Number(process.env.AUTH_THROTTLE_LIMIT ?? 3), ttl: 600000 } })
   @Post('register')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Đăng ký tài khoản mới' })
-  @ApiResponse({ status: 201, description: 'Đăng ký thành công' })
-  @ApiResponse({ status: 400, description: 'Email đã được sử dụng' })
+  @ApiResponse({ status: 200, description: 'Đăng ký thành công' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -65,6 +67,27 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 3600000 } })
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Yêu cầu đặt lại mật khẩu qua email (tối đa 3 lần/giờ)' })
+  @ApiResponse({ status: 200, description: 'Message trung lập — không lộ email tồn tại hay không' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Đặt lại mật khẩu bằng token từ email' })
+  @ApiResponse({ status: 200, description: 'Mật khẩu đã được đặt lại' })
+  @ApiResponse({ status: 400, description: 'Token không hợp lệ hoặc đã hết hạn' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Public()
   @Throttle({ default: { limit: Number(process.env.AUTH_THROTTLE_LIMIT ?? 5), ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -86,10 +109,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Yêu cầu gửi mã OTP qua SĐT' })
   @ApiResponse({ status: 200, description: 'Yêu cầu gửi mã thành công' })
   async requestOtp(@Body() dto: RequestOtpDto) {
-    const code = await this.authService.requestOtp(dto.phone, dto.purpose);
+    // KHÔNG trả mã OTP qua response — kể cả dev (mã chỉ có trong DB + tin nhắn SMS).
+    await this.authService.requestOtp(dto.phone, dto.purpose);
     return {
       message: 'Mã OTP đã được gửi thành công',
-      ...(code ? { code } : {}),
     };
   }
 

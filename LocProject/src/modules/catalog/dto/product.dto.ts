@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUUID, IsOptional, IsBoolean, IsArray, ValidateNested, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, IsOptional, IsBoolean, IsArray, ValidateNested, IsNumber, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateProductVariantDto {
@@ -17,6 +17,47 @@ export class CreateProductVariantDto {
   @IsOptional()
   @IsNumber({}, { message: 'Giá so sánh phải là số' })
   compareAtPrice?: number;
+
+  @IsOptional()
+  @IsDateString()
+  discountStartAt?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discountEndAt?: string;
+
+  @IsOptional()
+  optionValues?: any;
+}
+
+export class UpdateProductVariantDto {
+  @IsOptional()
+  @IsUUID('4', { message: 'id biến thể phải là UUID hợp lệ' })
+  id?: string;
+
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Giá phải là số' })
+  price?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Giá so sánh phải là số' })
+  compareAtPrice?: number;
+
+  @IsOptional()
+  @IsDateString()
+  discountStartAt?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discountEndAt?: string;
 
   @IsOptional()
   optionValues?: any;
@@ -83,6 +124,12 @@ export class UpdateProductDto {
   @IsOptional()
   @IsBoolean()
   isPublished?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateProductVariantDto)
+  variants?: UpdateProductVariantDto[];
 }
 
 export class UpsertProductAttributeValueDto {

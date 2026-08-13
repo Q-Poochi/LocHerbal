@@ -61,6 +61,7 @@ jobs:
           echo "JWT_REFRESH_SECRET=ci_refresh_secret_not_for_production" >> .env
           echo "REDIS_HOST=localhost" >> .env
           echo "REDIS_PORT=6379" >> .env
+          echo "SMS_PROVIDER=mock" >> .env
 
       - name: Run migrations
         working-directory: LocProject
@@ -80,6 +81,7 @@ jobs:
           JWT_REFRESH_SECRET: ci_refresh_secret_not_for_production
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          SMS_PROVIDER: mock
 
       - name: Run e2e saga tests
         working-directory: LocProject
@@ -95,6 +97,7 @@ jobs:
           VNP_URL: https://sandbox.vnpayment.vn/
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          SMS_PROVIDER: mock
 
       - name: Build
         working-directory: LocProject
