@@ -58,6 +58,7 @@ jobs:
             CORS_ORIGINS="${{ vars.STAGING_FRONTEND_URL }}" \
             GHN_WEBHOOK_TOKEN="${{ secrets.STAGING_GHN_WEBHOOK_TOKEN }}" \
             GHTK_WEBHOOK_TOKEN="${{ secrets.STAGING_GHTK_WEBHOOK_TOKEN }}" \
+            API_URL="${{ secrets.STAGING_API_URL }}" \
             NODE_ENV=production \
             PORT=4000
 
