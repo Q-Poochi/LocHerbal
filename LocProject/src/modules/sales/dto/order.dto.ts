@@ -34,3 +34,54 @@ export class AdminOrderQueryDto extends PaginationDto {
     @IsDateString()
     to?: string;
 }
+
+/**
+ * Dữ liệu checkout từ form: địa chỉ giao hàng, ghi chú, phương thức thanh toán.
+ * `addressId` nếu khách chọn địa chỉ đã lưu; ngược lại backend tự tạo CustomerAddress
+ * từ các field form (fullName/phone/province/district/ward/address).
+ */
+export class CheckoutDto {
+    @IsOptional()
+    @IsString()
+    addressId?: string;
+
+    @IsOptional()
+    @IsString()
+    couponCode?: string;
+
+    @IsOptional()
+    @IsString()
+    fullName?: string;
+
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @IsOptional()
+    @IsString()
+    email?: string;
+
+    @IsOptional()
+    @IsString()
+    province?: string;
+
+    @IsOptional()
+    @IsString()
+    district?: string;
+
+    @IsOptional()
+    @IsString()
+    ward?: string;
+
+    @IsOptional()
+    @IsString()
+    address?: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
+
+    @IsOptional()
+    @IsString()
+    paymentMethod?: string;
+}

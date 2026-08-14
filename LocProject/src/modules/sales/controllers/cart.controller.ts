@@ -18,6 +18,7 @@ import { Public } from '../../core/decorators/public.decorator';
 import { CartService } from '../services/cart.service';
 import { OrderService } from '../services/order.service';
 import { AddCartItemDto, UpdateCartItemDto } from '../dto/cart.dto';
+import { CheckoutDto } from '../dto/order.dto';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
 @ApiTags('Cart')
@@ -105,8 +106,7 @@ export class CartController {
     @ApiResponse({ status: 201, description: 'Tạo đơn hàng thành công', schema: { example: { id: 'order-uuid', orderCode: 'LH-2026-000001', status: 'PENDING', paymentStatus: 'UNPAID', subtotal: 450000, shippingFee: 30000, totalAmount: 480000, customerId: 'customer-uuid', createdAt: '2026-08-07T00:00:00.000Z' } } })
     @ApiResponse({ status: 401, description: 'Yêu cầu đăng nhập để thanh toán' })
     async checkout(
-        @Body('addressId') addressId: string | undefined,
-        @Body('couponCode') couponCode: string | undefined,
+        @Body() body: CheckoutDto,
         @Req() req: Request,
     ) {
         const customerId = await this.getCustomerId(req);
@@ -114,7 +114,11 @@ export class CartController {
             throw new UnauthorizedException('Yêu cầu đăng nhập để thanh toán');
         }
         const cart = await this.cartService.getOrCreateCart(customerId);
-        return this.orderService.checkout(cart.id, customerId, addressId, undefined, couponCode);
+        return this.orderService.checkout({
+            cartId: cart.id,
+            customerId,
+            body,
+        });
     }
 
     /**

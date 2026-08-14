@@ -284,3 +284,80 @@ export function usePublicBlogPosts() {
         staleTime: 60000,
     });
 }
+
+// ── Page Builder ────────────────────────────────────────────────────────
+export type PageBlockType = 'hero' | 'text' | 'image-text' | 'stats' | 'team' | 'timeline';
+
+export interface AdminPageBlock {
+    id: string;
+    page: string;
+    type: PageBlockType;
+    order: number;
+    content: Record<string, unknown>;
+    isPublished: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export const PAGE_BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
+    hero: 'Hero (ảnh nền + tiêu đề)',
+    text: 'Văn bản',
+    'image-text': 'Ảnh + văn bản',
+    stats: 'Số liệu thống kê',
+    team: 'Đội ngũ',
+    timeline: 'Mốc phát triển',
+};
+
+export function useAdminPageBlocks(pageSlug: string) {
+    return useQuery({
+        queryKey: ['admin-page-blocks', pageSlug],
+        queryFn: async () => {
+            const { data } = await apiClient.get<AdminPageBlock[]>(`/admin/pages/${pageSlug}/blocks`);
+            return data;
+        },
+    });
+}
+
+export function useCreatePageBlock(pageSlug: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: { type: PageBlockType; content?: Record<string, unknown> }) => {
+            const { data } = await apiClient.post(`/admin/pages/${pageSlug}/blocks`, payload);
+            return data;
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-page-blocks', pageSlug] }),
+    });
+}
+
+export function useUpdatePageBlock(pageSlug: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, payload }: { id: string; payload: { content?: Record<string, unknown>; isPublished?: boolean } }) => {
+            const { data } = await apiClient.patch(`/admin/pages/${pageSlug}/blocks/${id}`, payload);
+            return data;
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-page-blocks', pageSlug] }),
+    });
+}
+
+export function useReorderPageBlocks(pageSlug: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (items: { id: string; order: number }[]) => {
+            const { data } = await apiClient.patch(`/admin/pages/${pageSlug}/blocks/reorder`, { items });
+            return data;
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-page-blocks', pageSlug] }),
+    });
+}
+
+export function useDeletePageBlock(pageSlug: string) {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const { data } = await apiClient.delete(`/admin/pages/${pageSlug}/blocks/${id}`);
+            return data;
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-page-blocks', pageSlug] }),
+    });
+}

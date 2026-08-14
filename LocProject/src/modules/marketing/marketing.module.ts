@@ -8,11 +8,14 @@ import { CouponController } from './controllers/coupon.controller';
 import { BlogPostService } from './services/blog-post.service';
 import { BlogPostController } from './controllers/blog-post.controller';
 import { PublicMarketingController } from './controllers/public-marketing.controller';
+import { PageBlockService } from './services/page-block.service';
+import { PageBlockController } from './controllers/page-block.controller';
+import { AdminPageBlockController } from './controllers/admin-page-block.controller';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [BannerController, HeroBannerController, AdminHeroBannerController, PublicBannersController, CouponController, BlogPostController, PublicMarketingController],
-  providers: [BannerService, CouponService, BlogPostService],
-  exports: [BannerService, CouponService, BlogPostService],
+  controllers: [BannerController, HeroBannerController, AdminHeroBannerController, PublicBannersController, CouponController, BlogPostController, PublicMarketingController, PageBlockController, AdminPageBlockController],
+  providers: [BannerService, CouponService, BlogPostService, PageBlockService],
+  exports: [BannerService, CouponService, BlogPostService, PageBlockService],
 })
 export class MarketingModule { }

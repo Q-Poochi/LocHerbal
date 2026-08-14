@@ -5,6 +5,13 @@ import { OrderCreatedEvent } from '../events/order-created.event';
 import { OrderCancelledEvent } from '../events/order-cancelled.event';
 import { CouponService } from '../../marketing/services/coupon.service';
 import { OrderStatus, PaymentStatus, Coupon, Prisma } from '@prisma/client';
+import { CheckoutDto } from '../dto/order.dto';
+
+export interface CheckoutOptions {
+  cartId: string;
+  customerId: string;
+  body: CheckoutDto;
+}
 
 @Injectable()
 export class OrderService {
@@ -19,7 +26,9 @@ export class OrderService {
   /**
    * Tạo đơn hàng từ giỏ hàng (Checkout)
    */
-  async checkout(cartId: string, customerId: string, addressId?: string, agentId?: string, couponCode?: string) {
+  async checkout({ cartId, customerId, body }: CheckoutOptions) {
+    const { addressId, couponCode, note, paymentMethod } = body;
+
     // 1. Lấy thông tin Cart và CartItems
     const cart = await this.prisma.cart.findUnique({
       where: { id: cartId },
@@ -44,12 +53,31 @@ export class OrderService {
       throw new BadRequestException('Giỏ hàng trống');
     }
 
-    // 2. Xác minh quyền sở hữu địa chỉ giao hàng (chống IDOR)
+    // 2. Xác minh / tạo địa chỉ giao hàng
+    // - Nếu khách chọn addressId có sẵn: kiểm tra quyền sở hữu (chống IDOR)
+    // - Nếu không: tự tạo CustomerAddress từ form (fullName/phone/province/district/ward/address)
+    let finalAddressId = addressId;
     if (addressId) {
       const address = await this.prisma.customerAddress.findUnique({ where: { id: addressId } });
       if (!address || address.customerId !== customerId) {
         throw new BadRequestException('Địa chỉ giao hàng không hợp lệ');
       }
+    } else {
+      if (!body.fullName || !body.phone || !body.province || !body.district || !body.ward || !body.address) {
+        throw new BadRequestException('Thiếu thông tin địa chỉ giao hàng (họ tên, SĐT, tỉnh/huyện/xã, địa chỉ)');
+      }
+      const newAddress = await this.prisma.customerAddress.create({
+        data: {
+          customerId,
+          recipientName: body.fullName,
+          phone: body.phone,
+          addressLine: body.address,
+          ward: body.ward,
+          district: body.district,
+          province: body.province,
+        },
+      });
+      finalAddressId = newAddress.id;
     }
 
     // 3. Truy vấn lại giá hiện tại từ ProductVariant để tránh price manipulation
@@ -113,10 +141,11 @@ export class OrderService {
         data: {
           orderCode,
           customerId,
-          addressId,
-          agentId,
+          addressId: finalAddressId,
           status: OrderStatus.PENDING,
           paymentStatus: PaymentStatus.UNPAID,
+          paymentMethod: paymentMethod ? paymentMethod.toUpperCase() : undefined,
+          notes: note || undefined,
           subtotal,
           discountAmount,
           shippingFee,
@@ -339,6 +368,9 @@ export class OrderService {
           orderBy: { createdAt: 'desc' },
         },
         statusHistory: { orderBy: { createdAt: 'desc' } },
+        couponUsages: {
+          include: { coupon: { select: { code: true } } },
+        },
       },
     });
 

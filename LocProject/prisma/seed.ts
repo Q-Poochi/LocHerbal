@@ -266,7 +266,70 @@ async function main() {
     })
   }
 
-  console.log(`✅ Seed hoàn tất: ${CATEGORIES.length} categories, ${PRODUCTS.length} products, ${PRODUCTS.reduce((s, p) => s + p.variants.length, 0)} variants, ${referencePrices.length} reference prices`)
+  // ── Page Builder: Trang "Về chúng tôi" (about-us) ──────────────────────
+  const ABOUT_PAGE = 'about-us'
+  const pageBlocks: { type: string; content: Record<string, unknown>; order: number }[] = [
+    {
+      type: 'hero',
+      content: {
+        title: 'LocHerbal — Thảo dược thiên nhiên',
+        subtitle: 'Kết hợp bài thuốc cổ truyền với công nghệ hiện đại, mang sức khỏe xanh đến từng gia đình Việt.',
+        backgroundImageUrl: 'https://placehold.co/1920x720/1b4332/ffffff?text=LocHerbal',
+        ctaText: 'Khám phá sản phẩm',
+        ctaLink: '/products',
+      },
+      order: 0,
+    },
+    {
+      type: 'text',
+      content: {
+        heading: 'Câu chuyện thương hiệu',
+        body: 'LocHerbal được thành lập với sứ mệnh mang tinh hoa y học cổ truyền Việt Nam đến gần hơn với người dùng hiện đại. Chúng tôi tuyển chọn các dược liệu sạch từ vùng trồng uy tín trên cả nước, kết hợp nghiên cứu khoa học hiện đại để tạo ra những sản phẩm chăm sóc sức khỏe an toàn và hiệu quả.',
+      },
+      order: 1,
+    },
+    {
+      type: 'stats',
+      content: {
+        items: [
+          { number: '200+', label: 'Dòng sản phẩm' },
+          { number: '50K+', label: 'Khách hàng tin dùng' },
+          { number: '10+', label: 'Năm kinh nghiệm' },
+          { number: '98%', label: 'Đánh giá hài lòng' },
+        ],
+      },
+      order: 2,
+    },
+    {
+      type: 'image-text',
+      content: {
+        imageUrl: 'https://placehold.co/800x600/2d6a4f/ffffff?text=Thao%20duoc',
+        imagePosition: 'left',
+        heading: 'Cam kết từ nhà sản xuất',
+        body: 'Mọi sản phẩm LocHerbal đều đạt chuẩn GMP, nguyên liệu có nguồn gốc rõ ràng, được kiểm nghiệm chất lượng trước khi đến tay người dùng.',
+      },
+      order: 3,
+    },
+    {
+      type: 'timeline',
+      content: {
+        milestones: [
+          { year: '2016', title: 'Thành lập', description: 'LocHerbal ra đời từ đam mê y học cổ truyền.' },
+          { year: '2019', title: 'Mở rộng sản xuất', description: 'Nhà máy đạt chuẩn GMP-WHO, đáp ứng nhu cầu toàn quốc.' },
+          { year: '2024', title: 'Thương mại điện tử', description: 'Ra mắt nền tảng bán hàng trực tuyến LocHerbal.' },
+        ],
+      },
+      order: 4,
+    },
+  ]
+
+  // Chỉ tạo lại blocks cho about-us (không đụng các trang khác)
+  await prisma.pageBlock.deleteMany({ where: { page: ABOUT_PAGE } })
+  await prisma.pageBlock.createMany({
+    data: pageBlocks.map((b) => ({ page: ABOUT_PAGE, type: b.type, content: b.content as object, order: b.order })),
+  })
+
+  console.log(`✅ Seed hoàn tất: ${CATEGORIES.length} categories, ${PRODUCTS.length} products, ${PRODUCTS.reduce((s, p) => s + p.variants.length, 0)} variants, ${referencePrices.length} reference prices, ${pageBlocks.length} page blocks (${ABOUT_PAGE})`)
 }
 
 main()

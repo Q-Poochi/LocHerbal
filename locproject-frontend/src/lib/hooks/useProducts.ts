@@ -221,6 +221,7 @@ export interface CheckoutPayload {
     ward: string;
     address: string;
     note?: string;
+    couponCode?: string;
     paymentMethod: 'vnpay' | 'momo' | 'cod';
 }
 

@@ -80,3 +80,7 @@ locproject-frontend/stitch-export/
 locproject-frontend/.next/
 locproject-frontend/node_modules/
 locproject-frontend/.playwright/
+
+# Screenshots (local only)
+screenshots*.png
+screenshots/

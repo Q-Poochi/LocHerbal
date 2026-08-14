@@ -20,6 +20,7 @@ describe('OrderService', () => {
     },
     customerAddress: {
       findUnique: jest.fn(),
+      create: jest.fn(),
     },
     order: {
       findUnique: jest.fn(),
@@ -91,7 +92,7 @@ describe('OrderService', () => {
       mockPrisma.cart.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.checkout('cart-1', 'customer-1'),
+        service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: {} }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -99,7 +100,7 @@ describe('OrderService', () => {
       mockPrisma.cart.findUnique.mockResolvedValue({ id: 'cart-1', items: [] });
 
       await expect(
-        service.checkout('cart-1', 'customer-1'),
+        service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: {} }),
       ).rejects.toThrow(BadRequestException);
     });
     it('should throw BadRequestException if addressId does not belong to customer', async () => {
@@ -119,7 +120,7 @@ describe('OrderService', () => {
       });
 
       await expect(
-        service.checkout('cart-1', 'customer-1', 'address-999', 'agent-1'),
+        service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: { addressId: 'address-999' } }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -135,7 +136,7 @@ describe('OrderService', () => {
       mockPrisma.customerAddress.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.checkout('cart-1', 'customer-1', 'address-999', 'agent-1'),
+        service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: { addressId: 'address-999' } }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -172,7 +173,7 @@ describe('OrderService', () => {
         customerId: 'customer-1',
       });
 
-      const order = await service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1');
+      const order = await service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: { addressId: 'address-1' } });
 
       // Verify tổng tiền tính theo giá thật (1500 * 2 = 3000)
       expect(order.subtotal).toBe(3000);
@@ -214,7 +215,7 @@ describe('OrderService', () => {
       ]);
 
       await expect(
-        service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1'),
+        service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: { addressId: 'address-1' } }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -241,7 +242,7 @@ describe('OrderService', () => {
       });
       mockEventEmitter.emitAsync.mockResolvedValue([]);
 
-      const order = await service.checkout('cart-1', 'customer-1', 'address-1', 'agent-1');
+      const order = await service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: { addressId: 'address-1' } });
       expect(order.id).toBe('order-1');
       expect(order.totalAmount).toBe(1500);
     });
@@ -274,13 +275,11 @@ describe('OrderService', () => {
         discountAmount: 500,
       });
 
-      const order = await service.checkout(
-        'cart-1',
-        'customer-1',
-        'address-1',
-        undefined,
-        'SALE10',
-      );
+      const order = await service.checkout({
+        cartId: 'cart-1',
+        customerId: 'customer-1',
+        body: { addressId: 'address-1', couponCode: 'SALE10' },
+      });
 
       expect(order.subtotal).toBe(3000);
       expect(order.discountAmount).toBe(500);
@@ -309,7 +308,7 @@ describe('OrderService', () => {
         customerId: 'customer-1',
       });
 
-      const order = await service.checkout('cart-1', 'customer-1', 'address-1');
+      const order = await service.checkout({ cartId: 'cart-1', customerId: 'customer-1', body: { addressId: 'address-1' } });
       expect(order.discountAmount).toBe(0);
       expect(mockCouponService.validateCode).not.toHaveBeenCalled();
     });

@@ -467,6 +467,10 @@ model Order {
   discountAmount Decimal       @default(0) @db.Decimal(12, 2) @map("discount_amount")
   shippingFee    Decimal       @default(0) @db.Decimal(12, 2) @map("shipping_fee")
   totalAmount    Decimal       @db.Decimal(12, 2) @map("total_amount")
+  // paymentMethod: 'VNPAY' | 'MOMO' | 'COD' — snapshot tại thời điểm đặt hàng
+  paymentMethod  String?       @map("payment_method")
+  // Ghi chú khách hàng nhập ở bước checkout
+  notes          String?
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
@@ -647,6 +651,24 @@ model LandingPage {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("landing_pages")
+}
+
+// ==========================================================================
+// PAGE BUILDER — trang tĩnh (VD: "Về chúng tôi") ghép từ các block nội dung.
+// Admin kéo-thả thứ tự + sửa content theo type mà không cần sửa code.
+// ==========================================================================
+model PageBlock {
+  id          String   @id @default(uuid())
+  page        String // 'about-us' — tái dùng cho trang khác sau này
+  type        String // 'hero' | 'text' | 'image-text' | 'stats' | 'team' | 'timeline'
+  order       Int // thứ tự hiển thị — kéo-thả đổi số này
+  content     Json // nội dung linh hoạt theo type
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([page, isPublished])
+  @@map("page_blocks")
 }
 
 model BlogPost {

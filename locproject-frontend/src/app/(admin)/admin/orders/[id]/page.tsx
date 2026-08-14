@@ -63,6 +63,8 @@ interface AdminOrderDetail {
     totalAmount: number;
     status: string;
     paymentStatus?: string;
+    paymentMethod?: string;
+    notes?: string;
     createdAt: string;
     address?: {
         recipientName?: string;
@@ -72,6 +74,7 @@ interface AdminOrderDetail {
         district?: string;
         province?: string;
     } | null;
+    couponUsages?: { coupon?: { code?: string } }[];
     statusHistory?: StatusHistoryEntry[];
 }
 
@@ -193,9 +196,16 @@ export default function OrderDetailPage() {
                                 <div className="flex justify-between text-text-secondary">
                                     <span>Tạm tính</span><span>{money(order.subtotal)}</span>
                                 </div>
-                                <div className="flex justify-between text-text-secondary">
-                                    <span>Giảm giá</span><span>-{money(order.discountAmount)}</span>
-                                </div>
+                                {order.couponUsages?.[0]?.coupon?.code ? (
+                                    <div className="flex justify-between text-text-secondary">
+                                        <span>Mã giảm giá: <span className="font-semibold text-primary-700">{order.couponUsages[0].coupon.code}</span></span>
+                                        <span className="text-green-600 font-semibold">-{money(order.discountAmount)}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex justify-between text-text-secondary">
+                                        <span>Giảm giá</span><span className="text-green-600 font-semibold">-{money(order.discountAmount)}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between text-text-secondary">
                                     <span>Phí ship</span><span>{money(order.shippingFee)}</span>
                                 </div>
@@ -214,13 +224,44 @@ export default function OrderDetailPage() {
                                 <p className="font-semibold text-text-primary">{order.customer?.fullName || '—'}</p>
                                 <p className="text-text-secondary">{order.customer?.phone || ''}</p>
                                 <p className="text-text-secondary">{order.customer?.email || ''}</p>
-                                {order.address && (
-                                    <p className="text-text-secondary pt-2">
-                                        {order.address.recipientName} · {order.address.phone} · {order.address.addressLine}, {order.address.ward || ''} {order.address.district || ''} {order.address.province || ''}
-                                    </p>
+                            </div>
+                        </div>
+
+                        {/* Địa chỉ giao hàng */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                            <div className="px-6 py-4 border-b border-border">
+                                <h3 className="font-bold text-text-primary">Địa chỉ giao hàng</h3>
+                            </div>
+                            <div className="px-6 py-4 space-y-1.5 text-sm">
+                                {order.address ? (
+                                    <>
+                                        <p className="font-semibold text-text-primary">
+                                            {order.address.recipientName || '—'} · {order.address.phone || ''}
+                                        </p>
+                                        <p className="text-text-secondary">{order.address.addressLine || ''}</p>
+                                        <p className="text-text-secondary">
+                                            {[order.address.ward, order.address.district, order.address.province]
+                                                .filter(Boolean)
+                                                .join(', ')}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <p className="text-text-tertiary">Chưa có thông tin địa chỉ giao hàng.</p>
                                 )}
                             </div>
                         </div>
+
+                        {/* Ghi chú */}
+                        {order.notes ? (
+                            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                                <div className="px-6 py-4 border-b border-border">
+                                    <h3 className="font-bold text-text-primary">Ghi chú đơn hàng</h3>
+                                </div>
+                                <div className="px-6 py-4 text-sm text-text-secondary whitespace-pre-wrap">
+                                    {order.notes}
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
 
                     {/* Cột phải: trạng thái + lịch sử */}
@@ -233,6 +274,11 @@ export default function OrderDetailPage() {
                                 <p className="text-sm text-text-tertiary">
                                     Thanh toán: <span className="font-semibold text-text-secondary">{order.paymentStatus || '—'}</span>
                                 </p>
+                                {order.paymentMethod && (
+                                    <p className="text-sm text-text-tertiary">
+                                        Phương thức thanh toán: <span className="font-semibold text-text-secondary">{order.paymentMethod}</span>
+                                    </p>
+                                )}
                                 {(nextStatusOptions[order.status] || []).length > 0 ? (
                                     <div className="flex flex-wrap gap-2">
                                         {nextStatusOptions[order.status].map((s) => (

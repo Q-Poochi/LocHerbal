@@ -34,6 +34,7 @@ const menuGroups = [
             { href: '/admin/banners', icon: 'view_carousel', label: 'Banner Carousel' },
             { href: '/admin/blog', icon: 'article', label: 'Bài viết' },
             { href: '/admin/coupons', icon: 'sell', label: 'Ưu đãi' },
+            { href: '/admin/pages/ve-chung-toi', icon: 'web', label: 'Trang: Về chúng tôi' },
         ],
     },
     {

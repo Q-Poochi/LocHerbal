@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { resolveCartItemImage } from '../../../lib/utils/imageUrl';
 
 interface OrderItem {
@@ -19,11 +20,21 @@ interface OrderSummaryProps {
     items: OrderItem[];
     subtotal: number;
     shippingFee?: number;
+    onCouponChange?: (code: string) => void;
 }
 
-export default function OrderSummary({ items, subtotal, shippingFee = 0 }: OrderSummaryProps) {
+export default function OrderSummary({ items, subtotal, shippingFee = 0, onCouponChange }: OrderSummaryProps) {
+    const [couponInput, setCouponInput] = useState('');
+    const [couponApplied, setCouponApplied] = useState('');
     const shipping = subtotal >= 500000 ? 0 : shippingFee;
     const total = subtotal + shipping;
+
+    const applyCoupon = () => {
+        const code = couponInput.trim().toUpperCase();
+        if (!code) return;
+        setCouponApplied(code);
+        onCouponChange?.(code);
+    };
 
     return (
         <div className="bg-white rounded-3xl shadow-card border border-border p-6 space-y-5">
@@ -64,11 +75,21 @@ export default function OrderSummary({ items, subtotal, shippingFee = 0 }: Order
                     className="flex-1 border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-100 transition-all text-text-primary placeholder:text-text-tertiary bg-surface-bg"
                     placeholder="Nhập mã giảm giá..."
                     type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
                 />
-                <button className="bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap">
+                <button
+                    onClick={applyCoupon}
+                    className="bg-primary-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-800 transition-colors whitespace-nowrap"
+                >
                     Áp dụng
                 </button>
             </div>
+            {couponApplied && (
+                <p className="text-xs text-green-600 font-semibold -mt-2">
+                    Đã áp dụng mã: {couponApplied}
+                </p>
+            )}
 
             {/* Price Details */}
             <div className="space-y-3 pt-4 border-t border-border text-sm">

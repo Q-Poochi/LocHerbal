@@ -16,11 +16,15 @@ export default function CheckoutClient() {
     const toast = useToast();
     const user = useAuthStore((s) => s.user);
     const [completed, setCompleted] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
 
     const handleCheckout = async (data: CheckoutFormData) => {
         console.log('[Checkout] form data:', data);
         try {
-            const result = await checkoutMutation.mutateAsync(data);
+            const result = await checkoutMutation.mutateAsync({
+                ...data,
+                couponCode: couponCode || undefined,
+            });
             if (result?.paymentUrl) {
                 // VNPay: redirect sang URL thanh toán
                 window.location.href = result.paymentUrl;
@@ -116,7 +120,12 @@ export default function CheckoutClient() {
 
             {/* Right Column: Order Summary (Sticky) */}
             <div className="lg:col-span-4 lg:sticky lg:top-28">
-                <OrderSummary items={cart.items} subtotal={subtotal} shippingFee={shippingFee} />
+                <OrderSummary
+                    items={cart.items}
+                    subtotal={subtotal}
+                    shippingFee={shippingFee}
+                    onCouponChange={setCouponCode}
+                />
             </div>
         </div>
     );
