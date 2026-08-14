@@ -441,14 +441,18 @@ export default function Navbar() {
               </div>
             </div>
 
-            {['Tư vấn', 'Ưu đãi', 'Về chúng tôi'].map(label => (
-              <button
-                key={label}
-                type="button"
+            {[
+              { label: 'Tư vấn', href: '/lien-he' },
+              { label: 'Ưu đãi', href: '/products' },
+              { label: 'Về chúng tôi', href: '/ve-chung-toi' },
+            ].map(item => (
+              <Link
+                key={item.label}
+                href={item.href}
                 className="px-4 py-2 rounded-full text-sm font-medium text-text-primary hover:text-primary-700 hover:bg-primary-50 transition-all duration-150"
               >
-                {label}
-              </button>
+                {item.label}
+              </Link>
             ))}
           </nav>
 
@@ -617,6 +621,7 @@ export default function Navbar() {
             { href: '/products?categoryId=an-than-ngu-ngon', label: 'An Thần', icon: 'bedtime', sub: true },
             { href: '/cart', label: 'Giỏ hàng', icon: 'shopping_cart' },
             { href: '/account', label: 'Tài khoản', icon: 'person' },
+            { href: '/ve-chung-toi', label: 'Về chúng tôi', icon: 'info' },
           ].map(({ href, label, icon, testId, sub }) => (
             <Link
               key={href + label}
