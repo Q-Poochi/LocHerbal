@@ -42,6 +42,11 @@ COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/schema.prisma ./schema.prisma
 COPY --from=builder /app/package.json ./
 
+# Upload persistence — Railway volume mount tại /app/uploads (không bị mất khi redeploy).
+# Thư mục con /products được tạo tự động khi app khởi động (xem src/main.ts).
+RUN mkdir -p /app/uploads/products
+VOLUME /app/uploads
+
 EXPOSE 4000
 
 # Migrations chạy ở start command: npx prisma migrate deploy && node dist/main

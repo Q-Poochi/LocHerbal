@@ -98,6 +98,8 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           SMS_PROVIDER: mock
+          THROTTLE_LIMIT: 100
+          AUTH_THROTTLE_LIMIT: 100
 
       - name: Build
         working-directory: LocProject

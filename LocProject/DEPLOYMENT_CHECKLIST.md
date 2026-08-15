@@ -3,8 +3,8 @@
 ## 0. Deploy lên Railway (recommended path)
 
 Config đã có sẵn trong repo:
-- `railway.json` — builder DOCKERFILE, start command `npx prisma migrate deploy && node dist/main`, healthcheck `/health`
-- `Dockerfile` — multi-stage Node 22, tự `prisma generate` + build
+- `railway.json` — builder DOCKERFILE, start command `npx prisma migrate deploy && node dist/main`, healthcheck `/health` + **volume mount `/app/uploads`** (upload bền khi redeploy)
+- `Dockerfile` — multi-stage Node 22, tự `prisma generate` + build, khai báo `VOLUME /app/uploads`
 - `.github/workflows/deploy-staging.yml` — CI/CD push `main` → Railway (backend + frontend)
 - `.github/workflows/backend-ci.yml`, `frontend-ci.yml` — test/build khi push
 
@@ -100,6 +100,7 @@ Trong `main.ts` đã cấu hình CORS cho phép FRONTEND_URL. Kiểm tra:
 - Credentials: true (nếu dùng cookie refresh token)
 
 ## 4. Database backup strategy
+- **Tự động hằng ngày (03:00 UTC)**: GitHub Actions workflow `.github/workflows/db-backup.yml` — `pg_dump` staging DB lên GitHub artifact (giữ 30 ngày); chạy tay qua `workflow_dispatch`.
 - **Hàng ngày**: `pg_dump` full database, giữ 7 ngày
 - **Hàng tuần**: `pg_dump` + archive, giữ 4 tuần
 - **Hàng tháng**: snapshot lưu trữ ngoài server (S3/Cloud Storage)
