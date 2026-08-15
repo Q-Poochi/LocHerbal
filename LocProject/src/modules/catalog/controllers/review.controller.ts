@@ -7,6 +7,7 @@ import { User } from '../../core/decorators/user.decorator';
 import { Public } from '../../core/decorators/public.decorator';
 import { ReviewService } from '../services/review.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
+import { CreateReviewDto, UpdateReviewDto } from '../dto/review.dto';
 
 @ApiTags('Reviews')
 @Controller('reviews')
@@ -24,7 +25,7 @@ export class ReviewController {
   async create(
     @Param('productId') productId: string,
     @User('userId') userId: string,
-    @Body() body: { rating: number; comment?: string },
+    @Body() body: CreateReviewDto,
   ) {
     const customer = await this.getCustomer(userId);
     return this.reviewService.create(productId, customer.id, body.rating, body.comment);
@@ -51,7 +52,7 @@ export class ReviewController {
   async update(
     @Param('id') id: string,
     @User('userId') userId: string,
-    @Body() body: { rating: number; comment?: string },
+    @Body() body: UpdateReviewDto,
   ) {
     const customer = await this.getCustomer(userId);
     return this.reviewService.update(id, customer.id, body.rating, body.comment);

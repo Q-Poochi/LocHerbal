@@ -1,5 +1,39 @@
 import type { NextConfig } from "next";
 
+const securityHeaders = [
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()' },
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "font-src 'self' https: data:",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "img-src 'self' blob: data: https:",
+      "object-src 'none'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src-attr 'none'",
+      "style-src 'self' 'unsafe-inline' https:",
+      "upgrade-insecure-requests",
+    ].join('; '),
+  },
+  { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
+  { key: 'X-DNS-Prefetch-Control', value: 'off' },
+  { key: 'X-Download-Options', value: 'noopen' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+];
+
+if (process.env.NODE_ENV === 'production') {
+  securityHeaders.push({
+    key: 'Strict-Transport-Security',
+    value: 'max-age=31536000; includeSubDomains',
+  });
+}
+
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
@@ -8,6 +42,14 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**' },
     ],
     unoptimized: true, // fallback cho local dev
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
   },
 };
 

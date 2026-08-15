@@ -142,6 +142,12 @@ export class VNPayService {
           throw new AlreadyPaidError();
         }
 
+        // Lưu rawResponse đã strip chữ ký bảo mật — vnp_SecureHash là dữ liệu nhạy
+        // cảm không nên lưu raw, tránh lộ nếu record bị expose qua API.
+        const rawResponse = { ...query };
+        delete rawResponse['vnp_SecureHash'];
+        delete rawResponse['vnp_SecureHashType'];
+
         // Tạo Transaction log
         await tx.paymentTransaction.create({
           data: {
@@ -150,7 +156,7 @@ export class VNPayService {
             transactionCode: vnpTxnId || `VNP-${Date.now()}`,
             amount,
             status: isSuccess ? PaymentStatus.PAID : PaymentStatus.FAILED,
-            rawResponse: query,
+            rawResponse,
           },
         });
 

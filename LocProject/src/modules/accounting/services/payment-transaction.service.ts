@@ -27,8 +27,17 @@ export class PaymentTransactionService {
     }
 
     async findByOrderId(orderId: string) {
+        // Select giới hạn field — KHÔNG trả rawResponse (chứa dữ liệu nhạy cảm của gateway).
         const transactions = await this.prisma.paymentTransaction.findMany({
             where: { orderId },
+            select: {
+                id: true,
+                provider: true,
+                transactionCode: true,
+                amount: true,
+                status: true,
+                createdAt: true,
+            },
             orderBy: { createdAt: 'desc' },
         });
         return transactions;
