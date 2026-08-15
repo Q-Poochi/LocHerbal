@@ -101,7 +101,11 @@ describe('E2E: Order saga (checkout → allocate → deduct → delivered)', () 
     // ── 1. Checkout qua OrderService (qua controller path không cần auth trước) ──
     const { OrderService } = await import('../src/modules/sales/services/order.service');
     const orderService = app.get(OrderService);
-    const order = await orderService.checkout(cart.id, customer.id, address.id);
+    const order = await orderService.checkout({
+      cartId: cart.id,
+      customerId: customer.id,
+      body: { addressId: address.id },
+    });
 
     expect(order.status).toBe('PENDING');
     expect(Number(order.totalAmount)).toBe(200000);
