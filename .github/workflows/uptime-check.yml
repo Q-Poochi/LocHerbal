@@ -2,8 +2,10 @@ name: Uptime Check
 
 on:
   schedule:
-    # Chạy mỗi 10 phút — ping endpoints sống của staging
-    - cron: "*/10 * * * *"
+    # Chạy mỗi 5 phút — ping endpoints sống của staging.
+    # Lưu ý: trial/free plan của Railway ép service "sleep" sau ~15-30 phút không có
+    # traffic. Ping 5 phút/lần giúp giữ backend + frontend luôn thức (miễn phí).
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

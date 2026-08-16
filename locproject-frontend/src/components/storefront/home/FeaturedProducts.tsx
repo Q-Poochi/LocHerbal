@@ -156,7 +156,15 @@ function ProductCardSkeleton() {
   );
 }
 
-export default function FeaturedProducts({ products }: { products: Product[] }) {
+export default function FeaturedProducts({
+  products,
+  loadState,
+  onRetry,
+}: {
+  products: Product[];
+  loadState: 'loading' | 'success' | 'error';
+  onRetry: () => void;
+}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -197,14 +205,32 @@ export default function FeaturedProducts({ products }: { products: Product[] }) 
         </div>
 
         {/* Loading */}
-        {products.length === 0 && (
+        {loadState === 'loading' && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => <ProductCardSkeleton key={i} />)}
           </div>
         )}
 
+        {/* Error — không im lặng hiện trang trống, đưa nút thử lại */}
+        {loadState === 'error' && (
+          <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+            <span className="material-symbols-outlined text-4xl text-text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>wifi_off</span>
+            <p className="text-text-secondary max-w-md">
+              Không thể tải sản phẩm lúc này. Có thể máy chủ đang khởi động lại — vui lòng thử lại sau giây lát.
+            </p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary-700 text-white font-medium text-sm hover:bg-primary-800 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">refresh</span>
+              Thử lại
+            </button>
+          </div>
+        )}
+
         {/* Carousel */}
-        {products.length > 0 && (
+        {loadState === 'success' && products.length > 0 && (
           <div className="relative">
             {/* Prev button */}
             <button
