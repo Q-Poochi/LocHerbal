@@ -1,0 +1,29 @@
+name: Uptime Check
+
+on:
+  schedule:
+    # Chạy mỗi 10 phút — ping endpoints sống của staging
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check backend health
+        run: |
+          curl -fsS --max-time 15 \
+            "https://backend-production-ebe64.up.railway.app/health" \
+            || { echo "::error::Backend /health FAILED"; exit 1; }
+
+      - name: Check backend readiness
+        run: |
+          curl -fsS --max-time 15 \
+            "https://backend-production-ebe64.up.railway.app/health/readiness" \
+            || { echo "::error::Backend /health/readiness FAILED"; exit 1; }
+
+      - name: Check frontend
+        run: |
+          curl -fsS --max-time 15 \
+            "https://frontend-production-d58e.up.railway.app/" \
+            || { echo "::error::Frontend FAILED"; exit 1; }

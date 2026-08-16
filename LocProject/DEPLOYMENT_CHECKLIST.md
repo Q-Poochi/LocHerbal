@@ -140,8 +140,10 @@ npx prisma db seed
 ```
 ## 7. Health check monitoring
 - Endpoint `GET /health` — trả về `{ status: 'ok', timestamp }`
-- Endpoint `GET /health/readiness` — kiểm tra DB kết nối
-- Nên cấu hình monitor (UptimeRobot / Better Stack) ping mỗi 5 phút
+- Endpoint `GET /health/readiness` — kiểm tra DB kết nối (trả 503 khi DB down)
+- **Tự động (GitHub Actions)**: `.github/workflows/uptime-check.yml` — ping backend `/health`, `/health/readiness` + frontend mỗi 10 phút; fail → GitHub notification.
+- **Sản xuất**: cấu hình UptimeRobot / Better Stack ping `https://<domain>/health/readiness` mỗi 5 phút + email/SMS alert.
+- Log backend là **JSON structured** (JsonLogger) + request log kèm `X-Request-Id` — parse được bởi log aggregator, truy vết theo requestId.
 
 ## 8. Security checklist
 - [ ] JWT_SECRET 64+ ký tự random

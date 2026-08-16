@@ -5,6 +5,8 @@ import express from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { setCsrfCookie, csrfGuard } from './shared/middleware/csrf.middleware';
+import { RequestLoggerMiddleware } from './shared/middleware/request-logger.middleware';
+import { JsonLogger } from './shared/services/json-logger.service';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
@@ -15,10 +17,26 @@ import { parseCorsOrigins } from './shared/config/env.validation';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  // JSON structured logging — mỗi log là 1 dòng JSON (parse được bởi log aggregator)
+  app.useLogger(new JsonLogger());
+
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      strictTransportSecurity: {
+        maxAge: 31536000, // 1 năm — đủ điều kiện HSTS preload
+        includeSubDomains: true,
+        preload: true,
+      },
+    }),
+  );
   app.use(cookieParser());
   // Webhook GHN/GHTK có thể gửi form-urlencoded (GHTK dùng application/x-www-form-urlencoded)
   app.use(express.urlencoded({ extended: true }));
+
+  // Request logging + requestId (X-Request-Id) — đặt ĐẦU TIÊN để đo toàn bộ thời gian request
+  const requestLogger = new RequestLoggerMiddleware();
+  app.use(requestLogger.use.bind(requestLogger));
 
   // CORS phải đặt TRƯỚC các middleware khác để mọi response (kể cả lỗi) đều có CORS headers
   // Origins lấy từ env CORS_ORIGINS (CSV) — không hardcode localhost ở production.
