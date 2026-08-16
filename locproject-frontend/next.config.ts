@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+// CSP connect-src phải cho phép API backend (cross-origin fetch).
+// Dùng env NEXT_PUBLIC_API_URL để tự cập nhật khi trỏ domain thật (api.locherbal.com).
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -10,6 +14,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "base-uri 'self'",
+      `connect-src 'self' ${API_URL} http://localhost:4000`,
       "font-src 'self' https: data:",
       "form-action 'self'",
       "frame-ancestors 'none'",
