@@ -101,11 +101,11 @@ railway variable set --service frontend \
 
 ## 6. HSTS
 
-- **Backend**: `helmet()` bật sẵn — `Strict-Transport-Security: max-age=15552000` (180 ngày).
-- **Frontend**: `next.config.ts` bật HSTS khi `NODE_ENV=production`.
+- **Backend**: `helmet()` — `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` (đã đủ điều kiện preload).
+- **Frontend**: `next.config.ts` bật HSTS khi `NODE_ENV=production` — `max-age=31536000; includeSubDomains; preload`.
 - Verify header sau khi trỏ domain (mục 4).
-- Khi hệ thống đã ổn định + toàn HTTPS, cân nhắc đăng ký **HSTS Preload** tại https://hstspreload.org
-  (yêu cầu `max-age >= 31536000` + `includeSubDomains` + `preload` — hiện tại chưa đủ điều kiện preload).
+- Hệ thống đã đủ điều kiện **HSTS Preload** (`max-age >= 31536000` + `includeSubDomains` + `preload`) — đăng ký tại https://hstspreload.org khi domain thật đã live toàn HTTPS.
+- Lưu ý CDN: HTML trang chủ có `Cache-Control: s-maxage=31536000` — đây là **mặc định của Next.js cho static shell**; vì trang chủ render nội dung client-side nên cache shell không làm nội dung cũ. Không cần chỉnh.
 
 ---
 
@@ -114,3 +114,11 @@ railway variable set --service frontend \
 - Cập nhật uptime monitor (`.github/workflows/uptime-check.yml`) sang domain thật thay vì `*.up.railway.app`.
 - Cập nhật `STAGING_*` secrets trong GitHub nếu dùng production pipeline riêng.
 - Xoá/quản lý domain `*.up.railway.app` mặc định nếu không muốn lộ.
+
+---
+
+## 8. Plan Railway & tránh "sleep" trước khi live
+
+- Project hiện đang ở plan **trial** (`subscriptionType: "trial"` qua GraphQL `project { subscriptionType }`) → service bị ép ngủ sau ~15-30 phút không traffic, gây hiện tượng "lâu lâu không thấy sản phẩm" (backend chờ wake → fetch `/products` timeout → trang trống).
+- **Khuyến nghị trước khi trỏ domain chính thức**: nâng lên **Hobby ($5/tháng)** để app không bao giờ ngủ — đặc biệt quan trọng cho production, tránh mất khách khi truy cập lần đầu.
+- Giảm thiểu miễn phí hiện tại (đã deploy): uptime-check ping 5 phút/lần + frontend retry/timeout 30s + trạng thái lỗi có nút "Thử lại". Chi tiết xem `DEPLOYMENT_CHECKLIST.md` mục 7a.

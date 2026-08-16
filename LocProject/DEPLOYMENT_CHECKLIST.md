@@ -3,8 +3,8 @@
 ## 0. Deploy lên Railway (recommended path)
 
 Config đã có sẵn trong repo:
-- `railway.json` — builder DOCKERFILE, start command `npx prisma migrate deploy && node dist/main`, healthcheck `/health` + **volume mount `/app/uploads`** (upload bền khi redeploy)
-- `Dockerfile` — multi-stage Node 22, tự `prisma generate` + build, khai báo `VOLUME /app/uploads`
+- `railway.json` — builder DOCKERFILE, start command `npx prisma migrate deploy && node dist/main`, healthcheck `/health` + **Railway Volume mount `/app/uploads`** (upload bền khi redeploy). Lưu ý: dùng `deploy.requiredMountPath` (schema hiện tại) — field `volumes[]` KHÔNG được Railway hỗ trợ.
+- `Dockerfile` — multi-stage Node 22, tự `prisma generate` + build, `RUN mkdir -p /app/uploads/products`. **KHÔNG khai báo `VOLUME`** — Railway báo lỗi `docker VOLUME at Line X is not supported, use Railway Volumes`; phải dùng Railway Volume.
 - `.github/workflows/deploy-staging.yml` — CI/CD push `main` → Railway (backend + frontend)
 - `.github/workflows/backend-ci.yml`, `frontend-ci.yml` — test/build khi push
 
@@ -100,8 +100,7 @@ Trong `main.ts` đã cấu hình CORS cho phép FRONTEND_URL. Kiểm tra:
 - Credentials: true (nếu dùng cookie refresh token)
 
 ## 4. Database backup strategy
-- **Tự động hằng ngày (03:00 UTC)**: GitHub Actions workflow `.github/workflows/db-backup.yml` — `pg_dump` staging DB lên GitHub artifact (giữ 30 ngày); chạy tay qua `workflow_dispatch`.
-- **Hàng ngày**: `pg_dump` full database, giữ 7 ngày
+- **Tự động hằng ngày (03:00 UTC)**: GitHub Actions workflow `.github/workflows/db-backup.yml` — `pg_dump` staging DB lên GitHub artifact (giữ 30 ngày); chạy tay qua `workflow_dispatch`.- **Hàng ngày**: `pg_dump` full database, giữ 7 ngày
 - **Hàng tuần**: `pg_dump` + archive, giữ 4 tuần
 - **Hàng tháng**: snapshot lưu trữ ngoài server (S3/Cloud Storage)
 - Script backup mẫu:
@@ -141,9 +140,18 @@ npx prisma db seed
 ## 7. Health check monitoring
 - Endpoint `GET /health` — trả về `{ status: 'ok', timestamp }`
 - Endpoint `GET /health/readiness` — kiểm tra DB kết nối (trả 503 khi DB down)
-- **Tự động (GitHub Actions)**: `.github/workflows/uptime-check.yml` — ping backend `/health`, `/health/readiness` + frontend mỗi 10 phút; fail → GitHub notification.
+- **Tự động (GitHub Actions)**: `.github/workflows/uptime-check.yml` — ping backend `/health`, `/health/readiness` + frontend mỗi **5 phút**; fail → GitHub notification.
 - **Sản xuất**: cấu hình UptimeRobot / Better Stack ping `https://<domain>/health/readiness` mỗi 5 phút + email/SMS alert.
 - Log backend là **JSON structured** (JsonLogger) + request log kèm `X-Request-Id` — parse được bởi log aggregator, truy vết theo requestId.
+
+## 7a. Railway plan & app "sleep" (quan trọng — đã gặp thực tế)
+- Railway **trial/free plan ép service ngủ (sleep)** sau ~15-30 phút không có traffic — dù `sleepApplication: false` trong config. Khi ngủ, request đầu phải chờ instance khởi động lại (cold start ~10-30s).
+- Hậu quả gặp thực tế: trang chủ frontend fetch `/products` client-side; khi backend đang ngủ → request chờ lâu/timeout → trang hiện **trống không sản phẩm** (tưởng hỏng).
+- Giảm thiểu đã áp dụng (không tốn phí):
+  1. **Uptime-check ping mỗi 5 phút** giữ backend + frontend thức (ngắn hơn timer sleep ~15-30 phút).
+  2. **Frontend retry + timeout 30s** (`src/app/(storefront)/page.tsx`) — request đầu khi app wake sẽ tự thử lại thay vì bỏ cuộc.
+  3. **Trạng thái lỗi có nút "Thử lại"** (`FeaturedProducts.tsx`) thay vì trang trống im lặng.
+- **Hết hẳn vấn đề**: nâng plan lên **Hobby ($5/tháng)** — app không bao giờ ngủ. Kiểm tra plan hiện tại: `railway` Dashboard → project → Settings, hoặc dùng GraphQL `backboard.railway.app` query `project { subscriptionType }` (giá trị `trial` = đang ở plan miễn phí).
 
 ## 8. Security checklist
 - [ ] JWT_SECRET 64+ ký tự random
