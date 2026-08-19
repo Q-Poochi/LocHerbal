@@ -343,7 +343,7 @@ export default function AccountPage() {
                                     <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[28px]">
                                         {initials}
                                     </div>
-                                    <button className="text-caption text-primary font-bold hover:underline" type="button">Đổi ảnh</button>
+                                    <button className="text-caption text-primary-700 font-bold hover:underline" type="button">Đổi ảnh</button>
                                 </div>
                                 <div className="flex-1 w-full space-y-5">
                                     <div>
@@ -388,7 +388,7 @@ export default function AccountPage() {
                                         Hủy
                                     </button>
                                     <button onClick={handleSaveProfile} disabled={savingProfile}
-                                        className="bg-primary text-on-primary px-8 py-3 rounded-xl font-label-bold hover:bg-primary-700 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50">
+                                        className="bg-primary-700 text-on-primary px-8 py-3 rounded-xl font-label-bold hover:bg-primary-800 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50">
                                         {savingProfile ? 'Đang lưu...' : 'Lưu thay đổi'}
                                     </button>
                                 </div>
@@ -416,7 +416,7 @@ export default function AccountPage() {
                                     <p className="text-body-lg text-on-surface-variant mb-2">Bạn chưa có đơn hàng nào</p>
                                     <p className="text-body-sm text-on-surface-variant mb-6">Hãy khám phá các sản phẩm thảo dược chất lượng cao</p>
                                     <button onClick={() => router.push('/products')}
-                                        className="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold hover:bg-primary-700 transition-colors">
+                                        className="bg-primary-700 text-on-primary px-6 py-3 rounded-xl font-label-bold hover:bg-primary-800 transition-colors">
                                         Bắt đầu mua sắm
                                     </button>
                                 </div>
@@ -464,7 +464,7 @@ export default function AccountPage() {
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="font-headline-md text-headline-md text-primary">Địa chỉ của tôi</h3>
                                 <button onClick={() => setShowAddressModal(true)}
-                                    className="flex items-center gap-1.5 bg-primary text-on-primary px-4 py-2 rounded-xl font-label-bold hover:bg-primary-700 transition-colors shadow-sm shadow-primary/20">
+                                    className="flex items-center gap-1.5 bg-primary-700 text-on-primary px-4 py-2 rounded-xl font-label-bold hover:bg-primary-800 transition-colors shadow-sm shadow-primary/20">
                                     <span className="material-symbols-outlined text-[18px]">add</span>
                                     Thêm địa chỉ mới
                                 </button>
@@ -485,7 +485,7 @@ export default function AccountPage() {
                                     <p className="text-body-lg text-on-surface-variant mb-1">Chưa có địa chỉ nào</p>
                                     <p className="text-body-sm text-on-surface-variant mb-6">Thêm địa chỉ để thuận tiện cho việc đặt hàng</p>
                                     <button onClick={() => setShowAddressModal(true)}
-                                        className="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-bold hover:bg-primary-700 transition-colors">
+                                        className="bg-primary-700 text-on-primary px-6 py-3 rounded-xl font-label-bold hover:bg-primary-800 transition-colors">
                                         Thêm địa chỉ mới
                                     </button>
                                 </div>
@@ -556,7 +556,7 @@ export default function AccountPage() {
                                 {passwordMsg && <p className="text-success-leaf text-body-sm font-bold">{passwordMsg}</p>}
                                 {passwordError && <p className="text-error text-body-sm">{passwordError}</p>}
                                 <button type="submit" disabled={passwordForm.formState.isSubmitting}
-                                    className="bg-primary text-on-primary px-8 py-3 rounded-xl font-label-bold hover:bg-primary-700 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50">
+                                    className="bg-primary-700 text-on-primary px-8 py-3 rounded-xl font-label-bold hover:bg-primary-800 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50">
                                     {passwordForm.formState.isSubmitting ? 'Đang xử lý...' : 'Đổi mật khẩu'}
                                 </button>
                             </form>
@@ -629,7 +629,7 @@ export default function AccountPage() {
                                 Hủy
                             </button>
                             <button onClick={handleSaveAddress} disabled={savingAddress}
-                                className="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-label-bold hover:bg-primary-700 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50">
+                                className="px-5 py-2.5 rounded-xl bg-primary-700 text-on-primary font-label-bold hover:bg-primary-800 transition-colors shadow-sm shadow-primary/20 disabled:opacity-50">
                                 {savingAddress ? 'Đang lưu...' : 'Lưu địa chỉ'}
                             </button>
                         </div>
