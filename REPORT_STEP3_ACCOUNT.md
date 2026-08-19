@@ -85,5 +85,23 @@ Kết luận:
 ## 8. Còn lại / Ghi chú
 
 - **Performance — vấn đề thật duy nhất là `elementRenderDelay` 2.38s**: h1 chỉ render sau khi auth-bootstrap + warm-up API xong (client-render). Hướng tối ưu cho bước sau: SSR shell tĩnh render h1 ngay (bỏ chờ auth), preload chunk account — **không phải** vấn đề ảnh (xem §6a).
+
+## 9. Tối ưu elementRenderDelay (commit `9535bb3`) — Perf 59 → 95
+
+Tách 2 lớp trong `account/page.tsx`: **shell tĩnh** (h1, khung layout, sidebar nav) render NGAY không chờ auth; **dữ liệu động** (tên/avatar, mini-stat orders/addresses, form profile) hiện skeleton `animate-pulse` riêng trong lúc auth-bootstrap + warm-up chạy. Bỏ 2 guard `if (!hasHydrated) return null; if (!user) return null;` chặn toàn bộ trang.
+
+Đo lại cùng phương pháp đã xác nhận (Desktop preset, không throttle, production):
+
+| Chỉ số | Trước fix | Sau fix (`9535bb3`) |
+|---|---|---|
+| Performance | 59 | **93–95** |
+| LCP (simulated) | 4.30s | **0.73s** |
+| LCP (observed, trace thật) | 4.24s | **0.97s** |
+| elementRenderDelay | ~3 990ms | **~570–720ms** |
+| FCP (observed) | 4.24s | **0.97s** |
+| TTFB | 250ms | 250ms (không đổi) |
+
+> LCP giờ ≈ TTFB + render tối thiểu đúng như kỳ vọng. Lần đo có TTFB 2.58s là do server cold start (CDN miss) — không phải regression.
+> Kiểm chứng: e2e 08-account **7/7 pass**, build pass, deploy SUCCESS, 11/13 chunk prod khớp build local.
 - Backend dev local (`LocProject/.env`) đã thêm `THROTTLE_LIMIT=1000` + `AUTH_THROTTLE_LIMIT=1000` để e2e không dính `ThrottlerException` — chỉ ở môi trường dev.
 - Tuân thủ `DESIGN_PRINCIPLES.md`: không hardcode hex mới, chỉ token `primary-*`, `globals.css` không bị xóa gì, Hero/Carousel không gộp, giữ cấu trúc sidebar pill `bg-primary-100` + mini-stat.
