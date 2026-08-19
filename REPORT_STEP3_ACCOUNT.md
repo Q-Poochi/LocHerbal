@@ -6,9 +6,9 @@ Redesign + polish trang `/account` theo ui-craft, sửa bug refresh-token race k
 
 | Chỉ số | Baseline (sai, đo nhầm login) | Sau STEP 3 (production thật) |
 |---|---|---|
-| Performance | 46 | 47–49 |
+| Performance | 46 | 47–49 (simulate) / 59 (desktop) / 67 (3G thật) |
 | Accessibility | 92 | **100** |
-| LCP | — | ~24s (ảnh hero) |
+| LCP | — | 2.6–4.2s thật (xem §6a) |
 | CLS | — | 0.010–0.013 |
 
 > Lưu ý: baseline `46/92` trong `LIGHTHOUSE_BASELINE.md` thực chất đo trang **login** (`finalUrl=/login?redirect=/account`) do bug race refresh token. Số liệu account thật chỉ đo được sau khi fix bug.
@@ -54,6 +54,22 @@ Redesign + polish trang `/account` theo ui-craft, sửa bug refresh-token race k
 
 (Playwright persistent context login UI → giữ browser với `--remote-debugging-port=9222` → `npx lighthouse --port=9222`) — không dùng được `--extra-headers` (chỉ áp cho main-doc request) hay `--user-data-dir` (chrome-launcher ghi đè profile), cả 2 đều dính redirect login.
 
+## 6a. Xác minh con số LCP — 24s là ảo (simulation), không phải thật
+
+LCP báo **24.0–24.2s** là **mô phỏng Lantern** (`throttlingMethod: simulate` — mặc định của CLI và DevTools panel mode Mobile), KHÔNG phải đồng hồ thật. So sánh 3 cách đo cùng URL production `/account`:
+
+| Phương pháp | LCP | Perf | Bản chất |
+|---|---|---|---|
+| CLI default (`simulate`) × 2 | 24.0 / 24.2s | 47–49 | Lantern ước tính (latency model 562ms/req, CPU 4x) — trace thật chỉ 7s |
+| Desktop preset (không throttle) | **4.24s** | 59 | trace thật |
+| `--throttling-method=devtools` (4x CPU + 3G thật) | **5.90s** | 67 | trace thật |
+| `observedLargestContentfulPaint` trong chính trace lúc báo 24.2s | **2.63s** | — | trace thật (h1 vẽ lúc 2.63s) |
+
+Kết luận:
+- **LCP element là h1 "Tài khoản của tôi" (text)**, không phải ảnh — trang `/account` không có ảnh hero (ảnh duy nhất là SVG inline 0B; orders tab rỗng). Lo ngại ảnh admin upload nặng (giới hạn 10MB banner) **không liên quan** LCP của `/account` (nó ảnh hưởng homepage nếu banner nặng).
+- Lantern phồng 24s vì mô hình hóa chuỗi ~20 chunk JS + RSC fetches với latency 562ms/request rồi nhân CPU 4x — ước tính cực đoan.
+- Khi đo thủ công F12 > Lighthouse: mode **Mobile mặc định cũng dùng simulation → sẽ ra ~24s lại**; muốn số thật chọn **Desktop** mode hoặc Advanced > tắt "Simulated throttling".
+
 ## 7. Screenshot
 
 `C:\Project\LocHerbal\screenshots\account\`
@@ -68,6 +84,6 @@ Redesign + polish trang `/account` theo ui-craft, sửa bug refresh-token race k
 
 ## 8. Còn lại / Ghi chú
 
-- **Performance chưa tối ưu**: LCP ~24s do ảnh hero không preload — nằm ngoài phạm vi STEP 3, đề xuất cho bước tối ưu tiếp theo (preload LCP image, `fetchpriority`, image CDN).
+- **Performance — vấn đề thật duy nhất là `elementRenderDelay` 2.38s**: h1 chỉ render sau khi auth-bootstrap + warm-up API xong (client-render). Hướng tối ưu cho bước sau: SSR shell tĩnh render h1 ngay (bỏ chờ auth), preload chunk account — **không phải** vấn đề ảnh (xem §6a).
 - Backend dev local (`LocProject/.env`) đã thêm `THROTTLE_LIMIT=1000` + `AUTH_THROTTLE_LIMIT=1000` để e2e không dính `ThrottlerException` — chỉ ở môi trường dev.
 - Tuân thủ `DESIGN_PRINCIPLES.md`: không hardcode hex mới, chỉ token `primary-*`, `globals.css` không bị xóa gì, Hero/Carousel không gộp, giữ cấu trúc sidebar pill `bg-primary-100` + mini-stat.
