@@ -250,7 +250,7 @@ export default function AccountPage() {
     ];
 
     return (
-        <div className="max-w-container-max mx-auto w-full min-w-0 px-margin-mobile md:px-margin-desktop py-stack-lg">
+        <main className="max-w-container-max mx-auto w-full min-w-0 px-margin-mobile md:px-margin-desktop py-stack-lg">
             <h1 className="font-headline-lg text-headline-lg text-primary mb-6">Tài khoản của tôi</h1>
 
             {/* ── Mobile tabs (horizontal scroll) ── */}
@@ -337,7 +337,7 @@ export default function AccountPage() {
                     {/* ═══ PROFILE ═══ */}
                     {activeTab === 'profile' && (
                         <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-8">
-                            <h3 className="font-headline-md text-headline-md text-primary mb-6">Thông tin cá nhân</h3>
+                            <h2 className="font-headline-md text-headline-md text-primary mb-6">Thông tin cá nhân</h2>
                             <div className="flex flex-col sm:flex-row items-start gap-8 mb-8">
                                 <div className="flex flex-col items-center gap-2">
                                     <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[28px]">
@@ -352,7 +352,7 @@ export default function AccountPage() {
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Email</label>
-                                        <input className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md bg-surface-container-low text-on-surface-variant cursor-not-allowed outline-none" value={user.email} readOnly />
+                                        <input className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md bg-surface-container-low text-on-surface-variant cursor-not-allowed outline-none" value={user.email} readOnly aria-label="Email" />
                                         <p className="flex items-center gap-1 mt-1.5 text-[12px] font-medium text-success-leaf">
                                             <span className="material-symbols-outlined text-[14px]">verified</span>
                                             Đã xác thực
@@ -375,10 +375,10 @@ export default function AccountPage() {
                                     </div>
                                     <div>
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Ngày sinh</label>
-                                        <input type="date" className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" />
-                                    </div>
-                                </div>
-                            </div>
+                                        <input type="date" aria-label="Ngày sinh" className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" />
+</div>
+                </div>
+            </main>
                             <div className="flex flex-col gap-3 pt-6 border-t border-outline-variant/30">
                                 {profileMsg && <p className="text-success-leaf text-body-sm font-bold text-right">{profileMsg}</p>}
                                 {profileError && <p className="text-error text-body-sm text-right">{profileError}</p>}
@@ -399,7 +399,7 @@ export default function AccountPage() {
                     {/* ═══ ORDERS ═══ */}
                     {activeTab === 'orders' && (
                         <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-8">
-                            <h3 className="font-headline-md text-headline-md text-primary mb-6">Đơn hàng của tôi</h3>
+                            <h2 className="font-headline-md text-headline-md text-primary mb-6">Đơn hàng của tôi</h2>
                             {ordersLoading ? (
                                 <div className="space-y-4">
                                     {[1, 2, 3].map((i) => (
@@ -462,7 +462,7 @@ export default function AccountPage() {
                     {activeTab === 'addresses' && (
                         <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-headline-md text-headline-md text-primary">Địa chỉ của tôi</h3>
+                                <h2 className="font-headline-md text-headline-md text-primary">Địa chỉ của tôi</h2>
                                 <button onClick={() => setShowAddressModal(true)}
                                     className="flex items-center gap-1.5 bg-primary-700 text-on-primary px-4 py-2 rounded-xl font-label-bold hover:bg-primary-800 transition-colors shadow-sm shadow-primary/20">
                                     <span className="material-symbols-outlined text-[18px]">add</span>
@@ -527,7 +527,7 @@ export default function AccountPage() {
                     {/* ═══ CHANGE PASSWORD ═══ */}
                     {activeTab === 'password' && (
                         <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-8">
-                            <h3 className="font-headline-md text-headline-md text-primary mb-6">Đổi mật khẩu</h3>
+                            <h2 className="font-headline-md text-headline-md text-primary mb-6">Đổi mật khẩu</h2>
                             <form onSubmit={handlePasswordSubmit} className="max-w-md space-y-5">
                                 <div>
                                     <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Mật khẩu hiện tại *</label>

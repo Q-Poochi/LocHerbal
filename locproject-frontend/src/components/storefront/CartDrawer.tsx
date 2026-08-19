@@ -78,6 +78,7 @@ export default function CartDrawer() {
       className={`fixed inset-0 z-[150] transition-opacity duration-300
         ${isDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       aria-hidden={!isDrawerOpen}
+      inert={!isDrawerOpen}
     >
       {/* Backdrop */}
       <div

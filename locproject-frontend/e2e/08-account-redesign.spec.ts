@@ -15,7 +15,7 @@ async function login(page: Page, mobile = false) {
     await page.getByTestId('navbar-account-btn').waitFor({ timeout: 20000 })
     await page.getByTestId('navbar-account-btn').click()
     await page.getByRole('link', { name: 'Tài khoản của tôi' }).click()
-    await page.locator('h3', { hasText: 'Thông tin cá nhân' }).waitFor({ timeout: 10000 })
+    await page.locator('h2', { hasText: 'Thông tin cá nhân' }).waitFor({ timeout: 10000 })
   }
 }
 
@@ -49,7 +49,7 @@ test.describe('Account redesign', () => {
     await login(page)
     await page.locator('aside button', { hasText: 'Đơn hàng của tôi' }).click()
     await page.waitForTimeout(1500)
-    await expect(page.locator('h3', { hasText: 'Đơn hàng của tôi' })).toBeVisible()
+    await expect(page.locator('h2', { hasText: 'Đơn hàng của tôi' })).toBeVisible()
   })
 
   test('address tab không còn icon location_off', async ({ page }) => {
