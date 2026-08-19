@@ -64,6 +64,34 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Single-flight refresh: nhiều request 401 đồng thời chỉ gọi /auth/refresh 1 lần,
+// tránh race token rotation (token cũ bị vô hiệu ngay sau lần dùng đầu).
+let refreshPromise: Promise<{ accessToken: string }> | null = null;
+
+export async function refreshAccessToken(): Promise<{ accessToken: string }> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      let csrfHeader: string | undefined;
+      if (typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+        csrfHeader = match?.[1] ? decodeURIComponent(match[1]) : undefined;
+      }
+      const { data } = await axios.post<{ accessToken: string }>(`${API_URL}/auth/refresh`, {}, {
+        withCredentials: true,
+        headers: csrfHeader ? { 'x-csrf-token': csrfHeader } : {},
+      });
+      const { user } = useAuthStore.getState();
+      if (user) {
+        useAuthStore.getState().setAuth(data.accessToken, user);
+      }
+      return data;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
 // Response Interceptor: Xử lý 401 Unauthorized tự động refresh token
 apiClient.interceptors.response.use(
   (response) => response,
@@ -79,26 +107,8 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Gọi API refresh token. 
-        // Backend tự đọc httpOnly cookie (refreshToken) và trả về accessToken mới
-        let csrfHeader: string | undefined;
-        if (typeof document !== 'undefined') {
-          const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
-          csrfHeader = match?.[1] ? decodeURIComponent(match[1]) : undefined;
-        }
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, {
-          withCredentials: true,
-          headers: csrfHeader ? { 'x-csrf-token': csrfHeader } : {},
-        });
-
-        // Lưu accessToken mới vào in-memory store
-        const { user } = useAuthStore.getState();
-        if (user) {
-          useAuthStore.getState().setAuth(data.accessToken, user);
-        }
-
-        // Retry request gốc với token mới
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        const { accessToken } = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Refresh token cũng hết hạn hoặc lỗi -> Xóa state

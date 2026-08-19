@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { apiClient } from '../api/client';
+import { apiClient, refreshAccessToken } from '../api/client';
 
 interface User {
   id: string;
@@ -62,9 +62,9 @@ export const useAuthStore = create<AuthState>()(
       // Thành công → có accessToken + user mới. Thất bại (cookie hết hạn) → chưa đăng nhập.
       refreshSession: async () => {
         try {
-          const { data } = await apiClient.post('/auth/refresh');
+          const { accessToken } = await refreshAccessToken();
           const { data: user } = await apiClient.get('/auth/me');
-          set({ accessToken: data.accessToken, user });
+          set({ accessToken, user });
           return true;
         } catch {
           console.log('[Auth] No valid session, user not logged in');
