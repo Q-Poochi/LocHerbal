@@ -48,3 +48,6 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 /.playwright/
+
+# UI/UX reference skills (cloned repos — không commit vào repo chính)
+/ui-ux-skills/
