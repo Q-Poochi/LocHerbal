@@ -280,6 +280,7 @@ export default function FeaturedProducts({
                   <button
                     key={i}
                     type="button"
+                    aria-label={`Đến sản phẩm nổi bật ${i + 1}`}
                     onClick={() => scrollTo(i)}
                     className={`transition-all duration-300 rounded-full h-2
                       ${i === activeIdx ? 'w-6 bg-primary-700' : 'w-2 bg-gray-300 hover:bg-gray-400'}`}

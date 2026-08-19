@@ -155,6 +155,7 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
             <button
               onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus(); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="Xóa tìm kiếm"
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>

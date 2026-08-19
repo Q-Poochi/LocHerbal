@@ -213,6 +213,7 @@ export default function CartDrawer() {
                       onClick={() => updateQuantity(item.productVariantId, item.qty - 1)}
                       disabled={updateQuantityMutation.isPending}
                       className="w-7 h-full flex items-center justify-center text-primary hover:bg-gray-100 font-bold disabled:opacity-50"
+                      aria-label={`Giảm số lượng ${item.productNameSnapshot ?? 'sản phẩm'}`}
                     >
                       −
                     </button>
@@ -221,6 +222,7 @@ export default function CartDrawer() {
                       onClick={() => updateQuantity(item.productVariantId, item.qty + 1)}
                       disabled={updateQuantityMutation.isPending}
                       className="w-7 h-full flex items-center justify-center text-primary hover:bg-gray-100 font-bold disabled:opacity-50"
+                      aria-label={`Tăng số lượng ${item.productNameSnapshot ?? 'sản phẩm'}`}
                     >
                       +
                     </button>
