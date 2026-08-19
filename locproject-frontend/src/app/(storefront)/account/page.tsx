@@ -377,9 +377,9 @@ export default function AccountPage() {
                                         <label className="block font-label-bold text-label-bold text-on-surface-variant mb-1.5">Ngày sinh</label>
                                         <input type="date" aria-label="Ngày sinh" className="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all" />
 </div>
+                    </div>
                 </div>
-            </main>
-                            <div className="flex flex-col gap-3 pt-6 border-t border-outline-variant/30">
+                <div className="flex flex-col gap-3 pt-6 border-t border-outline-variant/30">
                                 {profileMsg && <p className="text-success-leaf text-body-sm font-bold text-right">{profileMsg}</p>}
                                 {profileError && <p className="text-error text-body-sm text-right">{profileError}</p>}
                                 <div className="flex justify-end gap-3">
@@ -636,6 +636,6 @@ export default function AccountPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </main>
     );
 }
