@@ -233,14 +233,11 @@ export default function AccountPage() {
         }
     });
 
-    // Chưa hydrate xong → render spinner, tránh flash-redirect về /login
-    if (!hasHydrated) return null;
-
-    if (!user) return null;
-
-    const initials = user.fullName
-        ? user.fullName.split(' ').map((w: string) => w[0]).slice(-2).join('').toUpperCase()
-        : user.email[0].toUpperCase();
+    const initials = user
+        ? (user.fullName
+            ? user.fullName.split(' ').map((w: string) => w[0]).slice(-2).join('').toUpperCase()
+            : user.email[0].toUpperCase())
+        : '';
 
     const menu: { key: Tab | 'logout'; label: string; icon: string }[] = [
         { key: 'profile', label: 'Thông tin cá nhân', icon: 'person' },
@@ -281,7 +278,7 @@ export default function AccountPage() {
                     <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-6">
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="relative mb-3">
-                                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[24px]">
+                                <div className={`w-16 h-16 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[24px] ${user ? '' : 'animate-pulse'}`}>
                                     {initials}
                                 </div>
                                 <button type="button" title="Đổi ảnh"
@@ -289,15 +286,24 @@ export default function AccountPage() {
                                     <span className="material-symbols-outlined text-[13px]">photo_camera</span>
                                 </button>
                             </div>
-                            <p className="font-label-bold text-label-bold text-primary">{user.fullName}</p>
-                            <p className="text-caption text-on-surface-variant mt-0.5">{user.email}</p>
+                            {user ? (
+                                <>
+                                    <p className="font-label-bold text-label-bold text-primary">{user.fullName}</p>
+                                    <p className="text-caption text-on-surface-variant mt-0.5">{user.email}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="h-4 w-28 bg-surface-container rounded animate-pulse mt-1" />
+                                    <div className="h-3 w-40 bg-surface-container rounded animate-pulse mt-1.5" />
+                                </>
+                            )}
                             <div className="grid grid-cols-2 gap-2 w-full mt-4">
                                 <div className="px-2 py-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-center">
-                                    <p className="font-label-bold text-label-bold text-primary tabular-nums">{ordersLoading ? '…' : orders.length}</p>
+                                    <p className="font-label-bold text-label-bold text-primary tabular-nums">{!user || ordersLoading ? '…' : orders.length}</p>
                                     <p className="text-caption text-on-surface-variant">Đơn hàng</p>
                                 </div>
                                 <div className="px-2 py-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-center">
-                                    <p className="font-label-bold text-label-bold text-primary tabular-nums">{addressesLoading ? '…' : addresses.length}</p>
+                                    <p className="font-label-bold text-label-bold text-primary tabular-nums">{!user || addressesLoading ? '…' : addresses.length}</p>
                                     <p className="text-caption text-on-surface-variant">Địa chỉ</p>
                                 </div>
                             </div>
@@ -338,6 +344,8 @@ export default function AccountPage() {
                     {activeTab === 'profile' && (
                         <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-8">
                             <h2 className="font-headline-md text-headline-md text-primary mb-6">Thông tin cá nhân</h2>
+                            {user ? (
+                            <>
                             <div className="flex flex-col sm:flex-row items-start gap-8 mb-8">
                                 <div className="flex flex-col items-center gap-2">
                                     <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-[28px]">
@@ -393,6 +401,16 @@ export default function AccountPage() {
                                     </button>
                                 </div>
                             </div>
+                            </>
+                            ) : (
+                                <div className="space-y-5">
+                                    <div className="h-14 bg-surface-container rounded-xl animate-pulse" />
+                                    <div className="h-14 bg-surface-container rounded-xl animate-pulse" />
+                                    <div className="h-14 bg-surface-container rounded-xl animate-pulse" />
+                                    <div className="h-6 w-40 bg-surface-container rounded animate-pulse" />
+                                    <div className="h-14 bg-surface-container rounded-xl animate-pulse" />
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -400,7 +418,7 @@ export default function AccountPage() {
                     {activeTab === 'orders' && (
                         <div className="bg-surface-white rounded-2xl shadow-[0_4px_20px_rgba(27,67,50,0.06)] border border-outline-variant/30 p-8">
                             <h2 className="font-headline-md text-headline-md text-primary mb-6">Đơn hàng của tôi</h2>
-                            {ordersLoading ? (
+                            {!user || ordersLoading ? (
                                 <div className="space-y-4">
                                     {[1, 2, 3].map((i) => (
                                         <div key={i} className="border border-outline-variant/30 rounded-xl p-5 animate-pulse space-y-3">
@@ -469,7 +487,7 @@ export default function AccountPage() {
                                     Thêm địa chỉ mới
                                 </button>
                             </div>
-                            {addressesLoading ? (
+                            {!user || addressesLoading ? (
                                 <div className="space-y-3">
                                     {[1, 2].map((i) => (
                                         <div key={i} className="border border-outline-variant/30 rounded-xl p-5 animate-pulse space-y-2">
