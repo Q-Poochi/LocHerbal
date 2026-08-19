@@ -69,7 +69,7 @@ const statusLabel: Record<string, string> = {
 };
 
 export default function AccountPage() {
-    const { user, hasHydrated, logout, clearAuth } = useAuthStore();
+    const { user, accessToken, hasHydrated, logout, clearAuth } = useAuthStore();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<Tab>('profile');
     const [orders, setOrders] = useState<Order[]>([]);
@@ -135,10 +135,10 @@ export default function AccountPage() {
 
     /* ── Warm up sidebar counters (orders/addresses count) ── */
     useEffect(() => {
-        if (!user) return;
+        if (!user || !accessToken) return;
         apiClient.get('/orders').then(({ data }) => setOrders(data.data || data || [])).catch(() => setOrders([]));
         apiClient.get('/customers/addresses').then(({ data }) => setAddresses(data.data || data || [])).catch(() => setAddresses([]));
-    }, [user]);
+    }, [user, accessToken]);
 
     /* ── Load provinces ── */
     useEffect(() => {
