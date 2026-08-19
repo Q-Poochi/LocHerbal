@@ -47,10 +47,10 @@ export default function HeroSection() {
 
                     {/* H1 */}
                     <h1 className="font-display font-bold text-4xl md:text-5xl lg:text-6xl
-                                   text-primary-700 leading-[1.1] tracking-[-0.03em] mb-6">
-                        Chăm Sóc Sức Khỏe
+                                   text-primary-700 leading-[1.1] tracking-[-0.03em] mb-6 text-balance">
+                        Chăm sóc sức khỏe
                         <br />
-                        <span className="text-primary-500">Từ Thiên Nhiên</span>
+                        <span className="text-primary-500">Từ thiên nhiên</span>
                     </h1>
 
                     {/* Subtitle */}
@@ -162,7 +162,7 @@ export default function HeroSection() {
                             <span className="material-symbols-outlined text-accent-gold text-xl"
                                   style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                             <div>
-                                <p className="font-bold text-sm text-text-primary">★ 4.8</p>
+                                <p className="font-bold text-sm text-text-primary">4.8</p>
                                 <p className="text-xs text-text-secondary">đánh giá</p>
                             </div>
                         </div>

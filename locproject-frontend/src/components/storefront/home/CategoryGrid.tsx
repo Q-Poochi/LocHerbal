@@ -59,8 +59,8 @@ export default function CategoryGrid() {
             <span className="material-symbols-outlined text-base">category</span>
             Chuyên khoa
           </div>
-          <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight">
-            Mua Theo Chuyên Khoa
+          <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight text-balance">
+            Mua theo chuyên khoa
           </h2>
           <p className="text-text-secondary mt-3 max-w-xl mx-auto">
             Sản phẩm được phân loại theo từng chuyên khoa, giúp bạn dễ dàng tìm kiếm giải pháp phù hợp

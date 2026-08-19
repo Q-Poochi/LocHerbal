@@ -44,8 +44,8 @@ export default function BlogSection({ posts = [] }: { posts: BlogPostInput[] }) 
                             <span className="material-symbols-outlined text-base">menu_book</span>
                             Kiến thức sức khỏe
                         </div>
-                        <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight">
-                            Bài Viết Mới Nhất
+                        <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight text-balance">
+                            Bài viết mới nhất
                         </h2>
                     </div>
                     <Link href="/products" className="hidden md:flex items-center gap-1 text-primary-700 font-medium hover:underline text-sm">

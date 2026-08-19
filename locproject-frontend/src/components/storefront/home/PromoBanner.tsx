@@ -34,8 +34,8 @@ export default function PromoBanner() {
               Cơ hội hợp tác
             </div>
 
-            <h2 className="font-display font-bold text-2xl md:text-3xl mb-4 leading-tight">
-              Chương Trình Đại Lý &amp; Cộng Tác Viên
+            <h2 className="font-display font-bold text-2xl md:text-3xl mb-4 leading-tight text-balance">
+              Chương trình đại lý &amp; cộng tác viên
             </h2>
 
             <p className="text-white/80 text-base leading-relaxed mb-8 max-w-lg">
@@ -56,7 +56,7 @@ export default function PromoBanner() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/50
                            text-white font-semibold text-sm hover:bg-white/10 transition-all duration-200"
               >
-                Xem sản phẩm
+                Khám phá sản phẩm
               </Link>
             </div>
 
@@ -69,7 +69,7 @@ export default function PromoBanner() {
               ].map(s => (
                 <div key={s.label}>
                   <p className="font-display font-bold text-2xl">{s.val}</p>
-                  <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
+                  <p className="text-white/75 text-xs mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>

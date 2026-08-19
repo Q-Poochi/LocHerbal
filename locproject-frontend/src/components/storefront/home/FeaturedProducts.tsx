@@ -127,7 +127,7 @@ function ProductCard({ product }: { product: Product }) {
           {product.name}
         </h3>
 
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-2 tabular-nums">
           <span className="font-bold text-lg text-primary-700">
             {price.toLocaleString('vi-VN')}đ
           </span>
@@ -191,8 +191,8 @@ export default function FeaturedProducts({
               <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               Nổi bật
             </div>
-            <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight">
-              Sản Phẩm Nổi Bật
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-text-primary tracking-tight text-balance">
+              Sản phẩm nổi bật
             </h2>
           </div>
           <Link
