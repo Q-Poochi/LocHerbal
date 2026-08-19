@@ -68,7 +68,7 @@ function ProductCard({ product }: { product: Product }) {
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {hasDiscount && (
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
               -{discountPct}%
             </span>
           )}
@@ -88,7 +88,7 @@ function ProductCard({ product }: { product: Product }) {
               ${btnState === 'success'
                 ? 'bg-primary-500 text-white'
                 : btnState === 'error'
-                ? 'bg-red-500 text-white'
+                ? 'bg-red-600 text-white'
                 : 'bg-primary-700 text-white hover:bg-primary-800'
               }`}
           >
@@ -187,7 +187,7 @@ export default function FeaturedProducts({
         {/* Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold-pale text-accent-gold text-sm font-medium mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-gold-pale text-[#8a6720] text-sm font-medium mb-4">
               <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               Nổi bật
             </div>

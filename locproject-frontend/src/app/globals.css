@@ -36,7 +36,7 @@
   /* Text */
   --color-text-primary:   #1a1a17;  /* Near-black, warm */
   --color-text-secondary: #5a5a52;  /* Muted text */
-  --color-text-tertiary:  #9a9a90;  /* Placeholder, disabled */
+  --color-text-tertiary:  #757570;  /* Muted text — đạt WCAG 4.5:1 trên nền trắng */
   --color-text-inverse:   #ffffff;
 
   /* Semantic */

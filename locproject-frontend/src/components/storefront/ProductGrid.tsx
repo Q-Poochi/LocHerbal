@@ -86,7 +86,7 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {hasDiscount && (
-            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
               -{discountPct}%
             </span>
           )}
@@ -107,7 +107,7 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
               ${btnState === 'success'
                 ? 'bg-primary-500 text-white'
                 : btnState === 'error'
-                ? 'bg-red-500 text-white'
+                ? 'bg-red-600 text-white'
                 : 'bg-primary-700 text-white hover:bg-primary-800'
               }`}
           >

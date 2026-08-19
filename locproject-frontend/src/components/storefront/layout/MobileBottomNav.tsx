@@ -81,7 +81,7 @@ export default function MobileBottomNav() {
               shopping_cart
             </span>
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}

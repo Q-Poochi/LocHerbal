@@ -126,7 +126,7 @@ export default function Footer() {
           <p className="text-white/70 text-xs md:text-sm">
             © {new Date().getFullYear()} {companyName}. Bảo lưu mọi quyền.
           </p>
-          <p className="text-white/50 text-[11px] md:text-xs tracking-wider uppercase font-semibold">
+          <p className="text-white/70 text-[11px] md:text-xs tracking-wider uppercase font-semibold">
             {settings?.businessLicense ? `ĐKKD số ${settings.businessLicense}` : 'Được cấp phép bởi Bộ Y Tế Việt Nam'}
           </p>
         </div>

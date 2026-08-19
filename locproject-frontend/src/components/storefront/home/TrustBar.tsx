@@ -44,7 +44,7 @@ export default function TrustBar() {
               </div>
               <div>
                 <p className="font-semibold text-sm leading-tight">{item.title}</p>
-                <p className="text-white/70 text-xs mt-0.5">{item.desc}</p>
+                <p className="text-white/80 text-xs mt-0.5">{item.desc}</p>
               </div>
             </div>
           ))}
