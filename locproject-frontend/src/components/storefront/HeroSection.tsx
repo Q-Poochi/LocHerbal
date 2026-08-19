@@ -5,6 +5,7 @@
 // ⚠️ TUYỆT ĐỐI KHÔNG render nhiều hơn 1 ảnh / không có carousel/slider ở đây
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api/client';
 
@@ -112,11 +113,12 @@ export default function HeroSection() {
                                         overflow-hidden shadow-xl relative">
                             {hero ? (
                                 <Link href={hero.linkUrl ?? '#'} className="block w-full h-full">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
+                                    <Image
                                         src={hero.imageUrl}
                                         alt={hero.title}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        className="object-cover"
                                     />
                                 </Link>
                             ) : (

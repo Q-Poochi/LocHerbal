@@ -46,7 +46,9 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: 'localhost' },
       { protocol: 'https', hostname: '**' },
     ],
-    unoptimized: true, // fallback cho local dev
+    // Chỉ tắt optimization ở local dev (không có server image optimizer chạy cùng).
+    // Production (NODE_ENV=production) để Next tự tối ưu: WebP/AVIF + resize + preload.
+    unoptimized: process.env.NODE_ENV === 'development',
   },
   async headers() {
     return [

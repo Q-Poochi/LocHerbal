@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { apiClient } from '@/lib/api/client';
 
 interface StorefrontBanner {
@@ -66,12 +67,14 @@ export default function BannerCarousel() {
     return (
         <section data-testid="banner-carousel" className="w-full bg-background">
             <div className="max-w-[1280px] mx-auto px-4 md:px-10 pb-2">
-                <div className="relative rounded-3xl overflow-hidden animate-fade-in-up shadow-lg">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                <div className="relative rounded-3xl overflow-hidden animate-fade-in-up shadow-lg h-[300px] md:h-[380px]">
+                    <Image
                         src={active.imageUrl}
                         alt={active.title}
-                        className="w-full h-[300px] md:h-[380px] object-cover"
+                        fill
+                        sizes="(max-width: 1280px) 100vw, 1280px"
+                        className="object-cover"
+                        priority={activeIdx === 0}
                         onError={(e) => {
                             (e.currentTarget as HTMLImageElement).style.display = 'none';
                         }}
