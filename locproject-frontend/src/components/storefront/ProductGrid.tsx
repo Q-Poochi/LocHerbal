@@ -50,10 +50,14 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
     }
   };
 
+  const escapeHtml = (s: string) =>
+    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+
   const highlight = (text: string, q: string) => {
-    if (!q) return text;
+    const safeText = escapeHtml(text);
+    if (!q) return safeText;
     const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<mark class="bg-primary-100 text-primary-800 rounded px-0.5 not-italic">$1</mark>');
+    return safeText.replace(regex, '<mark class="bg-primary-100 text-primary-800 rounded px-0.5 not-italic">$1</mark>');
   };
 
   return (
