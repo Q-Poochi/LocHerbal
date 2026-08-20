@@ -1,19 +1,27 @@
-import { Controller, Post, UseInterceptors, UploadedFiles, BadRequestException, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
+  UseGuards,
+  Inject,
+} from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { join } from 'path';
+import { memoryStorage } from 'multer';
 import { randomUUID } from 'crypto';
-import { open, rename, unlink } from 'fs/promises';
+import sharp from 'sharp';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { RolesGuard } from '../../core/guards/roles.guard';
+import { ObjectStorageService } from '../../../shared/storage/object-storage.service';
 
 // Chỉ chấp nhận file ảnh raster thật theo NỘI DUNG (magic bytes), không tin mimetype/đuôi client khai báo.
 // Loại trừ tuyệt đối: .svg (vector có thể nhúng script), .html và mọi đuôi khác ngoài whitelist.
 const ALLOWED_IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'webp']);
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-const MAGIC_READ_LIMIT = 64 * 1024; // đủ để nhận diện chữ ký PNG/JPEG/WEBP
-const UPLOAD_DIR = join(process.cwd(), 'uploads', 'products');
+const MAX_WIDTH = 800; // resize chiều lớn nhất ~800px — đủ cho web, giảm tải bandwidth
+const WEBP_QUALITY = 80;
 
 // Nhận diện định dạng ảnh raster bằng MAGIC BYTES (không tin mimetype/đuôi từ client).
 // Trả về đuôi chuẩn hoá, hoặc null nếu không phải PNG/JPEG/WEBP.
@@ -51,8 +59,13 @@ function detectImage(buf: Buffer): string | null {
 @ApiBearerAuth()
 @Controller('upload')
 export class UploadController {
+  constructor(
+    @Inject(ObjectStorageService)
+    private readonly storage: ObjectStorageService,
+  ) {}
+
   @Post()
-  @ApiOperation({ summary: 'Upload ảnh sản phẩm (admin/staff, multipart)' })
+  @ApiOperation({ summary: 'Upload ảnh sản phẩm (admin/staff, multipart) — xử lý Sharp + lưu Object Storage' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -64,11 +77,7 @@ export class UploadController {
   @Roles('admin', 'staff')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: UPLOAD_DIR,
-        // Lưu tạm KHÔNG có đuôi; đuôi chỉ được gán SAU khi xác minh nội dung thật.
-        filename: (_req, _file, cb) => cb(null, randomUUID()),
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: MAX_SIZE },
     }),
   )
@@ -77,48 +86,49 @@ export class UploadController {
       throw new BadRequestException('Không có file nào được tải lên');
     }
 
-    const verified: Array<Express.Multer.File> = [];
-    const movedPaths: string[] = [];
+    const uploaded: Array<{ url: string; filename: string; size: number; width?: number; height?: number }> = [];
 
-    try {
-      for (const f of files) {
-        const buf = Buffer.alloc(Math.min(f.size, MAGIC_READ_LIMIT));
-        const handle = await open(f.path, 'r');
-        try {
-          await handle.read(buf, 0, buf.length, 0);
-        } finally {
-          await handle.close();
-        }
-
-        // Định danh từ nội dung thật — mimetype client claim hoàn toàn bị bỏ qua.
-        const ext = detectImage(buf);
-        if (!ext || !ALLOWED_IMAGE_EXTS.has(ext)) {
-          throw new BadRequestException(
-            `File "${f.originalname}" bị từ chối: không phải ảnh hợp lệ (chỉ chấp nhận PNG, JPEG, WEBP theo nội dung thật)`,
-          );
-        }
-
-        const safeName = `${f.filename}.${ext}`;
-        const target = join(UPLOAD_DIR, safeName);
-        await rename(f.path, target);
-        movedPaths.push(target);
-        f.filename = safeName;
-        verified.push(f);
+    for (const f of files) {
+      // Định danh từ nội dung thật — mimetype client claim hoàn toàn bị bỏ qua.
+      const ext = detectImage(f.buffer);
+      if (!ext || !ALLOWED_IMAGE_EXTS.has(ext)) {
+        throw new BadRequestException(
+          `File "${f.originalname}" bị từ chối: không phải ảnh hợp lệ (chỉ chấp nhận PNG, JPEG, WEBP theo nội dung thật)`,
+        );
       }
-    } catch (err) {
-      // Dọn toàn bộ file đã ghi ra đĩa (kể cả đã rename) — chặn mọi file không hợp lệ lưu lại.
-      const orphans = [...files.map((x) => x.path), ...movedPaths];
-      await Promise.all(orphans.map((p) => unlink(p).catch(() => { /* đã xóa */ })));
-      throw err instanceof BadRequestException
-        ? err
-        : new BadRequestException('Không thể xác minh nội dung file ảnh');
+
+      // Tối ưu: resize ≤800px + nén WebP. Không phóng to ảnh nhỏ.
+      let optimized: Buffer;
+      let meta: sharp.OutputInfo;
+      try {
+        ({ data: optimized, info: meta } = await sharp(f.buffer, { failOn: 'error' })
+          .resize(MAX_WIDTH, MAX_WIDTH, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality: WEBP_QUALITY })
+          .toBuffer({ resolveWithObject: true }));
+      } catch {
+        throw new BadRequestException(`File "${f.originalname}" không thể xử lý thành WebP`);
+      }
+
+      const key = `products/${randomUUID()}.webp`;
+      let url: string;
+      try {
+        url = await this.storage.putObject(key, optimized, 'image/webp');
+      } catch (err) {
+        throw new BadRequestException(
+          'Không thể lưu ảnh vào Object Storage (chưa cấu hình S3_ENDPOINT hoặc lỗi kết nối). ' +
+            `Chi tiết: ${(err as Error).message}`,
+        );
+      }
+
+      uploaded.push({
+        url,
+        filename: key.split('/').pop() as string,
+        size: optimized.length,
+        width: meta.width,
+        height: meta.height,
+      });
     }
 
-    const baseUrl = process.env.API_URL || 'http://localhost:4000';
-    return verified.map((f) => ({
-      url: `${baseUrl}/uploads/products/${f.filename}`,
-      filename: f.filename,
-      size: f.size,
-    }));
+    return uploaded;
   }
 }

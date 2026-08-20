@@ -64,6 +64,12 @@ jobs:
             GHTK_WEBHOOK_TOKEN="${{ secrets.STAGING_GHTK_WEBHOOK_TOKEN }}" \
             API_URL="${{ secrets.STAGING_API_URL }}" \
             NODE_ENV=production \
+            S3_ENDPOINT="${{ secrets.STAGING_S3_ENDPOINT }}" \
+            S3_REGION="${{ secrets.STAGING_S3_REGION }}" \
+            S3_ACCESS_KEY="${{ secrets.STAGING_S3_ACCESS_KEY }}" \
+            S3_SECRET_KEY="${{ secrets.STAGING_S3_SECRET_KEY }}" \
+            S3_BUCKET="${{ secrets.STAGING_S3_BUCKET }}" \
+            S3_PUBLIC_URL="${{ secrets.STAGING_S3_PUBLIC_URL }}" \
             PORT=4000
 
   deploy-frontend:

@@ -133,6 +133,34 @@ class EnvironmentVariables {
   @IsString()
   PORT?: string;
 
+  // Object Storage (S3-compatible: MinIO / Cloudflare R2 / Backblaze B2).
+  // Bắt buộc đầy đủ khi NODE_ENV=production (kiểm tra fail-fast bên dưới).
+  @IsOptional()
+  @IsString()
+  S3_ENDPOINT?: string;
+
+  @IsOptional()
+  @IsString()
+  S3_REGION?: string;
+
+  @IsOptional()
+  @IsString()
+  S3_ACCESS_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  S3_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  S3_BUCKET?: string;
+
+  // URL công khai để trình duyệt load ảnh. Mặc định suy ra `${S3_ENDPOINT}/${S3_BUCKET}`
+  // (phù hợp MinIO path-style); với R2 set giá trị r2.dev hoặc custom domain.
+  @IsOptional()
+  @IsString()
+  S3_PUBLIC_URL?: string;
+
   // CSV: "https://a.com,https://b.com" — mặc định danh sách localhost
   @IsOptional()
   @IsString()
@@ -171,6 +199,26 @@ export function validate(config: Record<string, unknown>) {
         `[FATAL] SMS_PROVIDER=esms nhưng thiếu biến môi trường: ${missingSms.join(', ')}. App không thể khởi động.`,
       );
     }
+  }
+
+  // Object Storage (S3-compatible: MinIO / Cloudflare R2 / Backblaze B2).
+  // - Cấu hình CHƯA ĐỦ (chỉ set 1 vài biến) → fail-fast: nguy hiểm vì ảnh có thể
+  //   rơi vào nơi không mong muốn.
+  // - Chưa cấu hình gì cả → cho phép khởi động nhưng upload sẽ trả 503 kèm cảnh báo
+  //   (không làm sập site khi quên cấu hình giữa lúc migrate storage).
+  const s3Keys = ['S3_ENDPOINT', 'S3_ACCESS_KEY', 'S3_SECRET_KEY', 'S3_BUCKET'] as const;
+  const s3SetCount = s3Keys.filter((key) => {
+    const value = config[key];
+    return value !== undefined && value !== null && value !== '';
+  }).length;
+  if (s3SetCount > 0 && s3SetCount < s3Keys.length) {
+    throw new Error(
+      `[FATAL] Cấu hình Object Storage thiếu: chỉ set ${s3SetCount}/${s3Keys.length} biến. Bắt buộc set đủ ` +
+        `${s3Keys.join(', ')} hoặc bỏ toàn bộ (upload sẽ bị vô hiệu).`,
+    );
+  }
+  if (s3SetCount === 0) {
+    // Chỉ log — không chặn khởi động; upload controller sẽ trả 503 kèm hướng dẫn.
   }
 
   // Chuyển giá trị number dạng chuỗi từ env trước khi validate

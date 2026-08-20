@@ -7,6 +7,7 @@ import { CategoryController } from './controllers/category.controller';
 import { ProductController } from './controllers/product.controller';
 import { UploadController } from './controllers/upload.controller';
 import { ReviewController } from './controllers/review.controller';
+import { ObjectStorageService } from '../../shared/storage/object-storage.service';
 import KeyvRedis from '@keyv/redis';
 import Keyv from 'keyv';
 
@@ -29,8 +30,8 @@ function buildStore(): Keyv {
 
 @Module({
   controllers: [CategoryController, ProductController, UploadController, ReviewController],
-  providers: [CategoryService, ProductService, ReviewService],
-  exports: [ProductService, CategoryService],
+  providers: [CategoryService, ProductService, ReviewService, ObjectStorageService],
+  exports: [ProductService, CategoryService, ObjectStorageService],
   imports: [
     CacheModule.register({
       stores: [buildStore()],
