@@ -11,7 +11,10 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { randomUUID } from 'crypto';
+import { join } from 'path';
+import { writeFile, mkdir } from 'fs/promises';
 import sharp from 'sharp';
+import { ConfigService } from '@nestjs/config';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { ObjectStorageService } from '../../../shared/storage/object-storage.service';
@@ -62,7 +65,19 @@ export class UploadController {
   constructor(
     @Inject(ObjectStorageService)
     private readonly storage: ObjectStorageService,
+    private readonly config: ConfigService,
   ) {}
+
+  private readonly localUploadDir = join(process.cwd(), 'uploads', 'products');
+  private readonly localPublicPrefix = '/uploads/products';
+
+  private async saveLocal(key: string, buffer: Buffer): Promise<string> {
+    await mkdir(this.localUploadDir, { recursive: true });
+    const filePath = join(this.localUploadDir, key);
+    await writeFile(filePath, buffer);
+    const baseUrl = this.config.get<string>('API_URL') || 'http://localhost:4000';
+    return `${baseUrl}${this.localPublicPrefix}/${key}`;
+  }
 
   @Post()
   @ApiOperation({ summary: 'Upload ảnh sản phẩm (admin/staff, multipart) — xử lý Sharp + lưu Object Storage' })
@@ -111,13 +126,12 @@ export class UploadController {
 
       const key = `products/${randomUUID()}.webp`;
       let url: string;
-      try {
+      if (this.storage['client']) {
+        // Có S3 → upload lên Object Storage
         url = await this.storage.putObject(key, optimized, 'image/webp');
-      } catch (err) {
-        throw new BadRequestException(
-          'Không thể lưu ảnh vào Object Storage (chưa cấu hình S3_ENDPOINT hoặc lỗi kết nối). ' +
-            `Chi tiết: ${(err as Error).message}`,
-        );
+      } else {
+        // Chưa có S3 → lưu vào volume local (/app/uploads/products)
+        url = await this.saveLocal(key, optimized);
       }
 
       uploaded.push({
