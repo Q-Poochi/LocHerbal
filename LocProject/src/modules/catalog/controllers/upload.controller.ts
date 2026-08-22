@@ -76,6 +76,7 @@ export class UploadController {
     const filePath = join(this.localUploadDir, key);
     await writeFile(filePath, buffer);
     const baseUrl = this.config.get<string>('API_URL') || 'http://localhost:4000';
+    console.log('[UPLOAD] saved local:', filePath, '-> URL:', `${baseUrl}${this.localPublicPrefix}/${key}`);
     return `${baseUrl}${this.localPublicPrefix}/${key}`;
   }
 
