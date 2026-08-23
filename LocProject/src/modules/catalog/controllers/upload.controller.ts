@@ -72,12 +72,17 @@ export class UploadController {
   private readonly localPublicPrefix = '/uploads/products';
 
   private async saveLocal(key: string, buffer: Buffer): Promise<string> {
-    await mkdir(this.localUploadDir, { recursive: true });
-    const filePath = join(this.localUploadDir, key);
-    await writeFile(filePath, buffer);
-    const baseUrl = this.config.get<string>('API_URL') || 'http://localhost:4000';
-    console.log('[UPLOAD] saved local:', filePath, '-> URL:', `${baseUrl}${this.localPublicPrefix}/${key}`);
-    return `${baseUrl}${this.localPublicPrefix}/${key}`;
+    try {
+      await mkdir(this.localUploadDir, { recursive: true });
+      const filePath = join(this.localUploadDir, key);
+      await writeFile(filePath, buffer);
+      const baseUrl = this.config.get<string>('API_URL') || 'http://localhost:4000';
+      console.log('[UPLOAD] API_URL:', baseUrl, '| saved:', filePath, '-> URL:', `${baseUrl}${this.localPublicPrefix}/${key}`);
+      return `${baseUrl}${this.localPublicPrefix}/${key}`;
+    } catch (e) {
+      console.error('[UPLOAD] saveLocal ERROR:', e);
+      throw e;
+    }
   }
 
   @Post()
@@ -127,6 +132,7 @@ export class UploadController {
 
       const key = `products/${randomUUID()}.webp`;
       let url: string;
+      console.log('[UPLOAD] storage.client:', !!this.storage['client'], '| localUploadDir:', this.localUploadDir);
       if (this.storage['client']) {
         // Có S3 → upload lên Object Storage
         url = await this.storage.putObject(key, optimized, 'image/webp');
