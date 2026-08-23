@@ -68,7 +68,7 @@ export class UploadController {
     private readonly config: ConfigService,
   ) {}
 
-  private readonly localUploadDir = join(process.cwd(), 'uploads', 'products');
+  private readonly localUploadDir = join(process.cwd(), 'uploads');
   private readonly localPublicPrefix = '/uploads/products';
 
   private async saveLocal(key: string, buffer: Buffer): Promise<string> {
