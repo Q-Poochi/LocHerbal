@@ -423,17 +423,32 @@ export class AuthService {
     return { message: 'Mật khẩu đã được đặt lại thành công' };
   }
 
-  private async generateTokens(userId: string) {
+private async generateTokens(userId: string) {
     const jti = crypto.randomUUID();
 
-    // Query user kèm roles để đưa vào JWT payload
+    // Query user kèm roles + customer để đưa vào JWT payload
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { roles: { include: { role: true } } },
+      include: {
+        roles: { include: { role: true } },
+        customer: { select: { id: true } },
+      },
     });
     const roleNames = user?.roles.map(ur => ur.role.name) ?? [];
 
-    const payload = { sub: userId, jti, roles: roleNames };
+    // Lấy permissions từ roles
+    const permissions = await this.prisma.permission.findMany({
+      where: {
+        roles: {
+          some: { role: { name: { in: roleNames } } },
+        },
+      },
+      select: { code: true },
+    });
+    const permissionCodes = permissions.map(p => p.code);
+    const customerId = user?.customer?.id || null;
+
+    const payload = { sub: userId, jti, roles: roleNames, permissions: permissionCodes, customerId };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: requireEnv('JWT_ACCESS_SECRET'),
