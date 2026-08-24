@@ -49,5 +49,5 @@ RUN mkdir -p /app/uploads/products
 
 EXPOSE 4000
 
-# Migrations chạy ở start command: npx prisma migrate deploy && node dist/main
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+# Migrations chạy ở start command: npx prisma migrate deploy -> generate Prisma client -> start app
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma generate && node dist/main"]
