@@ -27,14 +27,12 @@ jobs:
         working-directory: LocProject
         run: npm ci
 
-      - name: Generate Prisma Client (after migration)
+- name: Generate Prisma Client
         working-directory: LocProject
         env:
-          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
-        run: |
-          npx prisma migrate deploy
-          npx prisma generate
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+          DIRECT_URL: "postgresql://user:pass@localhost:5432/dummy"
+        run: npx prisma generate
 
       - name: Typecheck
         working-directory: LocProject
