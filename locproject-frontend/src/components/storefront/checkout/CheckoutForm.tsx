@@ -42,7 +42,9 @@ interface CheckoutFormProps {
     onSubmit: (data: CheckoutFormData) => void;
 }
 
-const API = 'https://provinces.open-api.vn/api';
+// API provinces.open-api.vn đã chuyển sang /v1 — endpoint cũ /api/p/ trả 302 thiếu
+// CORS header nên browser chặn fetch (dropdown tỉnh rỗng). Gọi thẳng /api/v1.
+const API = 'https://provinces.open-api.vn/api/v1';
 
 export default function CheckoutForm({ defaultValues, isPending, onSubmit }: CheckoutFormProps) {
     const [currentStep, setCurrentStep] = useState(1);

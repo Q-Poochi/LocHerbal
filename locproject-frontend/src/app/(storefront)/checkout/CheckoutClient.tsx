@@ -52,32 +52,9 @@ export default function CheckoutClient() {
         );
     }
 
-    if (!cart || !cart.items || cart.items.length === 0) {
-        return (
-            <div className="text-center py-16">
-                <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="material-symbols-outlined text-5xl text-primary-300"
-                        style={{ fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
-                </div>
-                <p className="font-display font-bold text-xl text-text-primary mb-2">Giỏ hàng trống</p>
-                <p className="text-sm text-text-secondary mb-8">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
-                <Link
-                    href="/products"
-                    className="inline-flex items-center gap-2 bg-primary-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-800 transition-all text-sm"
-                >
-                    <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                    Tiếp tục mua sắm
-                </Link>
-            </div>
-        );
-    }
-
-    const subtotal = cart.items.reduce(
-        (sum: number, item: CartItem) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
-        0,
-    );
-    const shippingFee = 0;
-
+    // Đặt hàng xong LUÔN hiển thị xác nhận — đặt TRƯỚC nhánh giỏ trống vì sau khi
+    // đặt hàng thành công, backend đã xoá giỏ → refetch trả rỗng. Nếu kiểm tra giỏ
+    // trống trước, màn hình xác nhận sẽ không bao giờ xuất hiện (race condition).
     if (completed) {
         return (
             <div className="bg-white p-12 rounded-3xl shadow-card border border-border text-center max-w-2xl mx-auto">
@@ -109,6 +86,32 @@ export default function CheckoutClient() {
             </div>
         );
     }
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+        return (
+            <div className="text-center py-16">
+                <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="material-symbols-outlined text-5xl text-primary-300"
+                        style={{ fontVariationSettings: "'FILL' 1" }}>shopping_cart</span>
+                </div>
+                <p className="font-display font-bold text-xl text-text-primary mb-2">Giỏ hàng trống</p>
+                <p className="text-sm text-text-secondary mb-8">Bạn chưa có sản phẩm nào trong giỏ hàng</p>
+                <Link
+                    href="/products"
+                    className="inline-flex items-center gap-2 bg-primary-700 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-800 transition-all text-sm"
+                >
+                    <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                    Tiếp tục mua sắm
+                </Link>
+            </div>
+        );
+    }
+
+    const subtotal = cart.items.reduce(
+        (sum: number, item: CartItem) => sum + Number(item.priceSnapshot ?? item.unitPrice ?? 0) * item.qty,
+        0,
+    );
+    const shippingFee = 0;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

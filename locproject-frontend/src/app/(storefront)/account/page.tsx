@@ -37,7 +37,8 @@ interface Province { code: number; name: string }
 interface District { code: number; name: string }
 interface Ward { code: number; name: string }
 
-const API = 'https://provinces.open-api.vn/api';
+// API provinces.open-api.vn đã chuyển sang /v1 — endpoint cũ trả 302 thiếu CORS header
+const API = 'https://provinces.open-api.vn/api/v1';
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(1, 'Mật khẩu hiện tại là bắt buộc'),

@@ -14,7 +14,9 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "base-uri 'self'",
-      `connect-src 'self' ${API_URL} http://localhost:4000`,
+      // provinces.open-api.vn: API địa chỉ VN dùng ở checkout + account (dropdown tỉnh/quận).
+      // Thiếu domain này trong connect-src → browser chặn fetch → dropdown tỉnh rỗng.
+      `connect-src 'self' ${API_URL} http://localhost:4000 https://provinces.open-api.vn`,
       "font-src 'self' https: data:",
       "form-action 'self'",
       "frame-ancestors 'none'",
