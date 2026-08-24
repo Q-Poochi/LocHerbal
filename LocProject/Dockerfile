@@ -25,6 +25,7 @@ COPY src ./src
 ENV DATABASE_URL="postgresql://ci:ci@localhost:5432/ci"
 RUN npx prisma generate
 
+ARG BUILD_DATE=2026-08-24T06:00:00Z
 RUN npm run build
 
 # ---------- Stage 2: production ----------
