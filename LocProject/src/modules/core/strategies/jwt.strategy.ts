@@ -11,11 +11,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_ACCESS_SECRET!,
     });
-    console.log('[JWT Strategy] Constructor called, prisma available:', !!prisma);
   }
 
   async validate(payload: any) {
-    console.log('[JWT Strategy] Validating payload:', { sub: payload.sub, jti: payload.jti });
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: {
@@ -24,8 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         customer: { select: { id: true } },
       },
     });
-
-    console.log('[JWT Strategy] User found:', user ? { id: user.id, roles: user.roles, customer: user.customer } : 'NOT FOUND');
 
     if (!user) {
       return { userId: payload.sub, jti: payload.jti, roles: payload.roles || [], permissions: [] };
@@ -41,8 +37,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       },
       select: { code: true },
     });
-
-    console.log('[JWT Strategy] Role names:', roleNames, '| Permissions found:', permissions.map(p => p.code));
 
     return {
       userId: user.id,

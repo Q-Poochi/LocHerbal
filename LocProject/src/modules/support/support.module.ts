@@ -7,8 +7,4 @@ import { SupportService } from './services/support.service';
   providers: [SupportService],
   exports: [SupportService],
 })
-export class SupportModule {
-  constructor() {
-    console.log('[SupportModule] Module loaded');
-  }
-}
+export class SupportModule {}

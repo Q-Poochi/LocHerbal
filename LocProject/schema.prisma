@@ -89,6 +89,13 @@ enum ShipmentStatus {
   RETURNED
 }
 
+enum TicketStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
 enum AttributeDataType {
   STRING
   NUMBER
@@ -120,6 +127,7 @@ model User {
   customer       Customer?
   agent          Agent?
   assignedLeads  ConsultationLead[] @relation("LeadAssignee")
+  assignedTickets SupportTicket[] @relation("TicketAssignee")
   blogPosts      BlogPost[]
   purchaseOrders PurchaseOrder[]
   sessions       UserSession[]
@@ -382,6 +390,7 @@ model Customer {
   leads        ConsultationLead[]
   reviews      ProductReview[]
   wishlist     Wishlist?
+  supportTickets SupportTicket[]
 
   @@map("customers")
 }
@@ -484,6 +493,7 @@ model Order {
   paymentTxns   PaymentTransaction[]
   shipment      Shipment?
   couponUsages  CouponUsage[]
+  supportTickets SupportTicket[]
 
   @@index([customerId])
   @@index([status])
@@ -916,4 +926,34 @@ model OtpCode {
 
   @@index([phone, purpose])
   @@map("otp_codes")
+}
+
+// ==========================================================================
+// MODULE: SUPPORT — Hỗ trợ khách hàng
+// ==========================================================================
+
+model SupportTicket {
+  id         String       @id @default(uuid())
+  fullName   String       @map("full_name")
+  phone      String
+  email      String?
+  subject    String
+  message    String
+  orderId    String?      @map("order_id")
+  customerId String?      @map("customer_id")
+  status     TicketStatus @default(NEW)
+  assignedTo String?      @map("assigned_to")
+  resolvedAt DateTime?    @map("resolved_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  order     Order?     @relation(fields: [orderId], references: [id])
+  customer  Customer?  @relation(fields: [customerId], references: [id])
+  assignee  User?      @relation("TicketAssignee", fields: [assignedTo], references: [id])
+
+  @@index([status])
+  @@index([phone])
+  @@index([customerId])
+  @@index([createdAt])
+  @@map("support_tickets")
 }

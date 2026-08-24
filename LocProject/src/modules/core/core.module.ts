@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { PrismaModule } from '../../shared/prisma/prisma.module';
 
 import { OtpService } from './services/otp.service';
 import { EmailService } from './services/email.service';
@@ -25,6 +26,7 @@ import { EmailService } from './services/email.service';
       })(),
       signOptions: { expiresIn: '15m' },
     }),
+    PrismaModule,
   ],
   providers: [
     AuthService,

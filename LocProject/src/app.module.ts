@@ -15,6 +15,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { ConsultationModule } from './modules/consultation/consultation.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { SupplierModule } from './modules/supplier/supplier.module';
+import { SupportModule } from './modules/support/support.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { AuditService } from './shared/services/audit.service';
 
@@ -38,6 +39,7 @@ import { AuditService } from './shared/services/audit.service';
     ConsultationModule,
     ShippingModule,
     SupplierModule,
+    SupportModule,
   ],
   controllers: [],
   providers: [
