@@ -37,7 +37,8 @@ test.describe('Product Catalog', () => {
     await expect(page.getByRole('button', { 
       name: /thêm vào giỏ/i 
     })).toBeVisible({ timeout: 10000 })
-    // Giá hiển thị: 450000 đ
-    await expect(page.getByText(/450\s*000/)).toBeVisible()
+    // Giá hiển thị dạng định dạng VN (vd: 450.000đ) — không hardcode số tiền
+    // vì giá sản phẩm có thể thay đổi theo dữ liệu seed
+    await expect(page.getByText(/\d{1,3}(\.\d{3})+\s*₫|\d{1,3}(\.\d{3})+\s*đ/).first()).toBeVisible()
   })
 })

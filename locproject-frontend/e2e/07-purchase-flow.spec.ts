@@ -42,10 +42,13 @@ test.describe('Purchase Flow (COD)', () => {
     await page.fill('[data-testid="checkout-phone"]', '0901234567')
     await page.fill('[data-testid="checkout-address"]', '123 Đường Láng, Đống Đa')
 
-    // Chọn Tỉnh/Thành phố - chờ API provinces load
+    // Chọn Tỉnh/Thành phố - chờ API provinces load (API bên ngoài, có thể chậm)
     const provinceSelect = page.getByText('Tỉnh / Thành phố *').locator('..').locator('select')
     await provinceSelect.waitFor({ timeout: 10000 })
-    await page.waitForTimeout(2500) // chờ provinces load từ API bên ngoài
+    // Chờ tới khi select có >= 1 tỉnh thật (poll thay vì sleep cứng — chống flake)
+    await expect
+      .poll(async () => provinceSelect.locator('option').count(), { timeout: 20000 })
+      .toBeGreaterThan(1)
     await provinceSelect.selectOption({ index: 1 }) // tỉnh đầu tiên
 
     // Chờ districts load rồi chọn quận đầu tiên

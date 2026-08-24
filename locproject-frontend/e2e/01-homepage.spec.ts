@@ -6,7 +6,7 @@ test.describe('Homepage', () => {
     
     // Hero section
     await expect(page.getByTestId('hero-title')).toBeVisible()
-    await expect(page.getByRole('link', { name: /khám phá sản phẩm/i }))
+    await expect(page.getByRole('link', { name: /khám phá sản phẩm/i }).first())
       .toBeVisible()
     
     // Trust badges / features
@@ -41,7 +41,8 @@ test.describe('Homepage', () => {
 
     // Desktop: "Danh mục" chỉ nằm trong mobile sidebar (ẩn) → điều hướng /products
     // qua mega-dropdown "Sản phẩm" (CSS group-hover) rồi bấm "Xem tất cả"
-    await page.getByRole('button', { name: /sản phẩm/i }).hover()
+    // ^Sản phẩm: chỉ khớp nút navbar, KHÔNG khớp các dot carousel "Đến sản phẩm nổi bật N"
+    await page.getByRole('button', { name: /^Sản phẩm/ }).hover()
     await page.getByRole('link', { name: /xem tất cả/i }).first().click()
     await expect(page).toHaveURL(/\/products/)
   })

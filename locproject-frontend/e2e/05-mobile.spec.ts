@@ -35,7 +35,8 @@ test.describe('Mobile Responsive', () => {
       await expect(page.getByTestId('nav-categories')).toBeVisible()
     } else {
       // Desktop: category hiển thị qua mega-dropdown "Sản phẩm"
-      await page.getByRole('button', { name: /sản phẩm/i }).hover()
+      // ^Sản phẩm: chỉ khớp nút navbar, tránh strict-violation với dot carousel
+      await page.getByRole('button', { name: /^Sản phẩm/ }).hover()
       await expect(page.getByRole('link', { name: /tim mạch/i }).first()).toBeVisible()
     }
   })
