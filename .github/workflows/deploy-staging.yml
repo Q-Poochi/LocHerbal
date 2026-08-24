@@ -27,12 +27,14 @@ jobs:
         working-directory: LocProject
         run: npm ci
 
-      - name: Generate Prisma Client
+      - name: Generate Prisma Client (after migration)
         working-directory: LocProject
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
-        run: npx prisma generate
+        run: |
+          npx prisma migrate deploy
+          npx prisma generate
 
       - name: Typecheck
         working-directory: LocProject
