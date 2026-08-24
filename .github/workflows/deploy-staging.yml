@@ -28,7 +28,7 @@ jobs:
         working-directory: LocProject
         run: npm ci
 
-- name: Generate Prisma Client
+      - name: Generate Prisma Client
         working-directory: LocProject
         env:
           DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
