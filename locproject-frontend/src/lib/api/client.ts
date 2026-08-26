@@ -133,3 +133,12 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Wishlist API
+export const wishlistApi = {
+  getItems: () => apiClient.get('/wishlist').then(res => res.data),
+  addItem: (productVariantId: string) => apiClient.post('/wishlist', { productVariantId }).then(res => res.data),
+  removeItem: (productVariantId: string) => apiClient.delete(`/wishlist/${productVariantId}`).then(res => res.data),
+};
+
+export default apiClient;

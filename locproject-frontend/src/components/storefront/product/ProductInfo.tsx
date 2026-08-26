@@ -1,6 +1,12 @@
+'use client';
+
 import { ProductDetail } from '../../../types/api.types';
 import { getVariantPricing, formatDiscountDeadline } from '../../../lib/utils/discount';
 import ProductDetailClient from './ProductDetailClient';
+import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/lib/store/auth.store';
+import { useRouter } from 'next/navigation';
+import { wishlistApi } from '@/lib/api/client';
 
 interface ProductInfoProps {
     product: ProductDetail;
@@ -11,6 +17,50 @@ function formatPrice(price: number): string {
 }
 
 export default function ProductInfo({ product }: ProductInfoProps) {
+    const router = useRouter();
+    const { user, hasHydrated } = useAuthStore();
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [wishlistLoading, setWishlistLoading] = useState(false);
+
+    const toggleWishlist = async () => {
+        if (!user || !hasHydrated) {
+            router.push('/login?redirect=/products/' + product.slug);
+            return;
+        }
+
+        const variantId = product.variants[0].id;
+
+        try {
+            setWishlistLoading(true);
+            const res = await fetch('/api/wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productVariantId: product.variants[0].id })
+            });
+
+            if (res.ok) {
+                setIsInWishlist(!isInWishlist);
+            }
+        } catch (err) {
+            console.error('Wishlist error:', err);
+        } finally {
+            setWishlistLoading(false);
+        }
+    };
+
+    // Check if product is in wishlist
+    useEffect(() => {
+        if (user && hasHydrated) {
+            fetch('/api/wishlist')
+                .then(r => r.ok ? r.json() : [])
+                .then(data => {
+                    const inWishlist = data.some((item: any) => item.variant.id === product.variants[0].id);
+                    setIsInWishlist(true);
+                })
+                .catch(() => setIsInWishlist(false));
+        }
+    }, [user, hasHydrated]);
+
     // Pre-compute first variant price for SSR render
     const firstVariant = product.variants[0];
     const pricing = getVariantPricing(firstVariant);
@@ -22,41 +72,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
     return (
         <div className="flex flex-col gap-6">
-            {/* Category + Title + Rating (static) */}
             <div>
-                <span className="inline-block px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full font-label-bold text-label-bold mb-3">
+                <span className="inline-block px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full font-label-bold text-label-bold mb-3">
                     {product.category.name}
                 </span>
-                <h1 data-testid="product-detail-name" className="font-headline-lg text-headline-lg text-primary font-bold mb-2">
+                <h1 data-testid="product-detail-name" className="font-headline-lg font-bold text-3xl text-primary text-headline-lg mb-2">
                     {product.name}
                 </h1>
-                {/* Rating/Đã bán — chỉ hiển thị khi có dữ liệu thật từ Review/OrderItem */}
-                {product.reviewCount != null && product.reviewCount > 0 && (
-                    <div className="flex items-center gap-4 text-body-sm">
-                        <div className="flex items-center gap-1 text-secondary">
-                            <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <span
-                                        key={star}
-                                        className={`material-symbols-outlined text-[18px] ${star <= Math.round(product.rating ?? 0) ? 'filled-icon' : ''}`}
-                                        style={star <= Math.round(product.rating ?? 0) ? { fontVariationSettings: "'FILL' 1" } : { color: '#d1d5db' }}
-                                    >
-                                        star
-                                    </span>
-                                ))}
-                            </div>
-                            <span className="font-bold">{product.rating}</span>
-                        </div>
-                        <span className="text-outline">|</span>
-                        <span className="text-outline">{product.reviewCount} đánh giá</span>
-                        {product.soldCount != null && product.soldCount > 0 && (
-                            <>
-                                <span className="text-outline">|</span>
-                                <span className="text-outline">Đã bán {product.soldCount}</span>
-                            </>
-                        )}
-                    </div>
-                )}
+                <p className="text-sm text-text-secondary mt-1 line-clamp-2">{product.description}</p>
             </div>
 
             {/* Price Box */}
@@ -109,7 +132,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 </div>
             </div>
 
-            {/* Share + Wishlist (static) */}
+            {/* Share + Wishlist */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <span className="text-body-sm text-outline">Chia sẻ:</span>
@@ -120,11 +143,19 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                         <button type="button" className="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
                             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg>
                         </button>
+                        <button type="button" className="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg>
+                        </button>
                     </div>
                 </div>
-                <button type="button" className="flex items-center gap-2 text-primary font-label-bold hover:underline">
+                <button
+                    type="button"
+                    className="flex items-center gap-2 text-primary font-label-bold hover:underline"
+                    onClick={toggleWishlist}
+                    disabled={wishlistLoading}
+                >
                     <span className="material-symbols-outlined text-[20px]">favorite</span>
-                    Lưu vào yêu thích
+                    {isInWishlist ? 'Da luu' : 'Luu vao yeu thich'}
                 </button>
             </div>
         </div>
