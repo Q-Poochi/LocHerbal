@@ -1,7 +1,5 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 
-// CSP connect-src phải cho phép API backend (cross-origin fetch).
-// Dùng env NEXT_PUBLIC_API_URL để tự cập nhật khi trỏ domain thật (api.locherbal.com).
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 const securityHeaders = [
@@ -14,8 +12,6 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       "base-uri 'self'",
-      // provinces.open-api.vn: API địa chỉ VN dùng ở checkout + account (dropdown tỉnh/quận).
-      // Thiếu domain này trong connect-src → browser chặn fetch → dropdown tỉnh rỗng.
       `connect-src 'self' ${API_URL} http://localhost:4000 https://provinces.open-api.vn`,
       "font-src 'self' https: data:",
       "form-action 'self'",
@@ -44,13 +40,15 @@ if (process.env.NODE_ENV === 'production') {
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
+    dangerouslyAllowLocalIP: true,
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },
       { protocol: 'https', hostname: '**' },
     ],
-    // Chỉ tắt optimization ở local dev (không có server image optimizer chạy cùng).
-    // Production (NODE_ENV=production) để Next tự tối ưu: WebP/AVIF + resize + preload.
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: true,
   },
   async headers() {
     return [

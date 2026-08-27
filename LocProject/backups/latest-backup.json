@@ -1,0 +1,9 @@
+﻿{
+    "status":  "SUCCESS",
+    "timestamp":  "20260826_220736",
+    "container":  "postgres-primary",
+    "createdAt":  "2026-08-26T22:07:42.0221335+07:00",
+    "sizeBytes":  1495693,
+    "database":  "ecommerce",
+    "file":  "backup_ecommerce_20260826_220736.sql.gz"
+}

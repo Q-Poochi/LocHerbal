@@ -1,3 +1,4 @@
+import { sanitizeInput } from '../../../shared/utils/sanitize.util';
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CreateTicketDto } from '../dto/create-ticket.dto';
@@ -35,11 +36,11 @@ export class SupportService {
 
     const ticket = await this.prisma.supportTicket.create({
       data: {
-        fullName: dto.fullName,
+        fullName: sanitizeInput(dto.fullName),
         phone: dto.phone,
         email: dto.email,
-        subject: dto.subject,
-        message: dto.message,
+        subject: sanitizeInput(dto.subject),
+        message: sanitizeInput(dto.message),
         orderId: dto.orderId,
         customerId,
         status: TicketStatus.NEW,

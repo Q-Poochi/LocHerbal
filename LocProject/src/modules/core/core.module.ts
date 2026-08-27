@@ -1,3 +1,4 @@
+import { PermissionsGuard } from './guards/permissions.guard';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -28,7 +29,7 @@ import { EmailService } from './services/email.service';
     }),
     PrismaModule,
   ],
-  providers: [
+  providers: [PermissionsGuard, 
     AuthService,
     OtpService,
     EmailService,
@@ -44,6 +45,6 @@ import { EmailService } from './services/email.service';
     },
   ],
   controllers: [AuthController, HealthController],
-  exports: [AuthService],
+  exports: [PermissionsGuard, AuthService, EmailService],
 })
 export class CoreModule {}

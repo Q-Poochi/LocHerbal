@@ -15,9 +15,11 @@ import { AdminCustomerController } from './controllers/admin-customer.controller
 import { AddressController } from './controllers/address.controller';
 import { WishlistController } from './controllers/wishlist.controller';
 import { InventoryAllocationFailedListener } from './listeners/inventory-allocation-failed.listener';
+import { OrderConfirmationEmailListener } from './listeners/order-confirmation-email.listener';
+import { CoreModule } from '../core/core.module';
 
 @Module({
-  imports: [MarketingModule],
+  imports: [MarketingModule, CoreModule],
   providers: [
     CartService,
     OrderService,
@@ -26,6 +28,7 @@ import { InventoryAllocationFailedListener } from './listeners/inventory-allocat
     WishlistService,
     AdminCustomerService,
     InventoryAllocationFailedListener,
+    OrderConfirmationEmailListener,
   ],
   controllers: [PaymentController, CartController, OrderController, AdminOrderController, CustomerController, AdminCustomerController, AddressController, WishlistController],
   exports: [CartService, OrderService, VNPayService],

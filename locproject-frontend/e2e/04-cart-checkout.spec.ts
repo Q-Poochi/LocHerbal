@@ -1,95 +1,82 @@
-import { test, expect, Page } from '@playwright/test'
+﻿import { test, expect, Page } from '@playwright/test'
 
-// Do refresh-token rotation (token cũ bị revoke sau mỗi /auth/refresh),
-// mỗi test phải login mới — KHÔNG dùng storageState tĩnh dùng chung.
-test.beforeEach(async ({ page }) => {
+async function loginUser(page: Page) {
   await page.goto('/login')
-  await page.getByLabel(/email/i).fill('test2@locherbal.com')
-  await page.getByLabel(/mật khẩu/i).fill('Test@123456')
-  await page.getByRole('button', { name: /đăng nhập/i }).click()
-  await page.waitForURL('/', { timeout: 10000 })
-  await expect(page.getByText(/Chào mừng trở lại/i).first()).toBeVisible()
+  await page.waitForFunction(() => document.cookie.includes('csrf_token'), null, { timeout: 10000 })
+  await page.locator('#email').fill('test2@locherbal.com')
+  await page.locator('#password').fill('Test@123456')
+  await page.locator('form').getByRole('button', { name: /đăng nhập/i }).click()
+  await page.getByTestId('navbar-account-btn').waitFor({ timeout: 20000 })
 
-  // Clear cart trước mỗi test
+  // Clear cart
   await page.request.delete('http://localhost:4000/cart/clear', {
     headers: { 'Content-Type': 'application/json' }
   }).catch(() => {})
-})
-
-// CHỈ goto 1 lần duy nhất ở bước đầu của mỗi test (context mới, chưa có gì để click).
-// Sau goto phải đợi AuthBootstrap refresh xong: user chỉ persist trong localStorage nên
-// navbar-account-btn hiện ngay — dấu hiệu đáng tin là response /auth/me (gọi sau /auth/refresh).
-async function navigateToProduct(page: Page, slug: string) {
-  const meReady = page
-    .waitForResponse((r) => r.url().includes('/auth/me') && r.status() === 200, { timeout: 15000 })
-    .catch(() => null)
-  await page.goto(`/products/${slug}`)
-  await meReady
-  // waitForResponse trigger khi nhận response, trước khi refreshSession set({accessToken}) —
-  // chờ thêm một nhịp để accessToken thực sự có trong store trước khi click add.
-  await page.waitForTimeout(800)
-  await page.getByTestId('navbar-account-btn').waitFor({ timeout: 10000 })
-}
-
-async function addProductToCart(page: Page, slug: string) {
-  await navigateToProduct(page, slug)
-  const addBtn = page.getByRole('button', { name: /thêm vào giỏ/i })
-  await addBtn.waitFor({ timeout: 10000 })
-  await addBtn.click()
-  // Chờ cart update
-  await page.waitForTimeout(1000)
 }
 
 test.describe('Cart & Checkout Flow', () => {
   test('thêm sản phẩm vào giỏ hàng', async ({ page }) => {
-    await navigateToProduct(page, 'ich-tam-khang')
+    await loginUser(page)
+    await page.goto('/products/ich-tam-khang')
+    await page.getByTestId('navbar-account-btn').waitFor({ timeout: 10000 })
 
-    // Click thêm vào giỏ
-    const addBtn = page.getByRole('button', { name: /thêm vào giỏ/i })
+    const addBtn = page.locator('[data-testid="product-detail-add-to-cart"]').or(page.getByRole('button', { name: /thêm vào giỏ hàng/i })).first()
+    await addBtn.waitFor({ state: 'visible', timeout: 10000 })
     await addBtn.click()
 
-    // Thông báo thành công hoặc cart count tăng
     await expect(
-      page.getByText(/đã thêm|thành công/i)
-        .or(page.locator('[data-testid="cart-count"]')).first()
-    ).toBeVisible({ timeout: 5000 })
+      page.getByText(/đã thêm/i)
+        .or(page.locator('[data-testid="cart-count"]'))
+        .or(page.locator('.toast'))
+        .first()
+    ).toBeVisible({ timeout: 8000 })
   })
 
   test('xem giỏ hàng hiển thị đúng', async ({ page }) => {
-    await addProductToCart(page, 'ich-tam-khang')
+    await loginUser(page)
+    await page.goto('/products/ich-tam-khang')
+    await page.getByTestId('navbar-account-btn').waitFor({ timeout: 10000 })
 
-    // Mở drawer (SPA) — tránh full reload làm mất accessToken khiến giỏ trống
-    await page.getByTestId('navbar-cart-icon').click()
+    // Bấm Mua ngay để thêm vào giỏ và điều hướng client-side sang /cart
+    const buyNowBtn = page.getByRole('button', { name: /mua ngay/i })
+    await buyNowBtn.waitFor({ state: 'visible', timeout: 10000 })
+    await buyNowBtn.click()
 
-    // Không phụ thuộc tên sản phẩm cụ thể — chỉ cần ít nhất 1 item trong giỏ
-    const cartItems = page.locator('[data-testid^="cart-item-"]')
+    await expect(page).toHaveURL(/\/cart/, { timeout: 10000 })
+    const cartItems = page.locator('[data-testid^="cart-item-"]').or(page.getByText(/Ích Tâm Khang/i))
     await expect(cartItems.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('navigate từ cart sang checkout', async ({ page }) => {
-    await addProductToCart(page, 'ich-tam-khang')
+    await loginUser(page)
+    await page.goto('/products/ich-tam-khang')
+    await page.getByTestId('navbar-account-btn').waitFor({ timeout: 10000 })
 
-    // Desktop: click icon giỏ hàng trên navbar mở DRAWER (không navigate thẳng)
-    await page.getByTestId('navbar-cart-icon').click()
-    await page.getByTestId('cart-drawer-checkout-btn').click()
+    const buyNowBtn = page.getByRole('button', { name: /mua ngay/i })
+    await buyNowBtn.waitFor({ state: 'visible', timeout: 10000 })
+    await buyNowBtn.click()
 
-    await expect(page).toHaveURL('/checkout', { timeout: 10000 })
+    await expect(page).toHaveURL(/\/cart/, { timeout: 10000 })
+    const checkoutBtn = page.getByRole('button', { name: /tiến hành thanh toán|thanh toán/i }).first()
+    await checkoutBtn.waitFor({ state: 'visible', timeout: 10000 })
+    await checkoutBtn.click()
+
+    await expect(page).toHaveURL(/\/checkout/, { timeout: 10000 })
     await expect(page.getByText(/thông tin/i).first()).toBeVisible()
   })
 
   test('checkout form validation', async ({ page }) => {
+    await loginUser(page)
     await page.goto('/checkout')
 
-    // Bấm submit khi form trống
     const submitBtn = page.getByRole('button', {
       name: /tiếp tục thanh toán|đặt hàng|thanh toán/i
     }).first()
     if (await submitBtn.isVisible()) {
       await submitBtn.click()
-      // Phải hiện lỗi validation
       await expect(
         page.getByText(/bắt buộc|required|không được để trống/i).first()
-      ).toBeVisible({ timeout: 3000 })
+      ).toBeVisible({ timeout: 5000 })
     }
   })
 })

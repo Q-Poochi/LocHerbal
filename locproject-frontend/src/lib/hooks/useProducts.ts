@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '../api/client';
+import { apiClient, refreshAccessToken } from '../api/client';
 import { ProductDetail, CartItem, Product, Category } from '../../types/api.types';
 import { useAuthStore } from '../store/auth.store';
 import { getSessionId } from '../session';
@@ -88,11 +88,16 @@ export function useAddToCart() {
     const toast = useToast();
     return useMutation({
         mutationFn: async ({ productVariantId, qty }: { productVariantId: string; qty: number }) => {
-            const { accessToken } = useAuthStore.getState();
-            if (!accessToken) {
-                toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
-                router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
-                throw new AuthRequiredError();
+            let token = useAuthStore.getState().accessToken;
+            if (!token) {
+                try {
+                    const res = await refreshAccessToken();
+                    token = res.accessToken;
+                } catch {
+                    toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+                    router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+                    throw new AuthRequiredError();
+                }
             }
             const { data } = await apiClient.post('/cart/items', { productVariantId, qty }, {
                 params: guestParams(),

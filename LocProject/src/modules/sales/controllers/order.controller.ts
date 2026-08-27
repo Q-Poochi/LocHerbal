@@ -19,6 +19,7 @@ import { OrderService } from '../services/order.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { CancelOrderDto } from '../dto/order.dto';
 import { PaginationDto } from '../../../shared/dto/pagination.dto';
+import { OrderStatus } from '@prisma/client';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -44,10 +45,15 @@ export class OrderController {
     }
 
     /**
-     * Danh sách đơn hàng của customer hiện tại (có phân trang).
+     * Danh sách đơn hàng của customer hiện tại (có phân trang + lọc trạng thái).
+     * status không hợp lệ sẽ bị bỏ qua âm thầm (trả tất cả) — tránh 500 do query lạ.
      */
     @Get()
-    async listOrders(@Query() pagination: PaginationDto, @Req() req: Request) {
+    async listOrders(
+        @Query() pagination: PaginationDto,
+        @Query('status') status?: string,
+        @Req() req?: Request,
+    ) {
         const customerId = await this.getCustomerId(req);
         if (!customerId) {
             throw new NotFoundException('Không tìm thấy thông tin khách hàng');
@@ -55,9 +61,15 @@ export class OrderController {
         const page = pagination?.page || 1;
         const limit = pagination?.limit || 20;
 
+        const VALID_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'];
+        const where: { customerId: string; status?: OrderStatus } = { customerId };
+        if (status && (VALID_STATUSES as readonly string[]).includes(status)) {
+            where.status = status as OrderStatus;
+        }
+
         const [data, total] = await Promise.all([
             this.prisma.order.findMany({
-                where: { customerId },
+                where,
                 skip: (page - 1) * limit,
                 take: limit,
                 include: {
@@ -77,7 +89,7 @@ export class OrderController {
                 },
                 orderBy: { createdAt: 'desc' },
             }),
-            this.prisma.order.count({ where: { customerId } }),
+            this.prisma.order.count({ where }),
         ]);
 
         return { data, total, page, limit, totalPages: Math.ceil(total / limit) };

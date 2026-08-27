@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { PrismaModule } from '../../shared/prisma/prisma.module';
 import { BannerService } from './services/banner.service';
 import { BannerController } from './controllers/banner.controller';
@@ -11,9 +12,33 @@ import { PublicMarketingController } from './controllers/public-marketing.contro
 import { PageBlockService } from './services/page-block.service';
 import { PageBlockController } from './controllers/page-block.controller';
 import { AdminPageBlockController } from './controllers/admin-page-block.controller';
+import KeyvRedis from '@keyv/redis';
+import Keyv from 'keyv';
+
+function buildStore(): Keyv {
+  const redisUrl = process.env.REDIS_URL;
+  const redisHost = process.env.REDIS_HOST;
+  if (redisUrl || redisHost) {
+    return new Keyv(redisUrl
+      ? new KeyvRedis(redisUrl)
+      : new KeyvRedis({
+          socket: {
+            host: redisHost,
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        }));
+  }
+  return new Keyv();
+}
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    CacheModule.register({
+      stores: [buildStore()],
+      ttl: 3_600_000,
+    }),
+  ],
   controllers: [BannerController, HeroBannerController, AdminHeroBannerController, PublicBannersController, CouponController, BlogPostController, PublicMarketingController, PageBlockController, AdminPageBlockController],
   providers: [BannerService, CouponService, BlogPostService, PageBlockService],
   exports: [BannerService, CouponService, BlogPostService, PageBlockService],

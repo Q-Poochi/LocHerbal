@@ -1,3 +1,4 @@
+import { SkipThrottle } from '@nestjs/throttler';
 import { Controller, Get, Post, Body, Param, Put, Delete, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductService } from '../services/product.service';
@@ -25,6 +26,7 @@ export class ProductController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get()
   @ApiOperation({ summary: 'Danh sách sản phẩm (có phân trang, lọc)' })
   @ApiResponse({ status: 200, description: 'Danh sách sản phẩm phân trang', schema: { example: { data: [{ id: 'product-uuid', name: 'Cỏ Thoái Vương', slug: 'cot-thoai-vuong', price: 290000, salePrice: 250000, imageUrl: 'http://localhost:4000/uploads/products/xxx.png', categoryId: 'cat-uuid' }], total: 12, page: 1, limit: 12, totalPages: 1 } } })
@@ -49,12 +51,14 @@ export class ProductController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.productService.findBySlug(slug);
   }
 
   @Public()
+  @SkipThrottle()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productService.findOne(id);

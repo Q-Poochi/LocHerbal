@@ -1,0 +1,1 @@
+{"statusCode":400,"message":"Expected property name or '}' in JSON at position 1 (line 1 column 2)","error":"BadRequestException","timestamp":"2026-08-24T11:41:04.802Z","path":"/support/tickets"}

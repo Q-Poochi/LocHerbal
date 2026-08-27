@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+﻿import { test, expect } from '@playwright/test'
 
 // Do refresh-token rotation, mỗi test phải login mới (không dùng storageState tĩnh dùng chung)
 test.beforeEach(async ({ page }) => {
@@ -45,16 +45,19 @@ test.describe('Admin Panel', () => {
     await page.goto('/admin/orders')
     await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
 
+    // Lấy mã đơn hàng thực tế từ dòng đầu tiên để test search dynamic
+    const firstRow = page.locator('tbody tr').first()
+    const orderCodeMatch = (await firstRow.innerText()).match(/ORD-[A-Z0-9]+/)
+    const searchTerm = orderCodeMatch ? orderCodeMatch[0] : 'ORD'
+
     const searchInput = page.getByPlaceholder(/tìm mã đơn, tên kh/i)
-    await searchInput.fill('Khách Test')
+    await searchInput.fill(searchTerm)
     await searchInput.press('Enter')
 
-    // Kết quả lọc chỉ còn khách tên "Khách Test"
+    // Chờ kết quả lọc cập nhật
     await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText('Khách Test').first()).toBeVisible()
-
-    const firstRowText = await page.locator('tbody tr').first().innerText()
-    expect(firstRowText).toContain('Khách Test')
+    const filteredText = await page.locator('tbody tr').first().innerText()
+    expect(filteredText).toContain(searchTerm)
   })
 
   test('lọc đơn hàng theo khoảng ngày', async ({ page }) => {

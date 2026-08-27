@@ -113,4 +113,64 @@ export class EmailService {
 
     await this.provider.sendEmail(to, 'Đặt lại mật khẩu LocHerbal', html);
   }
+
+  /**
+   * Email xác nhận đã tiếp nhận đơn hàng — gửi NGAY sau khi checkout thành công
+   * (cả COD lẫn VNPay). Lời hứa này hiển thị trên màn hình xác nhận đơn hàng,
+   * nên bắt buộc phải có email tương ứng.
+   */
+  async sendOrderConfirmationEmail(
+      to: string,
+      fullName: string,
+      data: {
+          orderCode: string;
+          orderId: string;
+          items: { name: string; qty: number; subtotal: number }[];
+          totalAmount: number;
+      },
+  ): Promise<void> {
+      const detailUrl = `${this.frontendUrl}/orders/${data.orderId}`;
+      const rows = data.items
+          .map(
+              (it) => `
+            <tr>
+              <td style="padding: 8px 0; border-bottom: 1px solid #e9efe9;">${it.name}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #e9efe9; text-align: center;">x${it.qty}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #e9efe9; text-align: right;">${it.subtotal.toLocaleString('vi-VN')}đ</td>
+            </tr>`,
+          )
+          .join('');
+
+      const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1b4332;">
+        <h2 style="margin: 0 0 12px;">Cảm ơn bạn đã đặt hàng!</h2>
+        <p>Xin chào ${fullName},</p>
+        <p>
+          Đơn hàng <strong>#${data.orderCode}</strong> của bạn đã được tiếp nhận và đang chờ xác nhận.
+          Chi tiết như sau:
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <thead>
+            <tr>
+              <th style="text-align: left; padding: 8px 0; border-bottom: 2px solid #1b4332;">Sản phẩm</th>
+              <th style="padding: 8px 0; border-bottom: 2px solid #1b4332;">SL</th>
+              <th style="text-align: right; padding: 8px 0; border-bottom: 2px solid #1b4332;">Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="text-align: right; font-size: 16px; margin: 16px 0;">
+          <strong>Tổng cộng: ${data.totalAmount.toLocaleString('vi-VN')}đ</strong>
+        </p>
+        <p style="text-align: center; margin: 24px 0;">
+          <a href="${detailUrl}" style="display: inline-block; padding: 12px 28px; background: #1b4332; color: #ffffff; text-decoration: none; border-radius: 8px;">Xem chi tiết đơn hàng</a>
+        </p>
+        <p style="font-size: 12px; color: #6b7c73;">
+          Nếu nút trên không hoạt động, sao chép link: ${detailUrl}
+        </p>
+      </div>
+    `;
+
+      await this.provider.sendEmail(to, `Xác nhận đơn hàng #${data.orderCode} — LocHerbal`, html);
+  }
 }

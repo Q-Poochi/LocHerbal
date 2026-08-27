@@ -1,3 +1,4 @@
+import { SkipThrottle } from '@nestjs/throttler';
 import { Controller, Get, Post, Body, Param, Put, Delete, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoryService } from '../services/category.service';
@@ -23,6 +24,7 @@ export class CategoryController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get()
   @ApiOperation({ summary: 'Danh sách danh mục (có phân trang)' })
   findAll(@Query() pagination?: PaginationDto) {
@@ -30,6 +32,7 @@ export class CategoryController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get(':id')
   @ApiOperation({ summary: 'Chi tiết danh mục theo id' })
   findOne(@Param('id') id: string) {

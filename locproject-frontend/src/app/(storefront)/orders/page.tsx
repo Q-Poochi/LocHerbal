@@ -32,14 +32,39 @@ const paymentConfig: Record<string, { label: string; color: string }> = {
     REFUNDED: { label: 'Đã hoàn tiền',    color: 'bg-blue-100 text-blue-700'     },
 };
 
+// Filter pills — giá trị '' = tất cả
+const STATUS_FILTERS: { value: string; label: string }[] = [
+    { value: '',           label: 'Tất cả'        },
+    { value: 'PENDING',    label: 'Chờ xác nhận'  },
+    { value: 'CONFIRMED',  label: 'Đã xác nhận'   },
+    { value: 'PROCESSING', label: 'Đang xử lý'    },
+    { value: 'SHIPPED',    label: 'Đang giao'     },
+    { value: 'DELIVERED',  label: 'Đã giao'       },
+    { value: 'CANCELLED',  label: 'Đã hủy'        },
+];
+
 export default function OrdersListPage() {
     const router = useRouter();
     const { user, hasHydrated } = useAuthStore();
+    // Đọc filter từ URL 1 lần khi mount (không dùng useSearchParams để tránh bắt buộc Suspense)
+    const [statusFilter, setStatusFilter] = useState<string>(() => {
+        if (typeof window === 'undefined') return '';
+        return new URLSearchParams(window.location.search).get('status') ?? '';
+    });
     const [orders, setOrders] = useState<OrderListItem[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
+
+    const applyFilter = (value: string) => {
+        setStatusFilter(value);
+        setPage(1);
+        const url = new URL(window.location.href);
+        if (value) url.searchParams.set('status', value);
+        else url.searchParams.delete('status');
+        window.history.replaceState({}, '', url);
+    };
 
     useEffect(() => {
         if (hasHydrated && !user) {
@@ -50,7 +75,7 @@ export default function OrdersListPage() {
 
         setLoading(true);
         apiClient
-            .get('/orders', { params: { page, limit: 10 } })
+            .get('/orders', { params: { page, limit: 10, status: statusFilter || undefined } })
             .then(({ data }) => {
                 setOrders(data.data || []);
                 setTotalPages(data.totalPages || 1);
@@ -58,7 +83,7 @@ export default function OrdersListPage() {
             })
             .catch(() => setLoadError(true))
             .finally(() => setLoading(false));
-    }, [user, hasHydrated, page, router]);
+    }, [user, hasHydrated, page, statusFilter, router]);
 
     const formatCurrency = (v: number) => Number(v).toLocaleString('vi-VN') + 'đ';
     const formatDate = (d: string) =>
@@ -104,22 +129,72 @@ export default function OrdersListPage() {
 
     /* ─── Rỗng ─── */
     if (orders.length === 0) {
+        const isFiltered = !!statusFilter;
         return (
-            <div className="min-h-screen bg-surface-bg flex items-center justify-center px-4">
-                <div className="text-center max-w-md">
-                    <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                        <span className="material-symbols-outlined text-primary-300 text-4xl"
-                            style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
+            <div className="min-h-screen bg-surface-bg">
+                <div className="max-w-[1000px] mx-auto px-4 md:px-10 py-8">
+                    <nav className="flex items-center gap-2 text-sm text-text-secondary mb-6">
+                        <Link href="/account" className="hover:text-primary-700 transition-colors flex items-center gap-1">
+                            <span className="material-symbols-outlined text-base">person</span>
+                            Tài khoản
+                        </Link>
+                        <span className="material-symbols-outlined text-base text-text-tertiary">chevron_right</span>
+                        <span className="text-text-primary font-medium">Đơn hàng của tôi</span>
+                    </nav>
+
+                    {/* Filter pills — giữ hiển thị cả khi rỗng để user đổi filter */}
+                    <div className="flex flex-wrap gap-2 mb-8" data-testid="order-status-filters">
+                        {STATUS_FILTERS.map((f) => {
+                            const active = statusFilter === f.value;
+                            return (
+                                <button
+                                    key={f.value || 'all'}
+                                    onClick={() => applyFilter(f.value)}
+                                    data-testid={`filter-${f.value || 'all'}`}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                        active
+                                            ? 'bg-primary-700 text-white'
+                                            : 'bg-white border border-border text-text-secondary hover:border-primary-300 hover:text-primary-700'
+                                    }`}
+                                >
+                                    {f.label}
+                                </button>
+                            );
+                        })}
                     </div>
-                    <p className="font-display font-bold text-xl text-text-primary mb-2">Bạn chưa có đơn hàng nào</p>
-                    <p className="text-sm text-text-secondary mb-6">Khám phá các sản phẩm thảo dược của LocHerbal nhé!</p>
-                    <Link
-                        href="/products"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-700 text-white font-semibold text-sm hover:bg-primary-800"
-                    >
-                        <span className="material-symbols-outlined text-lg">storefront</span>
-                        Mua sắm ngay
-                    </Link>
+
+                    <div className="text-center py-16">
+                        <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                            <span className="material-symbols-outlined text-primary-300 text-4xl"
+                                style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
+                        </div>
+                        {isFiltered ? (
+                            <>
+                                <p className="font-display font-bold text-xl text-text-primary mb-2">
+                                    Không có đơn hàng ở trạng thái này
+                                </p>
+                                <button
+                                    onClick={() => applyFilter('')}
+                                    data-testid="filter-show-all"
+                                    className="mt-2 inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-primary-700 text-primary-700 font-semibold text-sm hover:bg-primary-50"
+                                >
+                                    Xem tất cả đơn hàng
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="font-display font-bold text-xl text-text-primary mb-2">Bạn chưa có đơn hàng nào</p>
+                                <p className="text-sm text-text-secondary mb-6">Khám phá các sản phẩm thảo dược của LocHerbal nhé!</p>
+                                <Link
+                                    href="/products"
+                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-700 text-white font-semibold text-sm hover:bg-primary-800"
+                                >
+                                    <span className="material-symbols-outlined text-lg">storefront</span>
+                                    Mua sắm ngay
+                                </Link>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -141,10 +216,31 @@ export default function OrdersListPage() {
                 </nav>
 
                 {/* Header */}
-                <h1 className="font-display font-bold text-2xl md:text-3xl text-text-primary mb-8 flex items-center gap-3">
+                <h1 className="font-display font-bold text-2xl md:text-3xl text-text-primary mb-6 flex items-center gap-3">
                     <span className="material-symbols-outlined text-primary-700 text-3xl">receipt_long</span>
                     Đơn hàng của tôi
                 </h1>
+
+                {/* Filter theo trạng thái */}
+                <div className="flex flex-wrap gap-2 mb-8" data-testid="order-status-filters">
+                    {STATUS_FILTERS.map((f) => {
+                        const active = statusFilter === f.value;
+                        return (
+                            <button
+                                key={f.value || 'all'}
+                                onClick={() => applyFilter(f.value)}
+                                data-testid={`filter-${f.value || 'all'}`}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                    active
+                                        ? 'bg-primary-700 text-white'
+                                        : 'bg-white border border-border text-text-secondary hover:border-primary-300 hover:text-primary-700'
+                                }`}
+                            >
+                                {f.label}
+                            </button>
+                        );
+                    })}
+                </div>
 
                 {/* Danh sách */}
                 <div className="space-y-4">
