@@ -447,9 +447,11 @@ export default function Navbar() {
             </div>
 
             {[
-              { label: 'Tư vấn', href: '/lien-he' },
-              { label: 'Ưu đãi', href: '/products' },
+              { label: 'Chuyên khoa', href: '/products' },
+              { label: 'Ưu đãi', href: '/uu-dai' },
               { label: 'Về chúng tôi', href: '/ve-chung-toi' },
+              { label: 'Blog', href: '/#blog' },
+              { label: 'Tư vấn', href: '/tu-van' },
             ].map(item => (
               <Link
                 key={item.label}
@@ -557,7 +559,7 @@ export default function Navbar() {
             ) : (
               <button
                 type="button"
-                onClick={openAuthDrawer}
+                onClick={() => openAuthDrawer()}
                 className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary-700 text-white
                            text-sm font-medium hover:bg-primary-800 transition-all duration-150 shadow-sm hover:shadow"
               >
@@ -626,7 +628,10 @@ export default function Navbar() {
             { href: '/products?categoryId=an-than-ngu-ngon', label: 'An Thần', icon: 'bedtime', sub: true },
             { href: '/cart', label: 'Giỏ hàng', icon: 'shopping_cart' },
             { href: '/account', label: 'Tài khoản', icon: 'person' },
+            { href: '/uu-dai', label: 'Ưu đãi', icon: 'sell' },
+            { href: '/tu-van', label: 'Tư vấn', icon: 'handshake' },
             { href: '/ve-chung-toi', label: 'Về chúng tôi', icon: 'info' },
+            { href: '/#blog', label: 'Blog', icon: 'article' },
           ].map(({ href, label, icon, testId, sub }) => (
             <Link
               key={href + label}

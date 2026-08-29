@@ -13,7 +13,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#166b42] text-white mt-16 border-t border-primary-800">
+    <footer className="bg-[#1b4332] text-white mt-16 border-t border-[#012d1d]">
       {/* Main footer content */}
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
@@ -121,7 +121,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10 bg-[#0f5432]">
+      <div className="border-t border-white/10 bg-[#012d1d]">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-white/70 text-xs md:text-sm">
             © {new Date().getFullYear()} {companyName}. Bảo lưu mọi quyền.

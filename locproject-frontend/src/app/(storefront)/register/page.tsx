@@ -92,7 +92,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Register Card Container */}
-            <main className="w-full max-w-[420px] bg-surface-white rounded-lg shadow-[0_4px_20px_rgba(27,67,50,0.05)] overflow-hidden relative z-10">
+            <main className="w-full max-w-[420px] bg-surface-white rounded-2xl shadow-botanical overflow-hidden relative z-10 border border-outline-variant/40">
                 <div className="p-8 md:p-10 flex flex-col items-center">
                     {/* Logo Section */}
                     <div className="flex items-center gap-2 mb-stack-lg">
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                                 <p className="font-body-sm text-body-sm text-on-surface-variant text-center">{resendMessage}</p>
                             )}
                             <button
-                                className="w-full bg-primary text-on-primary font-label-bold text-label-bold py-4 rounded-lg hover:bg-primary-container active:scale-[0.98] transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-[0.1em] py-4 rounded-full hover:bg-primary-container active:scale-[0.98] transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                                 type="button"
                                 disabled={isResending}
                                 onClick={handleResend}
@@ -251,7 +251,7 @@ export default function RegisterPage() {
 
                         {/* Primary Button */}
                         <button
-                            className="w-full mt-4 bg-primary text-on-primary font-label-bold text-label-bold py-4 rounded-lg hover:bg-primary-container active:scale-[0.98] transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full mt-4 bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-[0.1em] py-4 rounded-full hover:bg-primary-container active:scale-[0.98] transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                             type="submit"
                             disabled={isLoading}
                         >

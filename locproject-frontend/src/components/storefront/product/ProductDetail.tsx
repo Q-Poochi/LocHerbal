@@ -29,7 +29,7 @@ export default async function ProductDetail({ slug }: { slug: string }) {
 
     if (!product) {
         return (
-            <main className="max-w-container-max mx-auto w-full min-w-0 px-margin-mobile md:px-margin-desktop py-8">
+            <main className="max-w-[1280px] mx-auto w-full min-w-0 px-margin-mobile md:px-[64px] py-8">
                 <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
                     <span className="material-symbols-outlined text-[48px] text-error mb-4">error</span>
                     <h1 className="font-headline-md text-headline-md text-primary mb-2">Không tìm thấy sản phẩm</h1>
@@ -40,9 +40,9 @@ export default async function ProductDetail({ slug }: { slug: string }) {
     }
 
     return (
-        <main className="max-w-[1200px] mx-auto px-4 md:px-8 py-8">
+        <main className="max-w-[1280px] mx-auto px-margin-mobile md:px-[64px] py-8 bg-background">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 mb-6 text-outline font-label-bold text-label-bold">
+            <nav className="flex items-center gap-2 mb-6 text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
                 <Link href="/" className="hover:text-primary transition-colors">
                     Trang chủ
                 </Link>
@@ -51,7 +51,7 @@ export default async function ProductDetail({ slug }: { slug: string }) {
                     Sản phẩm
                 </Link>
                 <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span className="text-on-surface">{product.category.name}</span>
+                <span className="text-primary">{product.category.name}</span>
             </nav>
 
             {/* Product Hero Section */}

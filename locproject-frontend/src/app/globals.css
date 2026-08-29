@@ -1,8 +1,36 @@
 @import "tailwindcss";
 
+/* ═══ MATERIAL SYMBOLS — TỰ HOST (Bug 3&4 gốc rễ) ═══
+   Trước đây load từ CDN Google Fonts lúc runtime → khi network không tải
+   được, mọi <span class="material-symbols-outlined">eco</span> hiển thị
+   chữ thô ("eco", "forest", "ace_p"...). Self-host woff2 + font-display:
+   block loại bỏ hoàn toàn hiện tượng này. */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 100 700;
+  src: url('/fonts/material-symbols-outlined.woff2') format('woff2-variations');
+  font-display: block;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
+
 :root {
-  --background: #fafaf8;
-  --foreground: #1a1a17;
+  --background: #f9faf6; /* Botanical Apothecary — warm cream */
+  --foreground: #1a1c1a;
 }
 
 @theme inline {
@@ -19,15 +47,19 @@
   --color-primary-700: #166b42;  /* Dark — buttons, headers */
   --color-primary-800: #145535;
   --color-primary-900: #11452b;  /* Darkest */
-  --color-primary:     #1a8a54;
+  --color-primary:     #012d1d;
 
-  /* Secondary — Vàng đất ấm áp (trust, traditional medicine) */
+  /* ═══ BOTANICAL APOTHECARY — phong cách luxury premium (redesign 2026) ═══ */
+  --color-primary-container:  #1b4332;   /* Forest Green — nút CTA, tiêu đề đậm */
+  --color-secondary:          #745a34;   /* Leather Brown */
+  --color-secondary-container: #fedaaa;  /* Sand/Gold container */
+  --color-tertiary:           #8b6f47;   /* Leather Brown (accent tags) */
   --color-accent-gold: #c8973a;
   --color-accent-gold-light: #f0d99a;
   --color-accent-gold-pale: #fdf6e3;
 
   /* Neutral — Warm whites (không lạnh như #fff thuần) */
-  --color-background:  #fafaf8;  /* Page background — ấm, không chói */
+  --color-background:  #f9faf6;  /* Page background — warm cream */
   --color-surface:     #ffffff;
   --color-surface-alt: #f4f4f0;  /* Card backgrounds */
   --color-border:      #e8e8e2;  /* Subtle borders */
@@ -49,38 +81,42 @@
 
   /* Primary container */
   --color-on-primary: #ffffff;
-  --color-primary-container: #166b42;       /* nút CTA chính, sidebar admin, viền focus */
-  --color-on-primary-container: #ffffff;
-  --color-primary-fixed: #dcf5e6;
-  --color-on-primary-fixed: #145535;
+  --color-primary-container: #1b4332;       /* Forest Green — nút CTA, tiêu đề đậm, sidebar admin */
+  --color-on-primary-container: #86af99;
+  --color-primary-fixed: #c1ecd4;
+  --color-on-primary-fixed: #002114;
   --color-on-primary-fixed-variant: #ffffff;
 
-  /* Secondary — vàng đất */
-  --color-secondary: #c8973a;
+  /* Secondary — Leather Brown */
+  --color-secondary: #745a34;
   --color-on-secondary: #ffffff;
-  --color-secondary-container: #fdf6e3;
-  --color-on-secondary-container: #8a6720;
+  --color-secondary-container: #fedaaa;
+  --color-on-secondary-container: #795e38;
 
   /* Tertiary — nâu vàng dược liệu */
-  --color-tertiary: #9a7b4f;
+  --color-tertiary: #8b6f47;
   --color-tertiary-container: #f7efdf;
   --color-tertiary-fixed: #faf0e0;
   --color-on-tertiary-fixed-variant: #6b4f28;
 
   /* Neutral / surfaces */
-  --color-on-surface: #1a1a17;
-  --color-on-surface-variant: #5a5a52;
+  --color-on-surface: #2c2416;
+  --color-on-surface-variant: #414844;
   --color-surface-white: #ffffff;
-  --color-surface-bg: #fafaf8;
-  --color-surface-container: #f4f4f0;
-  --color-surface-container-low: #f7f7f3;
+  --color-surface-bg: #f9faf6;
+  --color-surface-container: #eeeeeb;
+  --color-surface-container-low: #f3f4f1;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-high: #ecece5;
-  --color-surface-variant: #f4f4f0;
+  --color-surface-container-high: #e8e8e5;
+  --color-surface-variant: #e2e3e0;
 
   /* Outline */
-  --color-outline: #b9b9ae;
-  --color-outline-variant: #e8e8e2;
+  --color-outline: #717973;
+  --color-outline-variant: #c1c8c2;
+
+  /* ═══ BOTANICAL SHADOWS (DESIGN.md: soft warm glow) ═══ */
+  --shadow-botanical:        0 4px 20px rgba(44, 36, 22, 0.08);
+  --shadow-botanical-hover:  0 8px 30px rgba(44, 36, 22, 0.12);
 
   /* Trạng thái / cảnh báo */
   --color-error-container: #fdecea;
@@ -92,11 +128,16 @@
   --color-warning-container: #fdf3dd;
 
   /* ═══ TYPOGRAPHY ═══ */
-  --font-display:   var(--font-display), sans-serif;
-  --font-body:      var(--font-body), sans-serif;
+  --font-display:   var(--font-syne), var(--font-be-vietnam), sans-serif;
+  --font-body:      var(--font-inter), var(--font-be-vietnam), sans-serif;
+
+  /* Serif cổ điển mỏng — tên sản phẩm / tiêu đề section nổi bật
+     (Cormorant Garamond Light; fallback Georgia cho máy thiếu font) */
+  --font-serif-classic: var(--font-cormorant), Georgia, 'Times New Roman', serif;
 
   /* Font-family roles (đồng bộ PROJECT_CONTEXT typography convention) */
   --font-display-lg:    var(--font-display), sans-serif;
+  --font-headline-xl:   var(--font-display), sans-serif;
   --font-headline-sm:   var(--font-display), sans-serif;
   --font-headline-md:   var(--font-display), sans-serif;
   --font-headline-lg:   var(--font-display), sans-serif;
@@ -105,6 +146,7 @@
   --font-body-lg:       var(--font-body), sans-serif;
   --font-caption:       var(--font-body), sans-serif;
   --font-label:         var(--font-body), sans-serif;
+  --font-label-caps:    var(--font-body), sans-serif;
   --font-label-bold:    var(--font-body), sans-serif;
 
   /* Type scale (semantic, dùng text-body-* / text-headline-* / text-display-*) */
@@ -116,6 +158,8 @@
   --text-headline-sm: 1.25rem;    /* 20px */
   --text-headline-md: 1.5rem;     /* 24px */
   --text-headline-lg: 2rem;       /* 32px */
+  --text-headline-xl: 3rem;       /* 48px — Syne / 700 (DESIGN.md headline-xl) */
+  --text-label-caps:  0.75rem;    /* 12px — label-caps (DESIGN.md) */
   --text-display-lg:      2.5rem; /* 40px — heading trang */
   --text-display-lg-mobile: 2rem; /* 32px */
 
@@ -202,10 +246,15 @@ body {
   overflow-x: clip;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+/* Heading mặc định dùng display font — đặt trong @layer base để utility
+   (font-serif-classic, font-light...) có trên heading THẮNG được rule này.
+   (CSS cascade: style không-layer luôn thắng style trong layer, bất kể specificity) */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
 }
 
 /* Smooth focus rings */
@@ -240,6 +289,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .login-card-shadow {
   box-shadow: 0 4px 20px rgba(27, 67, 50, 0.05);
+}
+
+/* Botanical Apothecary — frosted card (product reviews, floating cards) */
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, #2c2416 10%, transparent);
+  box-shadow: 0 4px 20px rgba(44, 36, 22, 0.08);
 }
 
 .strength-bar {

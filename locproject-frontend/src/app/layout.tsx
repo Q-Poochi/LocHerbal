@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Be_Vietnam_Pro, Inter } from 'next/font/google';
+import { Be_Vietnam_Pro, Cormorant_Garamond, Inter, Syne } from 'next/font/google';
 import './globals.css';
 import { ReactQueryProvider } from '../lib/providers/query-provider';
 import { ToastProvider } from '../lib/providers/toast-provider';
@@ -8,16 +8,35 @@ import CartDrawer from '../components/storefront/CartDrawer';
 import AuthDrawer from '../components/storefront/AuthDrawer';
 import MobileBottomNav from '@/components/storefront/layout/MobileBottomNav';
 
+// Syne — headline (luxury botanical brand). Không có glyph tiếng Việt nên được
+// đặt TRƯỚC Be_Vietnam_Pro trong font stack: tiếng Việt sẽ fallback mượt mà.
+const syne = Syne({
+  weight: ['600', '700', '800'],
+  subsets: ['latin'],
+  variable: '--font-syne',
+  display: 'optional',
+});
+
+// Be_Vietnam_Pro — giữ lại để làm fallback tiếng Việt cho heading (Syne thiếu glyph)
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin', 'vietnamese'],
-  variable: '--font-display',
+  variable: '--font-be-vietnam',
   display: 'optional',
 });
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
-  variable: '--font-body',
+  variable: '--font-inter',
+  display: 'optional',
+});
+
+// Cormorant Garamond — serif cổ điển mỏng (Light 300) cho tên sản phẩm /
+// tiêu đề section nổi bật. Có subset tiếng Việt đầy đủ.
+const cormorant = Cormorant_Garamond({
+  weight: ['300', '400', '500'],
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-cormorant',
   display: 'optional',
 });
 
@@ -32,16 +51,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} h-full antialiased`}>
+    <html lang="vi" className={`${syne.variable} ${beVietnamPro.variable} ${inter.variable} ${cormorant.variable} h-full antialiased`}>
       <head>
-        {/* Preconnect trước link font — giảm round-trip DNS/TLS tới Google Fonts */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-          rel="stylesheet"
-        />
+        {/* Material Symbols được TỰ HOST trong /public/fonts — không dùng CDN
+            Google Fonts lúc runtime để icon không bao giờ hiện text thô
+            khi mạng không tải được stylesheet */}
       </head>
       <body className="min-h-full flex flex-col font-sans pb-[60px] md:pb-0">
         <ReactQueryProvider>

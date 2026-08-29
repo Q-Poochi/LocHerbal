@@ -25,7 +25,7 @@ export class EsmsOtpProvider implements OtpProvider {
   async sendOtp(phone: string, code: string): Promise<void> {
     const params = new URLSearchParams({
       Phone: phone,
-      Content: `Ma OTP LocHerbal cua ban la ${code}. Co hieu luc trong 5 phut.`,
+      Content: `Ma OTP LocHerbal cua ban la ${code}. Co hieu luc trong 2 phut.`,
       ApiKey: this.apiKey,
       SecretKey: this.secretKey,
       Brandname: this.brandname,
@@ -98,7 +98,8 @@ export class OtpService {
 
     const code = crypto.randomInt(100000, 999999).toString();
     const codeHash = await bcrypt.hash(code, 10);
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    // Mã OTP chỉ có hiệu lực 2 phút — đồng bộ với đồng hồ đếm ngược trên frontend
+    const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
 
     await this.prisma.otpCode.create({
       data: {

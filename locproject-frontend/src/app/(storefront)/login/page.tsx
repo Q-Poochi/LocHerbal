@@ -56,14 +56,14 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-            <div className="w-full max-w-[420px] bg-surface-white rounded-lg p-8 login-card-shadow relative z-10">
+            <div className="w-full max-w-[420px] bg-surface-white rounded-2xl p-8 shadow-botanical border border-outline-variant/40 relative z-10">
                 <div className="flex flex-col items-center mb-6">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="material-symbols-outlined text-primary text-4xl" data-icon="forest">forest</span>
-                        <span className="text-2xl font-bold text-primary tracking-tight">LocHerbal</span>
+                        <span className="text-2xl font-bold text-primary tracking-tight font-display">LocHerbal</span>
                     </div>
-                    <h1 className="text-xl font-bold text-primary mb-1">Đăng nhập</h1>
-                    <p className="text-sm text-on-surface-variant">Chào mừng bạn trở lại</p>
+                    <h1 className="font-headline-md text-headline-md text-primary mb-1">Đăng nhập</h1>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant">Chào mừng trở lại LocHerbal</p>
                 </div>
 
                 {error && (
@@ -74,12 +74,17 @@ export default function LoginPage() {
 
                 <form className="space-y-5" onSubmit={handleSubmit}>
                     <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-on-surface" htmlFor="email">Email</label>
+                        <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[0.1em]" htmlFor="email">Email hoặc số điện thoại</label>
                         <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60">
+                                <span className="material-symbols-outlined text-xl">person</span>
+                            </span>
                             <input
-                                className="w-full px-4 py-3 rounded-lg border border-outline focus:border-primary-container focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm text-on-surface"
+                                className="w-full pl-12 pr-4 py-3 rounded-full border border-outline-variant/60 bg-surface-container-low/40
+                                           focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none
+                                           transition-all font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/40"
                                 id="email"
-                                placeholder="name@company.com"
+                                placeholder="Nhập email hoặc SĐT"
                                 required
                                 type="email"
                                 value={email}
@@ -90,14 +95,19 @@ export default function LoginPage() {
 
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center">
-                            <label className="text-sm font-semibold text-on-surface" htmlFor="password">Mật khẩu</label>
-                            <a className="text-xs text-primary font-medium hover:underline" href="/forgot-password">
+                            <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-[0.1em]" htmlFor="password">Mật khẩu</label>
+                            <a className="font-label-caps text-label-caps text-primary font-medium hover:underline" href="/forgot-password">
                                 Quên mật khẩu?
                             </a>
                         </div>
                         <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60">
+                                <span className="material-symbols-outlined text-xl">lock</span>
+                            </span>
                             <input
-                                className="w-full px-4 py-3 rounded-lg border border-outline focus:border-primary-container focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm text-on-surface pr-11"
+                                className="w-full pl-12 pr-12 py-3 rounded-full border border-outline-variant/60 bg-surface-container-low/40
+                                           focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none
+                                           transition-all font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/40"
                                 id="password"
                                 placeholder="••••••••"
                                 required
@@ -106,7 +116,7 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                             <button
-                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors p-1"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors p-1"
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
@@ -118,7 +128,9 @@ export default function LoginPage() {
                     </div>
 
                     <button
-                        className="w-full py-3.5 rounded-lg bg-primary text-on-primary font-bold text-sm tracking-wide shadow-md hover:bg-primary/90 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-full bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-[0.1em]
+                                   shadow-botanical hover:bg-primary-container hover:shadow-botanical-hover active:scale-[0.99] transition-all duration-300
+                                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         disabled={isLoading}
                         type="submit"
                     >
@@ -126,7 +138,7 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <p className="mt-8 text-center text-sm text-on-surface-variant">
+                <p className="mt-8 text-center font-body-sm text-body-sm text-on-surface-variant">
                     Chưa có tài khoản?{' '}
                     <a className="text-primary font-bold hover:underline" href="/register">Đăng ký ngay</a>
                 </p>

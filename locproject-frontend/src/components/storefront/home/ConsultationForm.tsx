@@ -30,7 +30,7 @@ function buildDayOptions(): DayMeta[] {
     return days;
 }
 
-export default function ConsultationForm() {
+export default function ConsultationForm({ showHeader = true }: { showHeader?: boolean }) {
     const days = useMemo(() => buildDayOptions(), []);
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [form, setForm] = useState({ name: '', phone: '', email: '', topic: '' });
@@ -78,7 +78,10 @@ export default function ConsultationForm() {
     <section id="consultation" className="w-full py-16 md:py-20 bg-primary-50">
       <div className="max-w-[1280px] mx-auto px-4 md:px-10">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
+          {/* Header — chỉ render ở nơi KHÔNG có hero riêng (home). Trang /tu-van
+              đã có hero giống hệt nội dung này nên truyền showHeader={false}
+              để tránh lặp nội dung "y hệt 2 lần" (bug 5) */}
+          {showHeader && (
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-4">
               <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -93,6 +96,7 @@ export default function ConsultationForm() {
               Chuyên gia của chúng tôi sẽ liên hệ với bạn trong vòng <strong>15 phút</strong> để tư vấn giải pháp phù hợp nhất.
             </p>
           </div>
+          )}
 
           {/* Form card */}
           <div className="bg-white rounded-3xl shadow-lg border border-border p-8">
