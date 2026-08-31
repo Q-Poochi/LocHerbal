@@ -33,6 +33,17 @@ import { AuditService } from './shared/services/audit.service';
       // Redis storage: rate limit chia sẻ giữa các instance Railway
       // (in-memory counter per-instance khiến limit thực tế = limit x số instance)
       storage: new RedisThrottlerStorage(),
+      // Tracker = IP client thật (hop CUỐI của X-Forwarded-For, do Railway edge append
+      // -> client không spoof được). getTracker mặc định dùng req.ip = IP proxy nội bộ,
+      // khiến counter bị phân mảnh theo connection và limit trở nên vô nghĩa.
+      getTracker: (req: { headers?: Record<string, string | string[] | undefined>; ip?: string }) => {
+        const xff = req.headers?.['x-forwarded-for'];
+        if (typeof xff === 'string' && xff.trim().length > 0) {
+          const parts = xff.split(',');
+          return parts[parts.length - 1].trim();
+        }
+        return req.ip ?? 'unknown';
+      },
     }),
     CoreModule,
     CatalogModule,
