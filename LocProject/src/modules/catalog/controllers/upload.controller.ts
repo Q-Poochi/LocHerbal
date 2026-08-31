@@ -120,7 +120,7 @@ export class UploadController {
 
       // Tối ưu: resize ≤800px + nén WebP. Không phóng to ảnh nhỏ.
       let optimized: Buffer;
-      let meta: sharp.OutputInfo;
+      let meta: import('sharp').OutputInfo;
       try {
         ({ data: optimized, info: meta } = await sharp(f.buffer, { failOn: 'error' })
           .resize(MAX_WIDTH, MAX_WIDTH, { fit: 'inside', withoutEnlargement: true })
