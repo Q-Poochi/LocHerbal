@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { BannerService } from '../services/banner.service';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 
@@ -16,6 +17,12 @@ describe('BannerService', () => {
         },
     };
 
+    const mockCacheManager = {
+        get: jest.fn().mockResolvedValue(undefined),
+        set: jest.fn().mockResolvedValue(undefined),
+        del: jest.fn().mockResolvedValue(undefined),
+    };
+
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -23,6 +30,10 @@ describe('BannerService', () => {
                 {
                     provide: PrismaService,
                     useValue: mockPrisma,
+                },
+                {
+                    provide: CACHE_MANAGER,
+                    useValue: mockCacheManager,
                 },
             ],
         }).compile();
@@ -58,7 +69,7 @@ describe('BannerService', () => {
     it('should throw NotFoundException when banner not found', async () => {
         mockPrisma.banner.findUnique.mockResolvedValue(null);
 
-        await expect(service.findById('999')).rejects.toThrow('Banner không tồn tại');
+        await expect(service.findById('999')).rejects.toThrow('Banner khong ton tai');
     });
 
     it('should create a banner', async () => {

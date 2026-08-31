@@ -366,7 +366,7 @@ export default function CartPage() {
                                     Thanh toán bảo mật chuẩn SSL 256-bit
                                 </p>
                                 <div className="flex justify-center gap-2">
-                                    {['VNPAY', 'MOMO', 'COD'].map((m) => (
+                                    {['VNPAY', 'COD'].map((m) => (
                                         <span key={m} className="text-xs border border-border rounded-lg px-2.5 py-1 text-text-secondary font-medium">
                                             {m}
                                         </span>

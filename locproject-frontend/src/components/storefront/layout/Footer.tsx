@@ -13,7 +13,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#1b4332] text-white mt-16 border-t border-[#012d1d]">
+    <footer className="bg-[#1b4332] text-white mt-0 border-t border-[#012d1d]">
       {/* Main footer content */}
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
@@ -82,7 +82,7 @@ export default function Footer() {
             <div>
               <h3 className="font-display font-bold text-base mb-3 tracking-wide text-accent-gold-light uppercase">Thanh toán</h3>
               <div className="flex flex-wrap gap-2">
-                {['VNPAY', 'MOMO', 'COD'].map(m => (
+                {['VNPAY', 'COD'].map(m => (
                   <span
                     key={m}
                     className="px-3 py-1 bg-white/10 border border-white/5 rounded-lg text-xs font-semibold tracking-wider text-white"

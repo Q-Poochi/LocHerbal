@@ -64,6 +64,7 @@ jobs:
             VNP_IPN_URL="${{ secrets.STAGING_VNP_IPN_URL }}" \
             SMS_PROVIDER="mock" \
             SMS_PROVIDER_API_KEY="${{ secrets.STAGING_SMS_PROVIDER_API_KEY }}" \
+            REDIS_URL="${{ secrets.STAGING_REDIS_URL }}" \
             RESEND_API_KEY="${{ secrets.STAGING_RESEND_API_KEY }}" \
             EMAIL_FROM="${{ secrets.STAGING_EMAIL_FROM }}" \
             FRONTEND_URL="${{ vars.STAGING_FRONTEND_URL }}" \

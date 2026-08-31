@@ -38,6 +38,10 @@ describe('AuthService', () => {
       create: jest.fn(),
       update: jest.fn(),
     },
+    // RBAC: generateTokens load permissions từ roles (d2ca2bd)
+    permission: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     $transaction: jest.fn(),
   };
 
