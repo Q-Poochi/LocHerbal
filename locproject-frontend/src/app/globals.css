@@ -140,8 +140,11 @@
   --color-warning-container: #fdf3dd;
 
   /* ═══ TYPOGRAPHY ═══ */
-  --font-display:   var(--font-syne), var(--font-be-vietnam), sans-serif;
-  --font-body:      var(--font-inter), var(--font-be-vietnam), sans-serif;
+  /* Toàn site dùng serif cổ điển Cormorant Garamond (theo yêu cầu đổi font).
+     Fallback: Be Vietnam Pro (glyph dự phòng tiếng Việt) -> serif hệ thống. */
+  --font-display:   var(--font-cormorant), var(--font-be-vietnam), Georgia, serif;
+  --font-body:      var(--font-cormorant), var(--font-be-vietnam), Georgia, serif;
+  --font-sans:      var(--font-cormorant), var(--font-be-vietnam), Georgia, serif;
 
   /* Serif cổ điển mỏng — tên sản phẩm / tiêu đề section nổi bật
      (Cormorant Garamond Light; fallback Georgia cho máy thiếu font) */

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Be_Vietnam_Pro, Cormorant_Garamond, Inter, Syne } from 'next/font/google';
+import { Be_Vietnam_Pro, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import { ReactQueryProvider } from '../lib/providers/query-provider';
 import { ToastProvider } from '../lib/providers/toast-provider';
@@ -9,16 +9,7 @@ import AuthDrawer from '../components/storefront/AuthDrawer';
 import MobileBottomNav from '@/components/storefront/layout/MobileBottomNav';
 import BotanicalBackground from '@/components/storefront/layout/BotanicalBackground';
 
-// Syne — headline (luxury botanical brand). Không có glyph tiếng Việt nên được
-// đặt TRƯỚC Be_Vietnam_Pro trong font stack: tiếng Việt sẽ fallback mượt mà.
-const syne = Syne({
-  weight: ['600', '700', '800'],
-  subsets: ['latin'],
-  variable: '--font-syne',
-  display: 'optional',
-});
-
-// Be_Vietnam_Pro — giữ lại để làm fallback tiếng Việt cho heading (Syne thiếu glyph)
+// Be_Vietnam_Pro — fallback tiếng Việt dự phòng cho glyph thiếu
 const beVietnamPro = Be_Vietnam_Pro({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin', 'vietnamese'],
@@ -26,16 +17,11 @@ const beVietnamPro = Be_Vietnam_Pro({
   display: 'optional',
 });
 
-const inter = Inter({
-  subsets: ['latin', 'vietnamese'],
-  variable: '--font-inter',
-  display: 'optional',
-});
-
-// Cormorant Garamond — serif cổ điển mỏng (Light 300) cho tên sản phẩm /
-// tiêu đề section nổi bật. Có subset tiếng Việt đầy đủ.
+// Cormorant Garamond — serif cổ điển dùng cho TOÀN BỘ site (body + heading).
+// 300 = light thanh mảnh (tên sản phẩm), 400/500 = body, 600/700 = heading đậm.
+// Có subset tiếng Việt đầy đủ.
 const cormorant = Cormorant_Garamond({
-  weight: ['300', '400', '500'],
+  weight: ['300', '400', '500', '600', '700'],
   subsets: ['latin', 'vietnamese'],
   variable: '--font-cormorant',
   display: 'optional',
@@ -52,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${syne.variable} ${beVietnamPro.variable} ${inter.variable} ${cormorant.variable} h-full antialiased`}>
+    <html lang="vi" className={`${beVietnamPro.variable} ${cormorant.variable} h-full antialiased`}>
       <head>
         {/* Material Symbols được TỰ HOST trong /public/fonts — không dùng CDN
             Google Fonts lúc runtime để icon không bao giờ hiện text thô
