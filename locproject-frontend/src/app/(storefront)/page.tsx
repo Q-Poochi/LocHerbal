@@ -184,7 +184,7 @@ export default function HomePage() {
         </section>
 
         {/* ── REMEDIES / CHUYÊN KHOA ─────────────────────────────── */}
-        <section className="w-full py-16 md:py-20 bg-surface-container-low">
+        <section className="w-full py-16 md:py-20 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
               <div>
@@ -428,7 +428,7 @@ export default function HomePage() {
 
         {/* ── BLOG / JOURNAL ─────────────────────────────────────── */}
         {blogPosts.length > 0 && (
-          <section id="blog" className="w-full py-16 md:py-20 bg-surface-container-low">
+          <section id="blog" className="w-full py-16 md:py-20 bg-transparent">
             <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12">
                 <div>

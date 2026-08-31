@@ -7,6 +7,7 @@ import { AuthBootstrap } from '../lib/providers/auth-bootstrap';
 import CartDrawer from '../components/storefront/CartDrawer';
 import AuthDrawer from '../components/storefront/AuthDrawer';
 import MobileBottomNav from '@/components/storefront/layout/MobileBottomNav';
+import BotanicalBackground from '@/components/storefront/layout/BotanicalBackground';
 
 // Syne — headline (luxury botanical brand). Không có glyph tiếng Việt nên được
 // đặt TRƯỚC Be_Vietnam_Pro trong font stack: tiếng Việt sẽ fallback mượt mà.
@@ -57,16 +58,19 @@ export default function RootLayout({
             Google Fonts lúc runtime để icon không bao giờ hiện text thô
             khi mạng không tải được stylesheet */}
       </head>
-      <body className="min-h-full flex flex-col font-sans pb-[60px] md:pb-0">
-        <ReactQueryProvider>
-          <ToastProvider>
-            <AuthBootstrap />
-            {children}
-            <CartDrawer />
-            <AuthDrawer />
-            <MobileBottomNav />
-          </ToastProvider>
-        </ReactQueryProvider>
+      <body className="min-h-full flex flex-col font-sans pb-[60px] md:pb-0 relative isolate">
+        <BotanicalBackground />
+        <div className="relative z-10 flex flex-col min-h-full flex-1">
+          <ReactQueryProvider>
+            <ToastProvider>
+              <AuthBootstrap />
+              {children}
+              <CartDrawer />
+              <AuthDrawer />
+              <MobileBottomNav />
+            </ToastProvider>
+          </ReactQueryProvider>
+        </div>
       </body>
     </html>
   );

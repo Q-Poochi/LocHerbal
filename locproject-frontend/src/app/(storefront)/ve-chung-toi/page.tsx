@@ -12,9 +12,9 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main className="pb-16 md:pb-0 bg-background">
+      <main className="pb-16 md:pb-0 bg-transparent">
         {/* Hero */}
-        <section className="w-full bg-background">
+        <section className="w-full bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] py-16 md:py-20 text-center">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-tertiary/40
                              text-tertiary font-label-caps text-label-caps uppercase tracking-[0.1em] bg-white/40">
@@ -32,7 +32,7 @@ export default function AboutPage() {
         </section>
 
         {/* Story / Sứ mệnh */}
-        <section className="w-full py-16 md:py-20 bg-surface-container-low">
+        <section className="w-full py-16 md:py-20 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7">
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Câu chuyện của chúng tôi</span>
@@ -82,7 +82,7 @@ export default function AboutPage() {
         </section>
 
         {/* Giá trị cốt lõi */}
-        <section className="w-full py-16 md:py-20 bg-background">
+        <section className="w-full py-16 md:py-20 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="text-center mb-12">
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Giá trị cốt lõi</span>
@@ -112,7 +112,7 @@ export default function AboutPage() {
 
 
         {/* Tiêu chuẩn chất lượng */}
-        <section className="w-full py-16 md:py-20 bg-surface-container-low">
+        <section className="w-full py-16 md:py-20 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-5">
               <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-secondary-container to-[#745a34]

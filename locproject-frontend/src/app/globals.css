@@ -29,8 +29,8 @@
 }
 
 :root {
-  --background: #f9faf6; /* Botanical Apothecary — warm cream */
-  --foreground: #1a1c1a;
+  --background: #f8faf9; /* Premium Editorial Sage — paper white (DESIGN.md) */
+  --foreground: #191c1c;
 }
 
 @theme inline {
@@ -49,27 +49,41 @@
   --color-primary-900: #11452b;  /* Darkest */
   --color-primary:     #012d1d;
 
-  /* ═══ BOTANICAL APOTHECARY — phong cách luxury premium (redesign 2026) ═══ */
-  --color-primary-container:  #1b4332;   /* Forest Green — nút CTA, tiêu đề đậm */
-  --color-secondary:          #745a34;   /* Leather Brown */
-  --color-secondary-container: #fedaaa;  /* Sand/Gold container */
-  --color-tertiary:           #8b6f47;   /* Leather Brown (accent tags) */
+  /* ═══ PREMIUM EDITORIAL SAGE — DESIGN.md === */
+  --color-primary:            #4f6050;
+  --color-on-primary:         #ffffff;
+  --color-primary-container:  #677968;
+  --color-on-primary-container: #f7fff3;
+  --color-inverse-primary:    #b9ccb7;
+  --color-secondary:          #58605a;
+  --color-on-secondary:       #ffffff;
+  --color-secondary-container: #dde5dd;
+  --color-on-secondary-container: #5e6660;
+  --color-tertiary:           #555e54;
+  --color-on-tertiary:        #ffffff;
+  --color-tertiary-container: #6d776c;
+  --color-on-tertiary-container: #f7fff3;
   --color-accent-gold: #c8973a;
   --color-accent-gold-light: #f0d99a;
   --color-accent-gold-pale: #fdf6e3;
 
-  /* Neutral — Warm whites (không lạnh như #fff thuần) */
-  --color-background:  #f9faf6;  /* Page background — warm cream */
+  /* ═══ PREMIUM EDITORIAL SAGE — DESIGN.md === */
+  --color-botanical-light:   #f8faf9;    /* Global background (paper white) */
+  --color-botanical-lighter: #f3f4f3;    /* Surface container low */
+  --color-botanical-pattern: #526352;    /* Surface tint — botanical branch color */
+
+  /* Neutral — Paper white (DESIGN.md) */
+  --color-background:  #f8faf9;  /* Global — Premium Editorial Sage background */
   --color-surface:     #ffffff;
   --color-surface-alt: #f4f4f0;  /* Card backgrounds */
   --color-border:      #e8e8e2;  /* Subtle borders */
   --color-border-focus: #1a8a54;
 
-  /* Text */
-  --color-text-primary:   #1a1a17;  /* Near-black, warm */
-  --color-text-secondary: #5a5a52;  /* Muted text */
-  --color-text-tertiary:  #757570;  /* Muted text — đạt WCAG 4.5:1 trên nền trắng */
-  --color-text-inverse:   #ffffff;
+  /* Text — DESIGN.md */
+  --color-text-primary:   #191c1c;
+  --color-text-secondary: #434842;
+  --color-text-tertiary:  #747872;
+  --color-text-inverse:   #f0f1f0;
 
   /* Semantic */
   --color-success: #1a8a54;
@@ -77,38 +91,36 @@
   --color-warning: #d4830a;
   --color-info:    #2471a3;
 
-  /* ═══ MATERIAL DESIGN TOKENS — phong cách Material (alias cho các component dùng sẵn) ═══ */
+  /* ═══ MATERIAL DESIGN TOKENS — DESIGN.md fixed tiers ═══ */
+  --color-primary-fixed: #d4e8d3;
+  --color-primary-fixed-dim: #b9ccb7;
+  --color-on-primary-fixed: #101f12;
+  --color-on-primary-fixed-variant: #3a4b3c;
+  --color-secondary-fixed: #dde5dd;
+  --color-secondary-fixed-dim: #c0c9c1;
+  --color-on-secondary-fixed: #161d19;
+  --color-on-secondary-fixed-variant: #414943;
+  --color-tertiary-fixed: #dbe5d8;
+  --color-tertiary-fixed-dim: #bfc9bd;
+  --color-on-tertiary-fixed: #151e16;
+  --color-on-tertiary-fixed-variant: #404940;
 
-  /* Primary container */
-  --color-on-primary: #ffffff;
-  --color-primary-container: #1b4332;       /* Forest Green — nút CTA, tiêu đề đậm, sidebar admin */
-  --color-on-primary-container: #86af99;
-  --color-primary-fixed: #c1ecd4;
-  --color-on-primary-fixed: #002114;
-  --color-on-primary-fixed-variant: #ffffff;
-
-  /* Secondary — Leather Brown */
-  --color-secondary: #745a34;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #fedaaa;
-  --color-on-secondary-container: #795e38;
-
-  /* Tertiary — nâu vàng dược liệu */
-  --color-tertiary: #8b6f47;
-  --color-tertiary-container: #f7efdf;
-  --color-tertiary-fixed: #faf0e0;
-  --color-on-tertiary-fixed-variant: #6b4f28;
-
-  /* Neutral / surfaces */
-  --color-on-surface: #2c2416;
-  --color-on-surface-variant: #414844;
+  /* Neutral / surfaces — DESIGN.md Premium Editorial Sage */
+  --color-on-surface: #191c1c;
+  --color-on-surface-variant: #434842;
   --color-surface-white: #ffffff;
-  --color-surface-bg: #f9faf6;
-  --color-surface-container: #eeeeeb;
-  --color-surface-container-low: #f3f4f1;
+  --color-surface-bg: #f8faf9;
+  --color-surface-container: #edeeed;
+  --color-surface-container-low: #f3f4f3;
   --color-surface-container-lowest: #ffffff;
-  --color-surface-container-high: #e8e8e5;
-  --color-surface-variant: #e2e3e0;
+  --color-surface-container-high: #e7e8e7;
+  --color-surface-variant: #e1e3e2;
+  --color-surface-dim: #d9dad9;
+  --color-surface-bright: #f8faf9;
+  --color-surface-container-highest: #e1e3e2;
+  --color-surface-tint: #526352;
+  --color-inverse-surface: #2e3131;
+  --color-inverse-on-surface: #f0f1f0;
 
   /* Outline */
   --color-outline: #717973;
@@ -222,8 +234,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #fafaf8;
-    --foreground: #1a1a17;
+    --background: #f8faf9;
+    --foreground: #191c1c;
   }
 }
 
@@ -372,6 +384,52 @@ body {
 .sidebar-scroll::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
+}
+
+/* ═══ BOTANICAL PATTERN UTILITIES — xanh lá nhạt + họa tiết lá cây ═══ */
+
+.bg-botanical-light {
+  background-color: var(--color-botanical-light);
+}
+
+.bg-botanical-lighter {
+  background-color: var(--color-botanical-lighter);
+}
+
+/* SVG pattern: botanical leaf branches - light, subtle, repeatable */
+.bg-botanical-pattern {
+  background-color: var(--color-botanical-light);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%231b4332' stroke-width='0.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.06'%3E%3Cpath d='M60 105V45'/%3E%3Cpath d='M60 65c-12 0-18-7-20-18 10 0 17 6 20 18z'/%3E%3Cpath d='M60 65c12 0 18-7 20-18-10 0-17 6-20 18z'/%3E%3Cpath d='M60 85c-8 0-13-5-15-12 7 0 12 4 15 12z'/%3E%3Cpath d='M60 85c8 0 13-5 15-12-7 0-12 4-15 12z'/%3E%3Ccircle cx='60' cy='33' r='2.5'/%3E%3Cpath d='M38 102c8 5 35 5 44 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 120px 120px;
+}
+
+/* Corner decoration variant - góc trang */
+.bg-botanical-corner {
+  background-color: var(--color-botanical-light);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%231b4332' stroke-width='0.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.05'%3E%3Cpath d='M140 20c-15 15-45 15-60 0'/%3E%3Cpath d='M130 30c-10 10-28 10-38 0'/%3E%3Cpath d='M120 40c-8 8-22 8-30 0'/%3E%3Cpath d='M110 50c-6 6-15 6-20 0'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='none' stroke='%231b4332' stroke-width='0.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.05'%3E%3Cpath d='M20 140c15-15 45-15 60 0'/%3E%3Cpath d='M30 130c10-10 28-10 38 0'/%3E%3Cpath d='M40 120c8-8 22-8 30 0'/%3E%3Cpath d='M50 110c6-6 15-6 20 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: top left, bottom right;
+  background-size: 160px 160px;
+}
+
+/* Subtle leaf scatter - rải rác nhẹ */
+.bg-botanical-scatter {
+  background-color: var(--color-botanical-lighter);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%231b4332' stroke-width='0.4' stroke-linecap='round' opacity='0.04'%3E%3Cpath d='M40 40c-5 0-8-3-9-8 4 0 7 2 9 8z'/%3E%3Cpath d='M160 60c-5 0-8-3-9-8 4 0 7 2 9 8z'/%3E%3Cpath d='M100 120c-5 0-8-3-9-8 4 0 7 2 9 8z'/%3E%3Cpath d='M60 170c-5 0-8-3-9-8 4 0 7 2 9 8z'/%3E%3Cpath d='M140 140c-5 0-8-3-9-8 4 0 7 2 9 8z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* Footer dark botanical pattern — lá vàng nhạt trên nền xanh đậm */
+.bg-footer-botanical {
+  background-color: #1b4332;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23f0d99a' stroke-width='0.5' stroke-linecap='round' stroke-linejoin='round' opacity='0.07'%3E%3Cpath d='M60 105V45'/%3E%3Cpath d='M60 65c-12 0-18-7-20-18 10 0 17 6 20 18z'/%3E%3Cpath d='M60 65c12 0 18-7 20-18-10 0-17 6-20 18z'/%3E%3Cpath d='M60 85c-8 0-13-5-15-12 7 0 12 4 15 12z'/%3E%3Cpath d='M60 85c8 0 13-5 15-12-7 0-12 4-15 12z'/%3E%3Ccircle cx='60' cy='33' r='2.5'/%3E%3Cpath d='M38 102c8 5 35 5 44 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 120px 120px;
 }
 
 /* ═══ ANIMATIONS & MICRO-INTERACTIONS ═══ */

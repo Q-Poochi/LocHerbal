@@ -34,7 +34,7 @@ export default function ProductsPage() {
     <>
       <Navbar />
 
-      <main className="w-full py-8 bg-surface">
+      <main className="w-full py-8 bg-transparent">
         <div className="max-w-[1280px] mx-auto px-4 md:px-10">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Sidebar Filters */}
