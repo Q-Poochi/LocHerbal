@@ -55,8 +55,12 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-            <div className="w-full max-w-[420px] bg-surface-white rounded-2xl p-8 shadow-botanical border border-outline-variant/40 relative z-10">
+        <div
+            className="relative z-10 flex-1 min-h-[100dvh] flex items-center justify-center p-4 py-12
+                       bg-[#ccd6c8] bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/images/floral-sage.webp')" }}
+        >
+            <div className="w-full max-w-[420px] bg-surface-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-botanical border border-outline-variant/40">
                 <div className="flex flex-col items-center mb-6">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="material-symbols-outlined text-primary text-4xl" data-icon="forest">forest</span>
