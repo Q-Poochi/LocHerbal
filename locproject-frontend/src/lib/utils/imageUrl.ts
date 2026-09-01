@@ -10,6 +10,10 @@ export function resolveImageUrl(url?: string | null): string {
   const trimmed = url.trim();
   if (!trimmed) return '';
 
+  // Ảnh placeholder seed-data (placehold.co, nền xanh đậm) — coi như chưa có
+  // ảnh thật để UI render nền botanical dự phòng thay vì khối xanh đậm.
+  if (trimmed.includes('placehold.co')) return '';
+
   // Legacy data: ảnh từng được lưu với port frontend cũ (3000) — sửa về backend
   if (trimmed.includes('localhost:3000')) {
     return trimmed.replace('localhost:3000', new URL(API_URL).host);

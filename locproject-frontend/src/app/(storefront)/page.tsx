@@ -148,7 +148,16 @@ export default function HomePage() {
             <div className="lg:col-span-6 relative">
               <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-surface-container-low
                               border border-outline-variant/40 shadow-botanical">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-container via-[#24503c] to-[#012d1d]" />
+                {/* Nền lá vẽ tay (ảnh người dùng cung cấp) thay cho gradient xanh đậm */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: 'url(/images/leaf-eucalyptus.webp)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                />
                 {heroSrc ? (
                   <Image src={heroSrc} alt="Sản phẩm thảo dược LocHerbal" fill
                          sizes="(max-width: 1024px) 100vw, 50vw"
@@ -158,7 +167,7 @@ export default function HomePage() {
                      KHÔNG dùng icon-font cỡ lớn (tránh lộ text thô nếu font fail)
                      và không lộ tên file */
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <svg viewBox="0 0 120 90" className="w-48 text-on-primary/25" fill="none"
+                    <svg viewBox="0 0 120 90" className="w-48 text-primary/30" fill="none"
                          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                       <path d="M60 78V34" />
                       <path d="M60 46c-14 0-22-8-24-20 12 0 21 7 24 20z" />
@@ -300,7 +309,15 @@ export default function HomePage() {
                                        shadow-botanical hover:shadow-botanical-hover transition-shadow duration-300
                                        flex flex-col overflow-hidden"
                           >
-                            <div className="relative aspect-square bg-surface-container-low overflow-hidden">
+                            <div
+                              className="relative aspect-square overflow-hidden"
+                              style={{
+                                backgroundColor: '#eef3ec',
+                                backgroundImage: 'url(/images/leaf-maple.webp)',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                              }}
+                            >
                               {img ? (
                                 <Image
                                   src={img}
@@ -311,7 +328,7 @@ export default function HomePage() {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-5xl text-primary-container/40" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
+                                  <span className="material-symbols-outlined text-5xl text-primary/40" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
                                 </div>
                               )}
                             </div>
@@ -375,8 +392,18 @@ export default function HomePage() {
 
 
         {/* ── VALUE PROPS ────────────────────────────────────────── */}
-        <section className="w-full py-16 bg-primary text-on-primary">
-          <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
+        <section className="relative w-full py-16 bg-primary text-on-primary overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: 'url(/images/leaf-maple.webp)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.14,
+            }}
+          />
+          <div className="relative mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
               {[
                 { icon: 'spa', title: 'Thiên nhiên thuần khiết', desc: 'Nguyên liệu sạch, canh tác bền vững từ các vùng trồng dược liệu uy tín.' },
@@ -418,8 +445,15 @@ export default function HomePage() {
                   Xem ưu đãi <span className="material-symbols-outlined text-lg">local_activity</span>
                 </Link>
               </div>
-              <div className="relative h-56 md:h-full bg-gradient-to-br from-primary-container to-[#012d1d] flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-primary/20" style={{ fontSize: '160px', fontVariationSettings: "'FILL' 1" }}>sell</span>
+              <div
+                className="relative h-56 md:h-full flex items-center justify-center"
+                style={{
+                  backgroundImage: 'url(/images/leaf-eucalyptus.webp)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <span className="material-symbols-outlined text-primary/25" style={{ fontSize: '160px', fontVariationSettings: "'FILL' 1" }}>sell</span>
               </div>
             </div>
           </div>
