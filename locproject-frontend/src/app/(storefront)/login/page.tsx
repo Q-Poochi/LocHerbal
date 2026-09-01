@@ -56,11 +56,17 @@ export default function LoginPage() {
 
     return (
         <div
-            className="relative z-10 flex-1 min-h-[100dvh] flex items-center justify-center p-4 py-12
-                       bg-[#ccd6c8] bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/images/floral-sage.webp')" }}
+            className="relative z-10 flex-1 min-h-[100dvh] flex items-center justify-center p-4 py-12 overflow-hidden
+                       bg-[#ccd6c8] bg-[url('/images/floral-sage.webp')] bg-cover bg-center bg-no-repeat md:bg-none"
         >
-            <div className="w-full max-w-[420px] bg-surface-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-botanical border border-outline-variant/40">
+            {/* Nền trang trí: mobile = ảnh đầy đủ phủ kín; desktop = 4 góc hoa ở kích thước gốc (sắc nét) */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden md:block">
+                <div className="absolute top-0 left-0 w-[424px] h-[632px] bg-no-repeat bg-left-top bg-[url('/images/floral-tl.webp')]" />
+                <div className="absolute top-0 right-0 w-[424px] h-[632px] bg-no-repeat bg-right-top bg-[url('/images/floral-tr.webp')]" />
+                <div className="absolute bottom-0 left-0 w-[424px] h-[632px] bg-no-repeat bg-left-bottom bg-[url('/images/floral-bl.webp')]" />
+                <div className="absolute bottom-0 right-0 w-[424px] h-[632px] bg-no-repeat bg-right-bottom bg-[url('/images/floral-br.webp')]" />
+            </div>
+            <div className="w-full max-w-[420px] bg-surface-white/95 rounded-2xl p-8 shadow-botanical border border-outline-variant/40">
                 <div className="flex flex-col items-center mb-6">
                     <div className="flex items-center gap-2 mb-2">
                         <span className="material-symbols-outlined text-primary text-4xl" data-icon="forest">forest</span>
