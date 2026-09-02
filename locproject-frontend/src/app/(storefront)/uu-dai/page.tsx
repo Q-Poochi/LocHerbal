@@ -138,8 +138,22 @@ export default function UuDaiPage() {
           </div>
         </section>
 
-        {/* ═══════ SECTION 2: MEMBERSHIP TIERS ═══════ */}
-        <section className="bg-[#fafaf8] py-10">
+        {/* Nền ảnh space.webp cho toàn bộ nội dung dưới hero */}
+        <div className="relative">
+          <Image
+            src="/images/decor/space.webp"
+            alt=""
+            fill
+            sizes="100vw"
+            quality={80}
+            aria-hidden
+            className="object-cover object-center"
+          />
+          {/* Veil sáng để nội dung vẫn dễ đọc trên ảnh nền */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#fafaf8]/92 via-[#fafaf8]/80 to-[#f0faf4]/92" />
+
+          {/* ═══════ SECTION 2: MEMBERSHIP TIERS ═══════ */}
+          <section className="relative py-10">
           <div className="max-w-[1280px] mx-auto px-6 md:px-10">
             <p className="text-center text-sm font-medium text-[#5a5a52] uppercase tracking-widest mb-6">
               CẤP ĐỘ THÀNH VIÊN
@@ -194,7 +208,7 @@ export default function UuDaiPage() {
         </section>
 
         {/* Mã ưu đãi hiện có — giữ tính năng sao chép mã */}
-        <section className="bg-[#fafaf8] pb-10">
+        <section className="relative pb-10">
           <div className="max-w-[1280px] mx-auto px-6 md:px-10">
             <div className="rounded-2xl border border-[#86ddb1]/60 bg-[#f0faf4] px-5 py-4
                             flex flex-col md:flex-row items-center gap-3 md:gap-6 justify-between">
@@ -225,7 +239,7 @@ export default function UuDaiPage() {
         </section>
 
         {/* ═══════ SECTION 3: DEAL HẤP DẪN HÔM NAY ═══════ */}
-        <section id="deals" className="py-12 bg-[#fafaf8]">
+        <section id="deals" className="relative py-12">
           <div className="max-w-[1280px] mx-auto px-6 md:px-10">
             {/* Header */}
             <div className="flex items-end justify-between mb-8">
@@ -306,7 +320,7 @@ export default function UuDaiPage() {
         </section>
 
         {/* ═══════ SECTION 4: COMBO MUA KÈM ═══════ */}
-        <section className="py-12 bg-gradient-to-b from-[#fafaf8] to-[#f0faf4]">
+        <section className="relative py-12">
           <div className="max-w-[1280px] mx-auto px-6 md:px-10">
             <div className="text-center mb-10">
               <p className="text-xs uppercase tracking-widest text-[#1a8a54] font-semibold mb-2">
@@ -373,7 +387,8 @@ export default function UuDaiPage() {
               ))}
             </div>
           </div>
-        </section>
+          </section>
+        </div>
       </main>
       <Footer />
     </>
