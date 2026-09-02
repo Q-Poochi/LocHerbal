@@ -15,15 +15,17 @@ export default function TuVanPage() {
       <Navbar />
       <main className="pb-16 md:pb-0">
         {/* Nền riêng trang tư vấn — ảnh lá & viên nang thảo dược (tu-van.jpg) dưới dạng
-            CSS layer fixed: overlay sage sáng đè lên ảnh để chữ vẫn dễ đọc */}
+            CSS layer fixed: overlay sage sáng đè lên ảnh để chữ vẫn dễ đọc.
+            z-index -1 để ảnh nằm DƯỚI toàn bộ nội dung (z-0 positioned sẽ vẽ đè lên
+            section thường — bug đã gặp), nhưng vẫn trên BotanicalBackground toàn cục */}
         <div
           aria-hidden="true"
           className="pointer-events-none fixed inset-0 overflow-hidden"
           style={{
-            zIndex: 0,
+            zIndex: -1,
             backgroundColor: '#f8faf9',
             backgroundImage:
-              'linear-gradient(180deg, rgba(248,250,249,0.82) 0%, rgba(228,236,229,0.45) 45%, rgba(248,250,249,0.88) 100%), url(/images/decor/tu-van.webp)',
+              'linear-gradient(180deg, rgba(248,250,249,0.86) 0%, rgba(222,232,224,0.55) 45%, rgba(248,250,249,0.90) 100%), url(/images/decor/tu-van.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
