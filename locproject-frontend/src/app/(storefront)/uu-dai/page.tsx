@@ -75,7 +75,7 @@ export default function UuDaiPage() {
             zIndex: -1,
             backgroundColor: '#f8faf9',
             backgroundImage:
-              'linear-gradient(180deg, rgba(248,250,249,0.86) 0%, rgba(222,232,224,0.55) 45%, rgba(248,250,249,0.90) 100%), url(/images/decor/uu-dai.webp)',
+              'linear-gradient(180deg, rgba(233,241,234,0.55) 0%, rgba(186,208,191,0.28) 45%, rgba(231,239,232,0.62) 100%), url(/images/decor/uu-dai.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
