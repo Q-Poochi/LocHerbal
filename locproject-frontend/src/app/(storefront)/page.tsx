@@ -102,7 +102,7 @@ export default function HomePage() {
       <Navbar />
       <main className="pb-16 md:pb-0">
         {/* ── HERO ──────────────────────────────────────────────── */}
-        <section className="relative w-full bg-background overflow-hidden">
+        <section className="relative w-full overflow-hidden"> {/* trong suốt → lộ nền lá fixed (BotanicalBackground) */}
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] py-16 md:py-24
                           grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-6 text-center lg:text-left">
@@ -148,12 +148,12 @@ export default function HomePage() {
             <div className="lg:col-span-6 relative">
               <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-surface-container-low
                               border border-outline-variant/40 shadow-botanical">
-                {/* Nền lá vẽ tay (ảnh người dùng cung cấp) thay cho gradient xanh đậm */}
+                {/* Nền lá thật (Home.jpg) thay cho gradient xanh đậm */}
                 <div
                   aria-hidden="true"
                   className="absolute inset-0"
                   style={{
-                    backgroundImage: 'url(/images/leaf-eucalyptus.webp)',
+                    backgroundImage: 'url(/images/decor/home-bg.webp)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}
@@ -313,7 +313,7 @@ export default function HomePage() {
                               className="relative aspect-square overflow-hidden"
                               style={{
                                 backgroundColor: '#eef3ec',
-                                backgroundImage: 'url(/images/leaf-maple.webp)',
+                                backgroundImage: 'url(/images/decor/home-bg.webp)',
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center',
                               }}
@@ -397,7 +397,7 @@ export default function HomePage() {
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none"
             style={{
-              backgroundImage: 'url(/images/leaf-maple.webp)',
+              backgroundImage: 'url(/images/decor/home-bg.webp)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               opacity: 0.14,
@@ -448,7 +448,7 @@ export default function HomePage() {
               <div
                 className="relative h-56 md:h-full flex items-center justify-center"
                 style={{
-                  backgroundImage: 'url(/images/leaf-eucalyptus.webp)',
+                  backgroundImage: 'url(/images/decor/home-bg.webp)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}

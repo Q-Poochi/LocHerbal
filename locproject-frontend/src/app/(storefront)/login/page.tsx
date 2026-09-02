@@ -57,15 +57,14 @@ export default function LoginPage() {
     return (
         <div
             className="relative z-10 flex-1 min-h-[100dvh] flex items-center justify-center p-4 py-12 overflow-hidden
-                       bg-[linear-gradient(180deg,#d3ded4_0%,#d5e0d5_50%,#c4d0c4_100%)]"
+                       bg-cover bg-center bg-no-repeat"
+            style={{
+                // CSS layers: overlay sage-đậm bán trong suốt + ảnh lá thật (Home.jpg) — card trắng nổi bật
+                backgroundColor: '#22371f',
+                backgroundImage:
+                    'linear-gradient(180deg, rgba(20,40,25,0.30) 0%, rgba(20,40,25,0.55) 100%), url(/images/decor/home-bg.webp)',
+            }}
         >
-            {/* Vector decor corners (SVG = sharp at any DPI) */}
-            <div aria-hidden className="pointer-events-none absolute inset-0">
-                <img src="/images/decor/willow-tl.svg" alt="" className="absolute top-0 left-0 w-[38vw] min-w-[320px] max-w-[640px]" />
-                <img src="/images/decor/willow-tr.svg" alt="" className="absolute top-0 right-0 w-[36vw] min-w-[300px] max-w-[600px]" />
-                <img src="/images/decor/willow-bl.svg" alt="" className="absolute bottom-0 left-0 w-[42vw] min-w-[340px] max-w-[700px]" />
-                <img src="/images/decor/willow-br.svg" alt="" className="absolute bottom-0 right-0 w-[30vw] min-w-[260px] max-w-[520px]" />
-            </div>
 
             <div className="w-full max-w-[420px] bg-surface-white/95 rounded-2xl p-8 shadow-botanical border border-outline-variant/40">
                 <div className="flex flex-col items-center mb-6">
