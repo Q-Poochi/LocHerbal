@@ -63,8 +63,27 @@ export default function UuDaiPage() {
     <>
       <Navbar />
       <main className="pb-16 md:pb-0">
+        {/* Nền riêng trang ưu đãi — ảnh (uu-dai.jpg) dạng CSS layer fixed:
+            overlay sage sáng đè lên ảnh để chữ vẫn dễ đọc.
+            z-index -1 để ảnh nằm DƯỚI toàn bộ nội dung (z-0 positioned sẽ vẽ đè
+            lên section thường — bug đã gặp trên /tu-van), nhưng vẫn trên
+            BotanicalBackground toàn cục */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 overflow-hidden"
+          style={{
+            zIndex: -1,
+            backgroundColor: '#f8faf9',
+            backgroundImage:
+              'linear-gradient(180deg, rgba(248,250,249,0.86) 0%, rgba(222,232,224,0.55) 45%, rgba(248,250,249,0.90) 100%), url(/images/decor/uu-dai.webp)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+
         {/* Hero */}
-        <section className="w-full bg-background">
+        <section className="w-full bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] py-16 md:py-20 text-center">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-tertiary/40
                              text-tertiary font-label-caps text-label-caps uppercase tracking-[0.1em] bg-white/40">
@@ -82,7 +101,7 @@ export default function UuDaiPage() {
         </section>
 
         {/* Promo codes */}
-        <section className="w-full py-8 bg-surface-container-low border-y border-outline-variant/40">
+        <section className="w-full py-8 bg-white/40 border-y border-outline-variant/40">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <h2 className="font-headline-sm text-headline-sm text-on-surface mb-6 text-center">Mã ưu đãi đang chạy</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -110,7 +129,7 @@ export default function UuDaiPage() {
         </section>
 
         {/* Featured deals */}
-        <section className="w-full py-16 md:py-20 bg-background">
+        <section className="w-full py-16 md:py-20 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="text-center mb-12">
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Sản phẩm giảm giá</span>
