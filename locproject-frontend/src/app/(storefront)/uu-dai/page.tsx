@@ -70,18 +70,19 @@ export default function UuDaiPage() {
       <main className="pb-16 md:pb-0">
         {/* ═══════ SECTION 1: HERO BANNER ═══════ */}
         <section className="relative w-full h-[480px] overflow-hidden">
-          {/* Background ảnh (uu-dai.webp — ảnh nền được cung cấp) */}
+          {/* Background ảnh (uu-dai.webp — ảnh thảo mộc mới, khổ dọc;
+              object-position 65% để crop vào cụm lá trên đĩa) */}
           <Image
             src="/images/decor/uu-dai.webp"
             alt="Ưu đãi LocHerbal"
             fill
             priority
-            quality={95}
-            className="object-cover object-center scale-105"
+            quality={90}
+            className="object-cover object-[center_65%] scale-105"
           />
 
-          {/* Overlay gradient — tối dần từ trái sang phải */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0d3320]/85 via-[#166b42]/60 to-transparent" />
+          {/* Overlay gradient — tối dần từ trái sang phải (nhẹ hơn vì ảnh gốc đã tối) */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0d3320]/70 via-[#166b42]/40 to-transparent" />
 
           {/* Overlay bottom fade */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#fafaf8] via-transparent to-transparent" />
