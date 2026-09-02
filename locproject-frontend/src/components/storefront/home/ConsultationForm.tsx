@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import { useConsultationSlots, useBookConsultation } from '@/lib/hooks/useConsultation';
 
 type FormState = 'idle' | 'loading' | 'success';
@@ -77,7 +78,28 @@ export default function ConsultationForm({ showHeader = true }: { showHeader?: b
     return (
     <section id="consultation" className="w-full py-16 md:py-20 bg-primary-50">
       <div className="max-w-[1280px] mx-auto px-4 md:px-10">
-        <div className="max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+          {/* Ảnh tư vấn — dược sĩ đồng hành cùng khách hàng */}
+          <div className="relative rounded-3xl overflow-hidden shadow-lg aspect-[4/5]
+                          max-w-md w-full mx-auto lg:max-w-none lg:mx-0 order-2 lg:order-1">
+            <Image
+              src="/images/decor/tu-van.webp"
+              alt="Dược sĩ LocHerbal tư vấn sức khỏe cho khách hàng"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-primary-900/50 via-transparent to-transparent"
+            />
+            <div className="absolute bottom-5 left-5 right-5 text-white">
+              <p className="font-display font-bold text-lg md:text-xl">Dược sĩ đồng hành cùng bạn</p>
+              <p className="text-sm text-white/85 mt-1">Tư vấn 1-1 theo đúng thể trạng, hoàn toàn miễn phí</p>
+            </div>
+          </div>
+
+          <div className="order-1 lg:order-2">
           {/* Header — chỉ render ở nơi KHÔNG có hero riêng (home). Trang /tu-van
               đã có hero giống hệt nội dung này nên truyền showHeader={false}
               để tránh lặp nội dung "y hệt 2 lần" (bug 5) */}
@@ -301,6 +323,7 @@ export default function ConsultationForm({ showHeader = true }: { showHeader?: b
                 </p>
               </form>
             )}
+          </div>
           </div>
         </div>
       </div>
