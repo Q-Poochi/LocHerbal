@@ -64,7 +64,8 @@ export default function UuDaiPage() {
       <Navbar />
       <main className="pb-16 md:pb-0">
         {/* Nền riêng trang ưu đãi — ảnh (uu-dai.jpg) dạng CSS layer fixed:
-            overlay sage sáng đè lên ảnh để chữ vẫn dễ đọc.
+            overlay sage RẤT NHẸ chỉ để dịu độ tương phản, giữ ảnh rõ nét (không đục).
+            Chữ hero được đảm bảo đọc được bằng veil riêng trong section Hero.
             z-index -1 để ảnh nằm DƯỚI toàn bộ nội dung (z-0 positioned sẽ vẽ đè
             lên section thường — bug đã gặp trên /tu-van), nhưng vẫn trên
             BotanicalBackground toàn cục */}
@@ -75,7 +76,7 @@ export default function UuDaiPage() {
             zIndex: -1,
             backgroundColor: '#f8faf9',
             backgroundImage:
-              'linear-gradient(180deg, rgba(233,241,234,0.55) 0%, rgba(186,208,191,0.28) 45%, rgba(231,239,232,0.62) 100%), url(/images/decor/uu-dai.webp)',
+              'linear-gradient(180deg, rgba(233,241,234,0.28) 0%, rgba(186,208,191,0.08) 45%, rgba(231,239,232,0.40) 100%), url(/images/decor/uu-dai.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -83,8 +84,14 @@ export default function UuDaiPage() {
         />
 
         {/* Hero */}
-        <section className="w-full bg-transparent">
-          <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] py-16 md:py-20 text-center">
+        <section className="w-full bg-transparent relative">
+          {/* Veil cục bộ: gradient trắng mờ dần ngay sau hero để chữ dễ đọc
+              mà không làm đục ảnh nền ở phần dưới trang */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#f8faf9]/85 via-[#f8faf9]/45 to-transparent"
+          />
+          <div className="relative mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] py-16 md:py-20 text-center">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-tertiary/40
                              text-tertiary font-label-caps text-label-caps uppercase tracking-[0.1em] bg-white/40">
               <span className="material-symbols-outlined text-base">local_activity</span>
