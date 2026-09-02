@@ -404,44 +404,20 @@ export default function HomePage() {
             }}
           />
           <div className="relative mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-              {/* Ảnh chứng nhận — tiêu chuẩn chất lượng */}
-              <div className="relative rounded-lg overflow-hidden shadow-botanical-hover
-                              aspect-[4/5] max-w-md w-full mx-auto lg:max-w-none lg:mx-0">
-                <Image
-                  src="/images/decor/authentication.webp"
-                  alt="Chứng nhận và giấy kiểm nghiệm chất lượng sản phẩm LocHerbal"
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
-                />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent"
-                />
-                <div className="absolute bottom-4 left-4 right-4 text-white">
-                  <p className="font-label-caps text-label-caps uppercase tracking-[0.1em]">Chất lượng & tiêu chuẩn</p>
-                  <p className="font-body-md text-body-md text-white/85 mt-1">Minh bạch nguồn gốc — kiểm nghiệm trước khi đến tay bạn</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
+              {[
+                { icon: 'spa', title: 'Thiên nhiên thuần khiết', desc: 'Nguyên liệu sạch, canh tác bền vững từ các vùng trồng dược liệu uy tín.' },
+                { icon: 'science', title: 'Chuẩn khoa học', desc: 'Được nghiên cứu, kiểm nghiệm và bào chế theo quy trình apothecary khắt khe.' },
+                { icon: 'support_agent', title: 'Tư vấn chuyên môn', desc: 'Đội ngũ dược sĩ đồng hành, đặt lịch tư vấn trực tiếp miễn phí.' },
+              ].map((v) => (
+                <div key={v.title} className="flex flex-col items-center gap-4">
+                  <span className="w-14 h-14 rounded-full bg-on-primary/10 border border-on-primary/20 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>{v.icon}</span>
+                  </span>
+                  <h3 className="font-headline-md text-headline-md">{v.title}</h3>
+                  <p className="font-body-md text-body-md text-on-primary/80 max-w-xs">{v.desc}</p>
                 </div>
-              </div>
-
-              <div className="flex flex-col gap-8">
-                {[
-                  { icon: 'spa', title: 'Thiên nhiên thuần khiết', desc: 'Nguyên liệu sạch, canh tác bền vững từ các vùng trồng dược liệu uy tín.' },
-                  { icon: 'science', title: 'Chuẩn khoa học', desc: 'Được nghiên cứu, kiểm nghiệm và bào chế theo quy trình apothecary khắt khe.' },
-                  { icon: 'support_agent', title: 'Tư vấn chuyên môn', desc: 'Đội ngũ dược sĩ đồng hành, đặt lịch tư vấn trực tiếp miễn phí.' },
-                ].map((v) => (
-                  <div key={v.title} className="flex items-start gap-4 text-left">
-                    <span className="w-14 h-14 rounded-full bg-on-primary/10 border border-on-primary/20 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>{v.icon}</span>
-                    </span>
-                    <div>
-                      <h3 className="font-headline-md text-headline-md">{v.title}</h3>
-                      <p className="font-body-md text-body-md text-on-primary/80 mt-1 max-w-md">{v.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </section>

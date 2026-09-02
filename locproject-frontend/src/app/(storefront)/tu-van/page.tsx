@@ -14,8 +14,24 @@ export default function TuVanPage() {
     <>
       <Navbar />
       <main className="pb-16 md:pb-0">
+        {/* Nền riêng trang tư vấn — ảnh lá & viên nang thảo dược (tu-van.jpg) dưới dạng
+            CSS layer fixed: overlay sage sáng đè lên ảnh để chữ vẫn dễ đọc */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 overflow-hidden"
+          style={{
+            zIndex: 0,
+            backgroundColor: '#f8faf9',
+            backgroundImage:
+              'linear-gradient(180deg, rgba(248,250,249,0.82) 0%, rgba(228,236,229,0.45) 45%, rgba(248,250,249,0.88) 100%), url(/images/decor/tu-van.webp)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+
         {/* Hero */}
-        <section className="w-full bg-background">
+        <section className="w-full bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] py-16 md:py-20 text-center">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-tertiary/40
                              text-tertiary font-label-caps text-label-caps uppercase tracking-[0.1em] bg-white/40">
@@ -33,7 +49,7 @@ export default function TuVanPage() {
         </section>
 
         {/* Trust strip */}
-        <section className="w-full py-8 bg-surface-container-low border-y border-outline-variant/40">
+        <section className="w-full py-8 bg-white/40 border-y border-outline-variant/40">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               {[
@@ -60,7 +76,7 @@ export default function TuVanPage() {
         <ConsultationForm showHeader={false} />
 
         {/* CTA về sản phẩm */}
-        <section className="w-full py-16 bg-background">
+        <section className="w-full py-16 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] text-center">
             <h2 className="font-headline-lg text-headline-lg md:text-headline-xl text-primary">Chưa biết chọn sản phẩm nào?</h2>
             <p className="font-body-lg text-body-lg text-on-surface-variant mt-4 max-w-xl mx-auto">

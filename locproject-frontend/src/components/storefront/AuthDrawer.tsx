@@ -242,7 +242,7 @@ export default function AuthDrawer() {
 
       <div
         data-testid="auth-drawer"
-        className={`absolute bg-white shadow-xl flex flex-col
+        className={`absolute shadow-xl flex flex-col
                     transition-transform duration-300 ease-in-out
                     bottom-0 left-0 right-0 h-[92dvh] rounded-t-3xl
                     md:top-0 md:bottom-auto md:left-auto md:right-0 md:h-full md:w-full
@@ -251,6 +251,16 @@ export default function AuthDrawer() {
                       ? 'translate-y-0 md:translate-y-0 md:translate-x-0'
                       : 'translate-y-full md:translate-y-0 md:translate-x-full'
                     }`}
+        style={{
+          // Nền drawer auth — ảnh chứng nhận (authentication.jpg) dạng CSS layer:
+          // overlay trắng-sage sáng đè lên ảnh, form vẫn nổi bật và dễ đọc
+          backgroundColor: '#faf9f6',
+          backgroundImage:
+            'linear-gradient(180deg, rgba(250,249,246,0.93) 0%, rgba(233,237,230,0.80) 45%, rgba(250,249,246,0.93) 100%), url(/images/decor/authentication.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
       >
         {isDrawerOpen && (
           <>
