@@ -14,9 +14,10 @@ export function resolveImageUrl(url?: string | null): string {
   // ảnh thật để UI render nền botanical dự phòng thay vì khối xanh đậm.
   if (trimmed.includes('placehold.co')) return '';
 
-  // Legacy data: ảnh từng được lưu với port frontend cũ (3000) — sửa về backend
-  if (trimmed.includes('localhost:3000')) {
-    return trimmed.replace('localhost:3000', new URL(API_URL).host);
+  // Legacy data: ảnh từng được lưu với port frontend cũ (3000) hoặc API cục bộ
+  // (4000) — sửa host về backend hiện tại
+  if (trimmed.includes('localhost:3000') || trimmed.includes('localhost:4000')) {
+    return trimmed.replace(/localhost:(3000|4000)/, new URL(API_URL).host);
   }
 
   // Đường dẫn tương đối (/uploads/...) — ghép base API

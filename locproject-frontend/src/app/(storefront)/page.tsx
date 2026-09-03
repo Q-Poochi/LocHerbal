@@ -310,13 +310,7 @@ export default function HomePage() {
                                        flex flex-col overflow-hidden"
                           >
                             <div
-                              className="relative aspect-square overflow-hidden"
-                              style={{
-                                backgroundColor: '#eef3ec',
-                                backgroundImage: 'url(/images/decor/home-bg.webp)',
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                              }}
+                              className="relative aspect-square overflow-hidden bg-surface-container"
                             >
                               {img ? (
                                 <Image
