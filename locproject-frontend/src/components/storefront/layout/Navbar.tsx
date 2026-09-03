@@ -450,7 +450,7 @@ export default function Navbar() {
               { label: 'Chuyên khoa', href: '/products' },
               { label: 'Ưu đãi', href: '/uu-dai' },
               { label: 'Về chúng tôi', href: '/ve-chung-toi' },
-              { label: 'Blog', href: '/#blog' },
+              { label: 'Blog', href: '/blog' },
               { label: 'Tư vấn', href: '/tu-van' },
             ].map(item => (
               <Link
@@ -631,7 +631,7 @@ export default function Navbar() {
             { href: '/uu-dai', label: 'Ưu đãi', icon: 'sell' },
             { href: '/tu-van', label: 'Tư vấn', icon: 'handshake' },
             { href: '/ve-chung-toi', label: 'Về chúng tôi', icon: 'info' },
-            { href: '/#blog', label: 'Blog', icon: 'article' },
+            { href: '/blog', label: 'Blog', icon: 'article' },
           ].map(({ href, label, icon, testId, sub }) => (
             <Link
               key={href + label}
