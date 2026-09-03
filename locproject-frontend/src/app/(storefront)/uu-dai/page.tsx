@@ -70,15 +70,15 @@ export default function UuDaiPage() {
       <main className="pb-16 md:pb-0">
         {/* ═══════ SECTION 1: HERO BANNER ═══════ */}
         <section className="relative w-full h-[480px] overflow-hidden">
-          {/* Background ảnh (uu-dai.webp — ảnh thảo mộc mới, khổ dọc;
-              object-position 65% để crop vào cụm lá trên đĩa) */}
+          {/* Background ảnh (uu-dai.webp — ảnh thảo mộc mới, khổ ngang 4320×2856;
+              object-center để giữ trục chính của ảnh) */}
           <Image
             src="/images/decor/uu-dai.webp"
             alt="Ưu đãi LocHerbal"
             fill
             priority
             quality={90}
-            className="object-cover object-[center_65%] scale-105"
+            className="object-cover object-center scale-105"
           />
 
           {/* Overlay gradient — tối dần từ trái sang phải (nhẹ hơn vì ảnh gốc đã tối) */}
