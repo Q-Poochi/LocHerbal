@@ -15,7 +15,7 @@ export default function BotanicalBackground() {
         zIndex: 0,
         backgroundColor: '#e7f0e9',
         backgroundImage:
-          'linear-gradient(180deg, rgba(219,233,222,0.78) 0%, rgba(171,196,177,0.42) 45%, rgba(214,229,217,0.78) 100%), url(/images/decor/home-bg.webp)',
+          'linear-gradient(180deg, rgba(219,233,222,0.88) 0%, rgba(171,196,177,0.66) 45%, rgba(214,229,217,0.88) 100%), url(/images/decor/home-bg-soft.webp)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

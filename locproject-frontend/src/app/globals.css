@@ -56,11 +56,11 @@
   --color-primary-container:  #4c5e4d;
   --color-on-primary-container: #f7fff3;
   --color-inverse-primary:    #b9ccb7;
-  --color-secondary:          #58605a;
+  --color-secondary:          #3c473d;  /* đậm hơn #58605a — chữ phụ trên nền lá vẫn rõ */
   --color-on-secondary:       #ffffff;
   --color-secondary-container: #dde5dd;
   --color-on-secondary-container: #5e6660;
-  --color-tertiary:           #555e54;
+  --color-tertiary:           #47524a;  /* đậm hơn #555e54 — badge/eyebrow dễ đọc */
   --color-on-tertiary:        #ffffff;
   --color-tertiary-container: #6d776c;
   --color-on-tertiary-container: #f7fff3;

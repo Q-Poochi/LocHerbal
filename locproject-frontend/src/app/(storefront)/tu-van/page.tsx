@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Navbar from '@/components/storefront/layout/Navbar';
 import Footer from '@/components/storefront/layout/Footer';
 import ConsultationForm from '@/components/storefront/home/ConsultationForm';
@@ -25,7 +25,7 @@ export default function TuVanPage() {
             zIndex: -1,
             backgroundColor: '#f8faf9',
             backgroundImage:
-              'linear-gradient(180deg, rgba(248,250,249,0.86) 0%, rgba(222,232,224,0.55) 45%, rgba(248,250,249,0.90) 100%), url(/images/decor/tu-van.webp)',
+              'linear-gradient(180deg, rgba(248,250,249,0.92) 0%, rgba(226,235,228,0.74) 45%, rgba(248,250,249,0.94) 100%), url(/images/decor/tu-van-soft.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
