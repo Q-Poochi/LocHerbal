@@ -68,7 +68,7 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
                  border border-border hover:border-primary-200 transition-all duration-300 block"
     >
       {/* Image area */}
-      <div className="relative aspect-[3/4] bg-gradient-to-br from-primary-50 to-primary-100 overflow-hidden">
+      <div className="relative aspect-[3/4] bg-surface-container overflow-hidden">
         {resolveImageUrl(product.thumbnailUrl) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -79,10 +79,10 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <span
-              className="material-symbols-outlined text-primary-200 group-hover:scale-105 transition-transform duration-400"
+              className="material-symbols-outlined text-primary/40 group-hover:scale-105 transition-transform duration-400"
               style={{ fontSize: '72px', fontVariationSettings: "'FILL' 1" }}
             >
-              local_pharmacy
+              eco
             </span>
           </div>
         )}
@@ -92,11 +92,6 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
           {hasDiscount && (
             <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
               -{discountPct}%
-            </span>
-          )}
-          {product.seq === 1 && (
-            <span className="bg-accent-gold text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              Bán chạy
             </span>
           )}
         </div>
@@ -134,18 +129,6 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
 
       {/* Info */}
       <div className="p-4">
-        {/* Rating */}
-        <div className="flex items-center gap-1 mb-2">
-          {[1, 2, 3, 4, 5].map(s => (
-            <span
-              key={s}
-              className={`material-symbols-outlined text-xs ${s <= 4 ? 'text-accent-gold' : 'text-gray-200'}`}
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >star</span>
-          ))}
-          <span className="text-[10px] text-text-secondary ml-1">(24)</span>
-        </div>
-
         <h3
           className="font-display font-semibold text-sm text-text-primary line-clamp-2 mb-2 group-hover:text-primary-700 transition-colors h-10"
           dangerouslySetInnerHTML={{ __html: highlight(product.name, highlightQuery) }}

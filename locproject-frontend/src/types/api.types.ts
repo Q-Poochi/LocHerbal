@@ -12,7 +12,6 @@ export interface Product {
   name: string;
   slug: string;
   thumbnailUrl?: string;
-  seq?: number;
   category: { name: string };
   variants: {
     id?: string;
