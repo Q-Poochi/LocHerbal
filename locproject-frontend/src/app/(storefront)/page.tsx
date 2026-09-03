@@ -234,7 +234,7 @@ export default function HomePage() {
 
 
         {/* ── FEATURED PRODUCTS ──────────────────────────────────── */}
-        <section className="w-full py-16 md:py-20 bg-background">
+        <section className="w-full py-16 md:py-20 bg-gradient-to-b from-[#f2f7f3] via-[#e4efe6] to-[#f2f7f3]">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="text-center mb-12">
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Bộ sưu tập</span>
@@ -423,7 +423,7 @@ export default function HomePage() {
         </section>
 
         {/* ── PROMO → /uu-dai ─────────────────────────────────────── */}
-        <section className="w-full py-16 md:py-24 bg-background">
+        <section className="w-full py-16 md:py-24 bg-gradient-to-b from-[#eef5ef] via-[#dfece1] to-[#eef5ef]">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="rounded-lg overflow-hidden bg-surface-container-lowest border border-outline-variant/50 shadow-botanical
                             grid grid-cols-1 md:grid-cols-2 items-center">

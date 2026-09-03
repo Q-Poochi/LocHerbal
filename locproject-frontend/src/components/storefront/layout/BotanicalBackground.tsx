@@ -13,9 +13,9 @@ export default function BotanicalBackground() {
       className="pointer-events-none fixed inset-0 overflow-hidden"
       style={{
         zIndex: 0,
-        backgroundColor: '#f8faf9',
+        backgroundColor: '#e7f0e9',
         backgroundImage:
-          'linear-gradient(180deg, rgba(248,250,249,0.88) 0%, rgba(211,222,212,0.55) 45%, rgba(248,250,249,0.90) 100%), url(/images/decor/home-bg.webp)',
+          'linear-gradient(180deg, rgba(219,233,222,0.78) 0%, rgba(171,196,177,0.42) 45%, rgba(214,229,217,0.78) 100%), url(/images/decor/home-bg.webp)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
