@@ -238,7 +238,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
             <div className="text-center mb-12">
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Bộ sưu tập</span>
-              <h2 className="font-serif-classic font-light text-headline-lg md:text-headline-xl text-primary mt-2 tracking-tight">
+              <h2 className="font-serif-classic font-semibold text-headline-lg md:text-headline-xl text-primary mt-2 tracking-tight">
                 Sản phẩm nổi bật
               </h2>
             </div>

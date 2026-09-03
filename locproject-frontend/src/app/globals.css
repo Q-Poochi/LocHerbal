@@ -50,9 +50,10 @@
   --color-primary:     #012d1d;
 
   /* ═══ PREMIUM EDITORIAL SAGE — DESIGN.md === */
-  --color-primary:            #4f6050;
+  /* (tăng tương phản: #4f6050 gốc bị nhạt trên nền lá, người dùng báo "chữ mờ") */
+  --color-primary:            #2f3e30;
   --color-on-primary:         #ffffff;
-  --color-primary-container:  #677968;
+  --color-primary-container:  #4c5e4d;
   --color-on-primary-container: #f7fff3;
   --color-inverse-primary:    #b9ccb7;
   --color-secondary:          #58605a;
@@ -267,7 +268,7 @@ body {
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display), sans-serif;
-    font-weight: 600;
+    font-weight: 700; /* đậm hơn (600 cũ) — chữ tiêu đề mảnh bị "mờ" trên nền lá */
     letter-spacing: -0.02em;
   }
 }
