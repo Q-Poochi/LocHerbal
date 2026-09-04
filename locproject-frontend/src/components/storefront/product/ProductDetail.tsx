@@ -10,7 +10,7 @@ async function getProduct(slug: string): Promise<ProductDetailType | null> {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const res = await fetch(`${baseUrl}/products/slug/${slug}`, {
-            next: { revalidate: 60 },
+            next: { revalidate: 60, tags: ['products', `product:${slug}`] },
         });
 
         if (!res.ok) {

@@ -32,7 +32,7 @@ async function getRelated(categoryId: string, limit = 4): Promise<RelatedProduct
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const res = await fetch(
             `${baseUrl}/products?categoryId=${encodeURIComponent(categoryId)}&limit=${limit}&sort=popular`,
-            { next: { revalidate: 60 } },
+            { next: { revalidate: 60, tags: ['products'] } },
         );
         if (!res.ok) return [];
         const json: ProductsResponse = await res.json();

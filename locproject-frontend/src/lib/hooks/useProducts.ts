@@ -1,4 +1,5 @@
 ﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { revalidateStorefront } from '@/lib/revalidate';
 import { useRouter } from 'next/navigation';
 import { apiClient, refreshAccessToken } from '../api/client';
 import { ProductDetail, CartItem, Product, Category } from '../../types/api.types';
@@ -193,6 +194,8 @@ export function useCreateProduct() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
+            // Bust Data Cache 60s của Next — danh sách + related products hiện ngay sản phẩm mới
+            void revalidateStorefront(['products']);
         },
     });
 }
@@ -204,9 +207,13 @@ export function useUpdateProduct(id: string) {
             const { data } = await apiClient.put(`/products/${id}`, payload);
             return data;
         },
-        onSuccess: () => {
+        onSuccess: (_data, payload) => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
             queryClient.invalidateQueries({ queryKey: ['product'] });
+            // Bust Data Cache 60s — trang detail (nếu đổi slug thì tag theo slug mới)
+            void revalidateStorefront(
+                payload?.slug ? ['products', `product:${payload.slug}`] : ['products'],
+            );
         },
     });
 }

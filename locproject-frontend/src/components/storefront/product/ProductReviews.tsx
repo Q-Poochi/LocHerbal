@@ -18,7 +18,7 @@ async function getReviews(productId: string): Promise<ReviewsResponse> {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const res = await fetch(`${baseUrl}/reviews/${productId}?limit=50`, {
-            next: { revalidate: 60 },
+            next: { revalidate: 60, tags: ['reviews', `product:${productId}`] },
         });
         if (!res.ok) return { data: [], total: 0 };
         const json = await res.json();
