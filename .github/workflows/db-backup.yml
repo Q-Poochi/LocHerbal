@@ -17,6 +17,8 @@ jobs:
   # PRODUCTION — ưu tiên tuyệt đối.
   backup-production:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # cần để tạo GitHub Release khi chưa có BACKUP_S3_*
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,8 +68,9 @@ jobs:
           # Lưu trữ dài hạn phải qua step S3 bên dưới.
           retention-days: 90
 
-      - name: Push to S3-compatible backup storage (optional)
+      - name: Push to durable storage (S3 nếu có, fallback GitHub Release)
         env:
+          GH_TOKEN: ${{ github.token }}
           BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
           BACKUP_S3_REGION: ${{ secrets.BACKUP_S3_REGION }}
           BACKUP_S3_ACCESS_KEY: ${{ secrets.BACKUP_S3_ACCESS_KEY }}
@@ -75,17 +78,41 @@ jobs:
           BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
         run: |
           set -euo pipefail
-          if [ -z "${BACKUP_S3_ENDPOINT:-}" ] || [ -z "${BACKUP_S3_BUCKET:-}" ] || \
-             [ -z "${BACKUP_S3_ACCESS_KEY:-}" ] || [ -z "${BACKUP_S3_SECRET_KEY:-}" ]; then
-            echo "⚠️ Chưa set 4 secrets BACKUP_S3_{ENDPOINT,BUCKET,ACCESS_KEY,SECRET_KEY} — backup chỉ nằm trong artifact 90 ngày."
-            echo "👉 Nên tạo bucket RIÊNG cho backup (Cloudflare R2 / MinIO / B2 — S3-compatible) rồi set secrets."
+          if [ -n "${BACKUP_S3_ENDPOINT:-}" ] && [ -n "${BACKUP_S3_BUCKET:-}" ] && \
+             [ -n "${BACKUP_S3_ACCESS_KEY:-}" ] && [ -n "${BACKUP_S3_SECRET_KEY:-}" ]; then
+            aws s3 cp "${BACKUP_FILE}" \
+              "s3://${BACKUP_S3_BUCKET}/prod/$(basename "$BACKUP_FILE")" \
+              --endpoint-url "$BACKUP_S3_ENDPOINT" \
+              ${BACKUP_S3_REGION:+--region "$BACKUP_S3_REGION"}
+            echo "✅ Đã push lên S3-compatible bucket RIÊNG: s3://${BACKUP_S3_BUCKET}/prod/"
             exit 0
           fi
-          aws s3 cp "${BACKUP_FILE}" \
-            "s3://${BACKUP_S3_BUCKET}/prod/$(basename "$BACKUP_FILE")" \
-            --endpoint-url "$BACKUP_S3_ENDPOINT" \
-            ${BACKUP_S3_REGION:+--region "$BACKUP_S3_REGION"}
-          echo "✅ Đã push backup production lên object storage: s3://${BACKUP_S3_BUCKET}/prod/"
+          # Fallback durable KHÔNG cần account ngoài: GitHub Release trên repo
+          # private (asset chỉ người có quyền repo thấy được, giữ vô hạn tới
+          # khi xóa — không giới hạn 90 ngày như artifact).
+          if ! gh release create "db-backup-${TIMESTAMP}" "${BACKUP_FILE}" \
+                --title "DB backup production ${TIMESTAMP} UTC" \
+                --notes "pg_dump production, tự verify trong workflow (≥30 bảng + users/orders + data)." \
+                --latest 2>/dev/null; then
+            gh release upload "db-backup-${TIMESTAMP}" "${BACKUP_FILE}" --clobber
+          fi
+          echo "✅ Đã upload backup lên GitHub Release: db-backup-${TIMESTAMP}"
+          echo "👉 Vẫn nên set BACKUP_S3_* (R2/MinIO/B2) để tách lưu trữ khỏi GitHub."
+
+      - name: Prune db-backup releases cũ hơn 90 ngày
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          CUTOFF=$(date -u -d '90 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh release list --json tagName,createdAt,isLatest \
+            | jq -r --arg c "$CUTOFF" \
+              '.[] | select((.tagName | startswith("db-backup-")) and (.createdAt < $c) and (.isLatest | not)) | .tagName' \
+            | while read -r tag; do
+                echo "Xóa release cũ: $tag"
+                gh release delete "$tag" --cleanup-tag -y || true
+              done
 
   # STAGING — backup riêng. LƯU Ý: Railway project hiện chỉ có MỘT environment
   # tên "production" (chưa có staging env thật) nên job này resolve cùng DB.

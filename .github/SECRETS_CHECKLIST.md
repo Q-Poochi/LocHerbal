@@ -6,12 +6,23 @@ Settings → Secrets and variables → Actions → New repository secret
 ## Secrets bắt buộc (Repository Secrets)
 
 ### Production / Staging DB
-- [ ] STAGING_DATABASE_URL
-      postgresql://user:pass@host:5432/ecommerce_staging
-- [ ] STAGING_DIRECT_URL  
-      (URL kết nối thẳng Postgres, bypass PgBouncer — dùng cho migration)
-- [ ] PRODUCTION_DATABASE_URL
-- [ ] PRODUCTION_DIRECT_URL
+- [x] STAGING_DATABASE_URL        (đã set — giờ CHỈ dùng cho deploy-staging.yml; workflow backup KHÔNG dùng, tự resolve qua Railway API)
+- [x] STAGING_DIRECT_URL          (đã set — URL kết nối thẳng Postgres, bypass PgBouncer, dùng cho migration)
+- [ ] PROD_DATABASE_URL           (TÙY CHỌN — db-backup.yml tự resolve qua Railway API; set nếu muốn override, VD khi Railway API không suy ra được URL public)
+- [ ] PROD_DIRECT_URL             (chưa dùng)
+
+### Backup DB (workflow db-backup.yml — chạy 03:00 UTC hằng ngày)
+- [x] RAILWAY_API_TOKEN           (đã set — auto-resolve production DB URL)
+- [x] RAILWAY_PROJECT_ID          (đã set)
+- [x] RAILWAY_BACKEND_SERVICE_ID  (đã set — fallback service khi không tìm thấy service Postgres)
+- [ ] BACKUP_S3_ENDPOINT          (NÊN set — Cloudflare R2 / MinIO / B2, bucket RIÊNG chỉ dùng cho backup)
+- [ ] BACKUP_S3_REGION            (TÙY CHỌN)
+- [ ] BACKUP_S3_ACCESS_KEY        (NÊN set)
+- [ ] BACKUP_S3_SECRET_KEY        (NÊN set)
+- [ ] BACKUP_S3_BUCKET            (NÊN set)
+      → Không set 4 secrets trên: backup tự đẩy lên GitHub Release
+        `db-backup-<timestamp>` (durable, private, giữ tới khi prune 90 ngày)
+        — vẫn tốt hơn artifact 90 ngày, nhưng nên tách hẳn storage ngoài.
 
 ### JWT
 - [ ] STAGING_JWT_ACCESS_SECRET   (random string >= 64 chars)

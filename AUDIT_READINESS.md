@@ -71,10 +71,44 @@
 
 K6 2.1.0 chạy `04-race-payment.js` (local backend): 200/200 iterations xong nhưng **mọi add-to-cart fail 400 "Yêu cầu customerId hoặc sessionId"** — script/data cũ (user `test2@locherbal.com`, variant CT-001, addressId) không khớp DB sau re-seed; `IPN success: 0`. ⇒ **Chưa test được, không chấm.**
 
-### Backup DB tự động — ✅ CÓ THẬT
+### Backup DB production — ✅ ĐÃ FIX (04/09/2026; trước đó KHÔNG có backup hợp lệ nào)
 
-`db-backup.yml` (schedule) run **success** liên tục: 28/08, 29/08, 30/08 (GitHub Actions). Backup pg_dump hằng ngày đang chạy.
+**Phát hiện (sửa lại kết luận 30/08 — entry cũ "✅ CÓ THẬT" là SAI):**
+`db-backup.yml` cũ chỉ dump `STAGING_DATABASE_URL`, và khi chạy lại cơ chế cũ,
+dump ra đúng **20 bytes (gzip rỗng — connection fail, lỗi bị nuốt do thiếu
+pipefail trong container)** dù workflow báo success. ⇒ Trước 04/09/2026
+**không có backup hợp lệ nào đang chạy** (kể cả staging); nguyên nhân báo cáo
+30/08 sai là tin vào dấu "✅ success" mà không kiểm tra nội dung file backup.
 
+**Đã fix (commits `e24aa9a` → `6c61060` → `8733291` + follow-up):**
+- Job `backup-production` riêng, tự resolve DB URL qua **Railway GraphQL API**
+  (env `production` → service Postgres → `DATABASE_PUBLIC_URL` hoặc dựng URL
+  public từ TCP proxy). URL chỉ nằm trong `RUNNER_TEMP` + `::add-mask::`,
+  không in ra log; không cần secret DB thủ công (có thể override bằng
+  secret `PROD_DATABASE_URL`)
+- `pg_dump` bằng docker `postgres:18` — **khớp version server (18.6)**,
+  `bash -o pipefail` trong container (lỗi connection không còn bị nuốt)
+- **Verify tự động**: size > 2KB, `gunzip -t`, **≥30 bảng, bắt buộc có
+  `users`/`orders`, phải có data (`COPY`)** — dump rỗng/sai sẽ FAIL run
+- Job staging giữ riêng (hiện resolve cùng DB vì Railway project chỉ có
+  1 environment `production`; khi tạo staging env thật, đổi 1 tham số)
+- `.gitignore` chặn `/backups/`, `*.dump`, `*.sql.gz`, `/cookies.txt`… —
+  dump DB prod 3 file trước đó nằm ở repo root không thể lỡ tay commit
+
+**Bằng chứng — run github.com/Q-Poochi/LocHerbal/actions/runs/33888220204 (SUCCESS cả 2 job):**
+- Artifact `locherbal-prod-db-backup-20260904_151325` =
+  `locherbal_prod_20260904_151325.sql.gz` (54.2 KB):
+  **52 CREATE TABLE + 52 khối COPY data**, `gunzip -t` pass
+- **Restore test THÀNH CÔNG** vào postgres:18 tạm (`ON_ERROR_STOP=1`,
+  container đã xóa sau verify), đối chiếu số dòng khớp **100%** với production:
+  users 12=12, orders 5=5, customers 10=10, products 12=12, order_items 5=5
+- Schedule mới: hằng ngày 03:00 UTC (10:00 giờ VN)
+
+**Còn dang dở (không đóng entry hoàn toàn):**
+- 🟡 Lưu trữ dài hạn: artifact GitHub chỉ giữ **90 ngày**. Đã thêm fallback
+  **GitHub Release** (durable, private) tự đẩy mỗi backup; **nên set 4 secrets
+  `BACKUP_S3_{ENDPOINT,BUCKET,ACCESS_KEY,SECRET_KEY}`** (Cloudflare R2 /
+  MinIO / B2 — bucket RIÊNG cho backup) để tách hẳn lưu trữ khỏi GitHub.
 ---
 
 ## 3. THANH TOÁN — ĐIỂM: 3.0/10
