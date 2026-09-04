@@ -6,25 +6,103 @@ on:
     - cron: "0 3 * * *"
   workflow_dispatch: # cho phép chạy tay để test
 
+permissions:
+  contents: read
+
+env:
+  # pg_dump nên CÙNG version với server (production là PostgreSQL 18.x)
+  PG_IMAGE: postgres:18
+
 jobs:
-  backup:
+  # STAGING — dùng secret STAGING_DATABASE_URL (như trước + kiểm tra toàn vẹn)
+  backup-staging:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Dump PostgreSQL
+      - name: Dump PostgreSQL (staging)
         env:
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
         run: |
-          TIMESTAMP=$(date -u +%Y%m%d_%H%M%S)
+          set -euo pipefail
+          [ -n "$STAGING_DATABASE_URL" ] || { echo "::error::Thiếu secret STAGING_DATABASE_URL"; exit 1; }
+          TS=$(date -u +%Y%m%d_%H%M%S)
+          echo "TIMESTAMP=$TS" >> "$GITHUB_ENV"
           mkdir -p backups
-          pg_dump --no-owner --no-privileges "$STAGING_DATABASE_URL" | gzip > "backups/locherbal_${TIMESTAMP}.sql.gz"
-          echo "TIMESTAMP=$TIMESTAMP" >> "$GITHUB_ENV"
+          docker run --rm -e DUMP_URL="$STAGING_DATABASE_URL" -e TS="$TS" -v "$PWD/backups:/out" \
+            ${{ env.PG_IMAGE }} \
+            sh -c 'pg_dump "$DUMP_URL" --no-owner --no-privileges | gzip > "/out/locherbal_staging_${TS}.sql.gz"'
 
-      - name: Upload backup artifact
+      - name: Verify dump integrity (staging)
+        working-directory: backups
+        run: |
+          set -euo pipefail
+          F="locherbal_staging_${TIMESTAMP}.sql.gz"
+          SIZE=$(stat -c%s "$F")
+          [ "$SIZE" -gt 2048 ] || { echo "::error::Dump quá nhỏ ($SIZE bytes) — dump lỗi?"; exit 1; }
+          gunzip -t "$F"
+          TABLES=$(gunzip -c "$F" | grep -c 'CREATE TABLE' || true)
+          [ "$TABLES" -ge 10 ] || { echo "::error::Chỉ thấy $TABLES bảng — dump không đầy đủ"; exit 1; }
+          echo "✅ Staging backup OK: $F | $SIZE bytes | $TABLES tables"
+
+      - name: Upload backup artifact (staging)
         uses: actions/upload-artifact@v4
         with:
-          name: locherbal-db-backup-${{ env.TIMESTAMP }}
-          path: backups/locherbal_*.sql.gz
+          name: locherbal-staging-db-backup-${{ env.TIMESTAMP }}
+          path: backups/locherbal_staging_*.sql.gz
           retention-days: 30
+
+  # PRODUCTION — ưu tiên tuyệt đối.
+  # URL được resolve theo thứ tự:
+  #   1. Secret PROD_DATABASE_URL (nếu đã set qua GitHub Secrets UI)
+  #   2. Tự động lấy từ Railway API: service "Postgres" của environment
+  #      "production" → DATABASE_PUBLIC_URL, hoặc dựng URL public từ TCP proxy.
+  # URL chỉ nằm trong RUNNER_TEMP và bị mask trong log — KHÔNG in ra output.
+  backup-production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve Production DB URL
+        env:
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_BACKEND_SERVICE_ID: ${{ secrets.RAILWAY_BACKEND_SERVICE_ID }}
+          PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          GQL="https://backboard.railway.com/graphql/v2"
+          AUTH="Authorization: Bearer $RAILWAY_API_TOKEN"
+
+          if [ -n "${PROD_DATABASE_URL:-}" ]; then
+            echo "Sử dụng secret PROD_DATABASE_URL"
+            printf '%s' "$PROD_DATABASE_URL" > "$RUNNER_TEMP/prod_db_url"
+          else
+            echo "Resolve qua Railway API (không có secret PROD_DATABASE_URL)..."
+            REQ=$(jq -n --arg id "$RAILWAY_PROJECT_ID" '{query:"query($id:String!){project(id:$id){environments{edges{node{id name}}}}}",variables:{id:$id}}')
+            ENV_ID=$(curl -fsS "$GQL" -H "$AUTH" -H 'Content-Type: application/json' -d "$REQ" \
+              | jq -r '.data.project.environments.edges[] | select(.node.name=="production") | .node.id' | head -1)
+            [ -n "$ENV_ID" ] || { echo "::error::Không tìm thấy environment 'production'"; exit 1; }
+            REQ=$(jq -n --arg id "$RAILWAY_PROJECT_ID" '{query:"query($id:String!){project(id:$id){services{edges{node{id name}}}}}",variables:{id:$id}}')
+            PG_SERVICE_ID=$(curl -fsS "$GQL" -H "$AUTH" -H 'Content-Type: application/json' -d "$REQ" \
+              | jq -r '[.data.project.services.edges[].node | select(.name | ascii_downcase | contains("postgres"))][0].id // empty')
+            [ -n "$PG_SERVICE_ID" ] || PG_SERVICE_ID="$RAILWAY_BACKEND_SERVICE_ID"
+            REQ=$(jq -n --arg pid "$RAILWAY_PROJECT_ID" --arg eid "$ENV_ID" --arg sid "$PG_SERVICE_ID" '{query:"query($projectId:String!,$environmentId:String!,$serviceId:String!){variables(projectId:$projectId,environmentId:$environmentId,serviceId:$serviceId)}",variables:{projectId:$pid,environmentId:$eid,serviceId:$sid}}')
+            VARS=$(curl -fsS "$GQL" -H "$AUTH" -H 'Content-Type: application/json' -d "$REQ" | jq -c '.data.variables // empty')
+            [ -n "$VARS" ] || { echo "::error::Không lấy được variables từ Railway API"; exit 1; }
+            URL=$(echo "$VARS" | jq -r '.DATABASE_PUBLIC_URL // empty')
+            if [ -z "$URL" ]; then
+              DOMAIN=$(echo "$VARS" | jq -r '.RAILWAY_TCP_PROXY_DOMAIN // empty')
+              PORT=$(echo "$VARS" | jq -r '.RAILWAY_TCP_PROXY_PORT // empty')
+              if [ -n "$DOMAIN" ] && [ -n "$PORT" ]; then
+                PGUSER_=$(echo "$VARS" | jq -r '.PGUSER // "postgres"')
+                PGPASS=$(echo "$VARS" | jq -r '.PGPASSWORD // empty')
+                PGDB=$(echo "$VARS" | jq -r '.PGDATABASE // "railway"')
+                PGPASS_ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$PGPASS")
+                URL="postgresql://${PGUSER_}:${PGPASS_ENC}@${DOMAIN}:${PORT}/${PGDB}?sslmode=require"
+              fi
+            fi
+            if [ -z "$URL" ] || echo "$URL" | grep -q 'railway.internal'; then
+              echo "::error::Không suy ra được URL PUBLIC cho production DB. Fix: bật TCP Proxy cho service Postgres, hoặc set secret PROD_DATABASE_URL."
+              exit 1
+            fi
+            printf '%s' "$URL" > "$RUNNER_TEMP/prod_db_url"
+          fi
+          echo "::add-mask::$(cat "$RUNNER_TEMP/prod_db_url")"
+          echo "✅ Production DB URL sẵn sàng (đã mask trong log)"

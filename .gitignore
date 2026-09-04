@@ -19,6 +19,17 @@ out/
 dist/
 build/
 
+# DB dumps & session/curl artifacts — KHÔNG BAO GIỜ COMMIT
+/backups/
+*.dump
+*.sql.gz
+/cookies.txt
+/csrf.json
+/body.json
+/resp*.json
+/response.json
+.railway-tmp/
+
 # Logs
 logs
 *.log
