@@ -57,7 +57,12 @@ async function bootstrap() {
   if (!existsSync(uploadsDir)) {
     mkdirSync(uploadsDir, { recursive: true });
   }
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads',
+    // Browser cache ảnh sản phẩm 7 ngày — ảnh mới luôn có tên file mới
+    // nên không lo stale; đổi tên là cách bust cache khi thay ảnh.
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
   // Swagger documentation
   const swaggerConfig = new DocumentBuilder()

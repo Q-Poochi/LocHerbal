@@ -56,6 +56,27 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
+      {
+        // Font tự host (material-symbols woff2) — long-cache 30 ngày + SWR.
+        // (không dùng immutable vì tên file không có hash/version)
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=2592000, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        // Ảnh decor trong public/images (home-bg, tu-van, uu-dai...) — long-cache 30 ngày.
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=2592000, stale-while-revalidate=86400',
+          },
+        ],
+      },
     ];
   },
 };
