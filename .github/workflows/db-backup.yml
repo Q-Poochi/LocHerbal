@@ -47,11 +47,13 @@ jobs:
           SIZE=$(stat -c%s "$F")
           [ "$SIZE" -gt 2048 ] || { echo "::error::Dump quá nhỏ ($SIZE bytes) — dump lỗi?"; exit 1; }
           gunzip -t "$F"
-          TABLES=$(gunzip -c "$F" | grep -c 'CREATE TABLE' || true)
+          # Giải nén 1 lần — tránh grep -q trong pipe (SIGPIPE + pipefail = false negative)
+          gunzip -c "$F" > /tmp/dump.sql
+          TABLES=$(grep -c 'CREATE TABLE' /tmp/dump.sql || true)
           [ "$TABLES" -ge 30 ] || { echo "::error::Chỉ thấy $TABLES bảng (cần ≥30) — dump không đầy đủ"; exit 1; }
-          gunzip -c "$F" | grep -q 'CREATE TABLE public.users'  || { echo "::error::Thiếu bảng users"; exit 1; }
-          gunzip -c "$F" | grep -q 'CREATE TABLE public.orders' || { echo "::error::Thiếu bảng orders"; exit 1; }
-          gunzip -c "$F" | grep -q '^COPY '                     || { echo "::error::Không có dữ liệu (COPY) trong dump"; exit 1; }
+          grep -q 'CREATE TABLE public.users'  /tmp/dump.sql || { echo "::error::Thiếu bảng users"; exit 1; }
+          grep -q 'CREATE TABLE public.orders' /tmp/dump.sql || { echo "::error::Thiếu bảng orders"; exit 1; }
+          grep -q '^COPY ' /tmp/dump.sql                     || { echo "::error::Không có dữ liệu (COPY) trong dump"; exit 1; }
           echo "BACKUP_FILE=backups/$F" >> "$GITHUB_ENV"
           echo "✅ Production backup OK: $F | $SIZE bytes | $TABLES tables"
 
@@ -120,7 +122,8 @@ jobs:
           SIZE=$(stat -c%s "$F")
           [ "$SIZE" -gt 2048 ] || { echo "::error::Dump quá nhỏ ($SIZE bytes) — dump lỗi?"; exit 1; }
           gunzip -t "$F"
-          TABLES=$(gunzip -c "$F" | grep -c 'CREATE TABLE' || true)
+          gunzip -c "$F" > /tmp/dump.sql
+          TABLES=$(grep -c 'CREATE TABLE' /tmp/dump.sql || true)
           [ "$TABLES" -ge 10 ] || { echo "::error::Chỉ thấy $TABLES bảng — dump không đầy đủ"; exit 1; }
           echo "✅ Staging backup OK: $F | $SIZE bytes | $TABLES tables"
 
