@@ -108,7 +108,7 @@ export default function CouponForm({ coupon }: CouponFormProps) {
             </nav>
             <h2 className="font-headline-lg text-headline-lg text-primary mb-8">{isEdit ? 'Chỉnh sửa Ưu đãi' : 'Tạo Ưu đãi mới'}</h2>
 
-            <section className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-6 max-w-[760px]">
+            <section className="admin-card p-6 space-y-6 max-w-[760px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label htmlFor="coupon-code" className={label}>
@@ -236,7 +236,7 @@ export default function CouponForm({ coupon }: CouponFormProps) {
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="px-8 py-3 rounded-xl bg-primary-container text-white font-label-bold shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                    className="admin-btn admin-btn-primary !px-8 !py-3 !rounded-xl"
                 >
                     {isPending && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
                     {isEdit ? 'Cập nhật mã' : 'Tạo mã'}

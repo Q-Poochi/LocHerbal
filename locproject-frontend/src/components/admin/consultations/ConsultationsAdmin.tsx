@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import {
@@ -99,7 +99,7 @@ export default function ConsultationsAdmin() {
             </div>
 
             {isLoading ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-24 text-center">
+                <div className="admin-card p-24 text-center">
                     <span className="text-text-tertiary">Đang tải yêu cầu tư vấn...</span>
                 </div>
             ) : error ? (
@@ -116,8 +116,8 @@ export default function ConsultationsAdmin() {
                 </div>
             ) : (
                 <div className="bg-white rounded-xl border border-border overflow-hidden">
-                    <table className="w-full border-collapse">
-                        <thead className="bg-primary text-white">
+                    <table className="admin-table">
+                        <thead>
                             <tr>
                                 <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Khách hàng</th>
                                 <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Lịch hẹn</th>

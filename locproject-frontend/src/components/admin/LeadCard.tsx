@@ -11,7 +11,7 @@ interface LeadCardProps {
 
 export default function LeadCard({ leads }: LeadCardProps) {
     return (
-        <div className="bg-surface-white p-6 rounded-xl shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant">
+        <div className="admin-card p-6">
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary">support_agent</span>
@@ -49,7 +49,7 @@ export default function LeadCard({ leads }: LeadCardProps) {
                                     </p>
                                 </div>
                             </div>
-                            <button className="flex items-center gap-1.5 bg-secondary px-4 py-1.5 rounded-lg text-on-secondary text-caption font-bold hover:opacity-90">
+                            <button className="admin-btn admin-btn-outline !px-3 !py-1.5 !text-xs">
                                 <span className="material-symbols-outlined text-[16px]">call</span>
                                 Liên hệ
                             </button>

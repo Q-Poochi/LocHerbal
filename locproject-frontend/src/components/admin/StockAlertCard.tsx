@@ -13,7 +13,7 @@ export default function StockAlertCard({ alerts }: StockAlertCardProps) {
     const criticalCount = alerts.filter((a) => a.critical).length;
 
     return (
-        <div className="bg-surface-white p-6 rounded-xl shadow-[0_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant">
+        <div className="admin-card p-6">
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-error-alert">warning</span>
@@ -60,7 +60,7 @@ export default function StockAlertCard({ alerts }: StockAlertCardProps) {
                                     </p>
                                 </div>
                             </div>
-                            <button className="bg-primary px-4 py-1.5 rounded-lg text-on-primary text-caption font-bold hover:opacity-90">
+                            <button className="admin-btn admin-btn-outline !px-3 !py-1.5 !text-xs">
                                 Đặt hàng nhập
                             </button>
                         </div>

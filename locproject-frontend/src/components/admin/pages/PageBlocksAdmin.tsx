@@ -248,7 +248,7 @@ export default function PageBlocksAdmin({ pageSlug, pageTitle }: PageBlocksAdmin
                 <button
                     type="button"
                     onClick={() => setAdding(true)}
-                    className="bg-primary-container text-white px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95"
+                    className="admin-btn admin-btn-primary !px-6 !py-3 !rounded-xl"
                 >
                     <span className="material-symbols-outlined">add_box</span>
                     Thêm khối
@@ -256,15 +256,15 @@ export default function PageBlocksAdmin({ pageSlug, pageTitle }: PageBlocksAdmin
             </div>
 
             {isLoading ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="text-text-tertiary">Đang tải khối nội dung...</span>
                 </div>
             ) : error ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <p className="text-text-secondary font-medium">{getErrorMessage(error, 'Không thể tải danh sách khối')}</p>
                 </div>
             ) : blocks.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">web</span>
                     <p className="text-text-secondary font-medium">Trang chưa có khối nội dung nào.</p>
                     <p className="text-sm text-text-tertiary mt-1">Nhấn "Thêm khối" để bắt đầu xây dựng trang.</p>

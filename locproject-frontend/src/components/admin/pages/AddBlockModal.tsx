@@ -86,7 +86,7 @@ export default function AddBlockModal({ open, submitting, onSelect, onClose }: A
                         type="button"
                         onClick={() => selected && onSelect(selected)}
                         disabled={!selected || submitting}
-                        className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center gap-1.5"
+                        className="admin-btn admin-btn-primary"
                     >
                         {submitting && <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>}
                         Thêm khối

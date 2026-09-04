@@ -131,7 +131,7 @@ export default function ProductsTable() {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+            <div className="admin-card p-16 text-center">
                 <span className="text-text-tertiary">Đang tải sản phẩm...</span>
             </div>
         );
@@ -139,7 +139,7 @@ export default function ProductsTable() {
 
     if (error) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+            <div className="admin-card p-16 text-center">
                 <p className="text-text-secondary font-medium">{error}</p>
             </div>
         );
@@ -147,9 +147,9 @@ export default function ProductsTable() {
 
     return (
         <>
-            <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden mb-8">
-                <table className="w-full border-collapse">
-                    <thead className="bg-primary text-white">
+            <div className="admin-card overflow-hidden mb-8">
+                <table className="admin-table">
+                    <thead>
                         <tr>
                             <th className="p-4 text-left w-10">
                                 <input

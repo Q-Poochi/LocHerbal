@@ -168,7 +168,7 @@ export default function AdminDashboardPage() {
                     </button>
                     <button
                         onClick={exportReport}
-                        className="bg-primary-700 text-white px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 hover:opacity-90 transition-all shadow-sm"
+                        className="admin-btn admin-btn-primary"
                     >
                         <span className="material-symbols-outlined">download</span>
                         Xuất báo cáo
@@ -204,7 +204,7 @@ export default function AdminDashboardPage() {
                             <RecentOrdersTable orders={stats?.recentOrders ?? []} />
 
                             {/* Best Selling Products (40%) */}
-                            <div className="lg:col-span-4 bg-white p-6 rounded-xl shadow-sm border border-border">
+                            <div className="lg:col-span-4 admin-card p-6">
                                 <h4 className="font-display font-bold text-lg text-text-primary mb-6">
                                     Sản phẩm bán chạy
                                 </h4>
@@ -235,7 +235,7 @@ export default function AdminDashboardPage() {
                                         ))}
                                     </div>
                                 )}
-                                <button className="w-full mt-6 py-2.5 rounded-lg border border-primary-700 text-primary-700 font-semibold text-sm hover:bg-primary-700 hover:text-white transition-all">
+                                <button className="admin-btn admin-btn-outline w-full mt-6">
                                     Xem báo cáo chi tiết
                                 </button>
                             </div>

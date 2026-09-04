@@ -86,15 +86,15 @@ export default function WarehousePage() {
             </div>
 
             {loading ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="text-text-tertiary">Đang tải tồn kho...</span>
                 </div>
             ) : error ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <p className="text-text-secondary font-medium">{error}</p>
                 </div>
             ) : items.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="admin-card overflow-hidden">
                     <div className="flex flex-col items-center justify-center py-24 text-center px-8">
                         <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">inventory_2</span>
                         <p className="text-text-secondary font-semibold text-base">Chưa có dữ liệu tồn kho</p>
@@ -106,7 +106,7 @@ export default function WarehousePage() {
                     {summaries.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                             {summaries.map((s) => (
-                                <div key={s.warehouseId} className="bg-white rounded-2xl shadow-sm border border-border p-5">
+                                <div key={s.warehouseId} className="admin-card p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="material-symbols-outlined text-[20px] text-primary-700">warehouse</span>
                                         <p className="font-bold text-text-primary">{s.warehouseName}</p>
@@ -130,7 +130,7 @@ export default function WarehousePage() {
                         </div>
                     )}
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                    <div className="admin-card overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full border-collapse">
                                 <thead className="bg-primary text-white">

@@ -78,7 +78,7 @@ export default function InvoicesPage() {
                 </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+            <div className="admin-card overflow-hidden">
                 {loading ? (
                     <div className="p-16 text-center">
                         <span className="text-text-tertiary">Đang tải hóa đơn...</span>

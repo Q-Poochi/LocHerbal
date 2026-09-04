@@ -198,22 +198,22 @@ export default function AdminOrdersPage() {
             </div>
 
             {loading ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="text-text-tertiary">Đang tải đơn hàng...</span>
                 </div>
             ) : error ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <p className="text-text-secondary font-medium">{error}</p>
                 </div>
             ) : orders.length === 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="admin-card overflow-hidden">
                     <div className="flex flex-col items-center justify-center py-24 text-center px-8">
                         <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">receipt_long</span>
                         <p className="text-text-secondary font-semibold text-base">Chưa có dữ liệu đơn hàng</p>
                     </div>
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="admin-card overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead className="bg-primary text-white">

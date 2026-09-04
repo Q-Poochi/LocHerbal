@@ -122,7 +122,7 @@ export default function BlogForm({ post }: BlogFormProps) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
                 <div className="space-y-6">
-                    <section className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-6">
+                    <section className="admin-card p-6 space-y-6">
                         <div>
                             <label htmlFor="post-title" className={label}>
                                 Tiêu đề
@@ -174,7 +174,7 @@ export default function BlogForm({ post }: BlogFormProps) {
                         </div>
                     </section>
 
-                    <section className="bg-white rounded-xl shadow-sm border border-border p-6">
+                    <section className="admin-card p-6">
                         <label htmlFor="post-content" className={label}>
                             Nội dung bài viết
                         </label>
@@ -190,7 +190,7 @@ export default function BlogForm({ post }: BlogFormProps) {
                     </section>
                 </div>
 
-                <aside className="bg-white rounded-xl shadow-sm border border-border p-5 space-y-2 lg:sticky lg:top-24">
+                <aside className="admin-card p-5 space-y-2 lg:sticky lg:top-24">
                     <p className="text-sm font-semibold text-primary">Lưu ý</p>
                     <ul className="text-xs text-on-surface-variant space-y-2 leading-relaxed">
                         <li className="flex gap-2 items-start">
@@ -221,7 +221,7 @@ export default function BlogForm({ post }: BlogFormProps) {
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="px-8 py-3 rounded-xl bg-primary-container text-white font-label-bold shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                    className="admin-btn admin-btn-primary !px-8 !py-3 !rounded-xl"
                 >
                     {isPending && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
                     {isEdit ? 'Cập nhật bài viết' : 'Tạo bài viết'}

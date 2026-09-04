@@ -39,7 +39,7 @@ export default function SupportPage() {
             </div>
 
             {/* Empty state */}
-            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+            <div className="admin-card overflow-hidden">
                 <div className="flex flex-col items-center justify-center py-24 text-center px-8">
                     <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">confirmation_number</span>
                     <p className="text-text-secondary font-semibold text-base">Chưa có yêu cầu hỗ trợ</p>

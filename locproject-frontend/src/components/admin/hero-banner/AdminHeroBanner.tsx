@@ -77,7 +77,7 @@ export default function AdminHeroBanner() {
     };
 
     if (isLoading) {
-        return <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+        return <div className="admin-card p-16 text-center">
             <span className="text-text-tertiary">Đang tải ảnh hero...</span>
         </div>;
     }
@@ -110,12 +110,12 @@ export default function AdminHeroBanner() {
             </div>
 
             {error ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <p className="text-text-secondary font-medium">{getErrorMessage(error, 'Không thể tải ảnh hero')}</p>
                 </div>
             ) : (
                 <form onSubmit={handleSave} className="max-w-[760px]">
-                    <section className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-6">
+                    <section className="admin-card p-6 space-y-6">
                         <div className="space-y-2">
                             <label htmlFor="hero-title" className={label}>Tiêu đề</label>
                             <input
@@ -193,7 +193,7 @@ export default function AdminHeroBanner() {
                             <button
                                 type="submit"
                                 disabled={upsertMutation.isPending}
-                                className="px-8 py-3 rounded-xl bg-primary-container text-white font-label-bold shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                                className="admin-btn admin-btn-primary !px-8 !py-3 !rounded-xl"
                             >
                                 {upsertMutation.isPending && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
                                 {currentImageUrl ? 'Cập nhật ảnh hero' : 'Lưu ảnh hero'}

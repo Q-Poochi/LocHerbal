@@ -506,3 +506,243 @@ body {
   [class*="animate-"] { animation: none !important; }
   * { transition: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ADMIN DESIGN SYSTEM — SaaS Light (shadcn-style)
+   Scope: chỉ áp dụng bên trong .admin-shell (bọc tại
+   src/app/(admin)/admin/layout.tsx) → storefront KHÔNG bị ảnh hưởng.
+   Cách hoạt động: override biến token ở mức biến CSS — mọi utility
+   Tailwind (bg-background, border-border, text-text-primary…,
+   kể cả font-display) bên trong admin tự kế thừa giá trị mới.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.admin-shell {
+  /* Nền xám ấm thay paper-white xanh */
+  --color-background: #f6f6f3;
+  --color-surface-bg: #f6f6f3;
+  --color-surface-alt: #f0efeb;
+  --color-border: #e7e5df;
+  --color-border-focus: #166b42;
+  --color-surface-container: #f0efeb;
+  --color-surface-container-low: #f6f6f3;
+  --color-surface-container-high: #ebeae5;
+  --color-outline-variant: #d9d7d0;
+
+  /* Admin dùng sans-serif hiện đại (Be Vietnam Pro) thay serif Cormorant */
+  --font-display: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  --font-serif-classic: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+
+  /* Sans không cần letter-spacing âm kiểu serif */
+  letter-spacing: 0;
+}
+
+.admin-shell h1, .admin-shell h2, .admin-shell h3,
+.admin-shell h4, .admin-shell h5, .admin-shell h6 {
+  letter-spacing: -0.015em;
+}
+
+/* ─── Card chuẩn ─── */
+.admin-card {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgba(25, 28, 28, 0.04),
+    0 8px 24px -16px rgba(25, 28, 28, 0.08);
+}
+.admin-card-hover {
+  transition: box-shadow 200ms ease, border-color 200ms ease;
+}
+.admin-card-hover:hover {
+  box-shadow:
+    0 2px 4px rgba(25, 28, 28, 0.04),
+    0 12px 32px -16px rgba(25, 28, 28, 0.14);
+}
+
+/* ─── Input / Select / Textarea ─── */
+.admin-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 0.625rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--color-text-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.admin-input::placeholder {
+  color: #9ca29b;
+}
+.admin-input:focus {
+  outline: none;
+  border-color: #1a8a54;
+  box-shadow: 0 0 0 3px rgba(26, 138, 84, 0.12);
+}
+.admin-input:disabled {
+  background: var(--color-surface-alt);
+  cursor: not-allowed;
+}
+
+.admin-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.375rem;
+}
+
+/* ─── Buttons ─── */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  border-radius: 0.625rem;
+  padding: 0.55rem 1rem;
+  transition: all 150ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.admin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.admin-btn-primary {
+  background: #166b42;
+  color: #ffffff;
+}
+.admin-btn-primary:hover:not(:disabled) {
+  background: #145535;
+  box-shadow: 0 4px 12px -4px rgba(22, 107, 66, 0.4);
+}
+.admin-btn-outline {
+  background: #ffffff;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+.admin-btn-outline:hover:not(:disabled) {
+  border-color: #c9c7bf;
+  background: #fafaf8;
+}
+.admin-btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.admin-btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+}
+.admin-btn-danger {
+  background: #fdecea;
+  color: #c0392b;
+}
+.admin-btn-danger:hover:not(:disabled) {
+  background: #fbddd9;
+}
+
+/* ─── Badge pill ─── */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  white-space: nowrap;
+}
+
+/* ─── Table ─── */
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+.admin-table thead th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+.admin-table tbody td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+.admin-table tbody tr {
+  transition: background-color 120ms ease;
+}
+.admin-table tbody tr:hover {
+  background: #fafaf7;
+}
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ─── Tiêu đề trang ─── */
+.admin-page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--color-text-primary);
+}
+.admin-page-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Sidebar ─── */
+.admin-nav-label {
+  display: block;
+  padding: 0 0.75rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a3a8a1;
+}
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  transition: all 150ms ease;
+}
+.admin-nav-item:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+}
+.admin-nav-item.active {
+  background: #e7f3ec;
+  color: #166b42;
+  font-weight: 600;
+}
+
+/* Scrollbar sáng cho sidebar */
+.admin-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(25, 28, 28, 0.12);
+  border-radius: 10px;
+}

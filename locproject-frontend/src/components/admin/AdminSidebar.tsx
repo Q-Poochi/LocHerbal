@@ -83,43 +83,54 @@ export default function AdminSidebar() {
 
     return (
         <aside
-            className={`fixed left-0 top-0 h-screen bg-primary-container text-on-primary-container shadow-md flex flex-col py-6 overflow-y-auto transition-all z-50 ${collapsed ? 'w-16' : 'w-64'
+            className={`admin-scroll fixed left-0 top-0 h-screen bg-white border-r border-border flex flex-col py-5 overflow-y-auto transition-all z-50 ${collapsed ? 'w-16' : 'w-64'
                 }`}
         >
-            <div className={`px-6 mb-8 ${collapsed ? 'text-center' : ''}`}>
+            {/* Brand */}
+            <div className={`mb-6 ${collapsed ? 'px-3 text-center' : 'px-5'}`}>
                 {collapsed ? (
-                    <h1 className="font-headline-md text-headline-md font-bold text-on-primary">LA</h1>
+                    <div className="w-10 h-10 mx-auto rounded-xl bg-primary-700 flex items-center justify-center shadow-sm">
+                        <span className="material-symbols-outlined text-white text-[22px]">eco</span>
+                    </div>
                 ) : (
-                    <>
-                        <h1 className="font-headline-md text-headline-md font-bold text-on-primary">
-                            LocHerbal Admin
-                        </h1>
-                        <p className="font-caption text-on-primary-container opacity-70">
-                            Phòng quản trị
-                        </p>
-                    </>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary-700 flex items-center justify-center shadow-sm flex-shrink-0">
+                            <span className="material-symbols-outlined text-white text-[22px]">eco</span>
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <h1 className="text-[15px] font-bold text-text-primary leading-tight">
+                                LocHerbal
+                            </h1>
+                            <p className="text-[11px] text-text-tertiary leading-tight">
+                                Phòng quản trị
+                            </p>
+                        </div>
+                    </div>
                 )}
                 <button
                     onClick={() => setCollapsed((c) => !c)}
-                    className="mt-2 text-on-primary-container/60 hover:text-on-primary transition-colors"
+                    className={`mt-3 w-7 h-7 flex items-center justify-center rounded-lg border border-border text-text-tertiary hover:text-text-primary hover:bg-surface-alt transition-colors ${collapsed ? 'mx-auto' : ''
+                        }`}
+                    aria-label={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
                 >
-                    <span className="material-symbols-outlined">
+                    <span className="material-symbols-outlined text-[18px]">
                         {collapsed ? 'chevron_right' : 'chevron_left'}
                     </span>
                 </button>
             </div>
 
+            {/* User card */}
             {!collapsed && (
-                <div className="px-4 mb-8">
-                    <div className="flex items-center gap-3 p-3 bg-on-primary-fixed-variant/10 rounded-xl">
-                        <div className="w-10 h-10 rounded-full border-2 border-secondary-container overflow-hidden bg-primary-fixed/30 flex items-center justify-center font-bold text-on-primary">
+                <div className="px-4 mb-2">
+                    <div className="flex items-center gap-3 p-3 bg-surface-alt rounded-xl border border-border/60">
+                        <div className="w-9 h-9 rounded-full bg-primary-700/10 flex items-center justify-center font-semibold text-primary-700 flex-shrink-0">
                             {user?.fullName?.charAt(0) || 'A'}
                         </div>
-                        <div className="flex flex-col">
-                            <span className="font-label-bold text-label-bold text-on-primary">
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[13px] font-semibold text-text-primary truncate">
                                 {user?.fullName || 'Admin'}
                             </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-container text-on-secondary-container uppercase tracking-wider">
+                            <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-white border border-border text-text-tertiary uppercase tracking-wide">
                                 {userRole}
                             </span>
                         </div>
@@ -127,26 +138,23 @@ export default function AdminSidebar() {
                 </div>
             )}
 
-            <nav className="flex-1 px-2 space-y-6">
-                {visibleGroups.map((group) => (
-                    <div key={group.label}>
+            <nav className="flex-1 px-3 pb-4">
+                {visibleGroups.map((group, gi) => (
+                    <div key={group.label} className={gi === 0 ? '' : 'mt-1'}>
                         {!collapsed && (
-                            <span className="px-4 text-[11px] font-bold uppercase tracking-widest text-on-primary-container opacity-40">
-                                {group.label}
-                            </span>
+                            <span className="admin-nav-label">{group.label}</span>
                         )}
-                        <div className="mt-2 space-y-1">
+                        <div className={collapsed ? 'space-y-1' : 'space-y-0.5'}>
                             {group.items.map((item) => (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${isActive(item.href)
-                                            ? 'bg-secondary-container/20 text-on-primary active-nav-border'
-                                            : 'text-on-primary-container/80 hover:text-on-primary hover:bg-on-primary-fixed-variant/20'
+                                    title={collapsed ? item.label : undefined}
+                                    className={`admin-nav-item ${collapsed ? 'justify-center px-0' : ''} ${isActive(item.href) ? 'active' : ''
                                         }`}
                                 >
                                     <span
-                                        className="material-symbols-outlined"
+                                        className="material-symbols-outlined text-[20px]"
                                         style={{
                                             fontVariationSettings: `'FILL' ${isActive(item.href) ? '1' : '0'}`,
                                         }}
@@ -154,9 +162,7 @@ export default function AdminSidebar() {
                                         {item.icon}
                                     </span>
                                     {!collapsed && (
-                                        <span className="font-label-bold text-label-bold">
-                                            {item.label}
-                                        </span>
+                                        <span className="truncate">{item.label}</span>
                                     )}
                                 </Link>
                             ))}
@@ -165,14 +171,22 @@ export default function AdminSidebar() {
                 ))}
             </nav>
 
-            <div className="mt-auto px-2 space-y-1 border-t border-on-primary-fixed-variant/20 pt-6">
-                {!collapsed && (
+            <div className="px-3 pb-1 pt-4 border-t border-border">
+                {collapsed ? (
                     <button
                         onClick={logout}
-                        className="w-full flex items-center gap-3 text-error-container/80 hover:text-error-container px-4 py-2.5 rounded-lg transition-colors"
+                        title="Đăng xuất"
+                        className="w-full flex items-center justify-center p-2.5 rounded-lg text-error-alert/70 hover:text-error-alert hover:bg-error-container/40 transition-colors"
                     >
-                        <span className="material-symbols-outlined">logout</span>
-                        <span className="font-label-bold text-label-bold">Đăng xuất</span>
+                        <span className="material-symbols-outlined text-[20px]">logout</span>
+                    </button>
+                ) : (
+                    <button
+                        onClick={logout}
+                        className="admin-nav-item w-full !text-error-alert/70 hover:!bg-error-container/40 hover:!text-error-alert"
+                    >
+                        <span className="material-symbols-outlined text-[20px]">logout</span>
+                        <span className="truncate">Đăng xuất</span>
                     </button>
                 )}
             </div>

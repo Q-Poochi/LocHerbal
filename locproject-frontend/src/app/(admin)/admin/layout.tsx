@@ -3,7 +3,7 @@ import AdminSessionGate from '@/components/admin/AdminSessionGate';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="min-h-screen bg-background">
+        <div className="admin-shell min-h-screen bg-background">
             <AdminSidebar />
             <main className="ml-64 min-h-screen">
                 {/* Chờ phiên khôi phục xong mới render — chống race 401 khi hard-reload */}

@@ -25,7 +25,7 @@ const EMPTY = {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <section className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-5">
+        <section className="admin-card p-6 space-y-5">
             <h3 className="font-headline-sm text-headline-sm text-primary">{title}</h3>
             {children}
         </section>
@@ -96,11 +96,11 @@ export default function SettingsAdmin() {
             <p className="text-sm text-text-tertiary -mt-6 mb-8">Thông tin hiển thị ở footer, trang Về chúng tôi và Liên hệ của storefront.</p>
 
             {isLoading ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="text-text-tertiary">Đang tải cài đặt...</span>
                 </div>
             ) : error ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <p className="text-text-secondary font-medium">{getErrorMessage(error, 'Không thể tải cài đặt')}</p>
                 </div>
             ) : (
@@ -189,7 +189,7 @@ export default function SettingsAdmin() {
                         <button
                             type="submit"
                             disabled={mutation.isPending}
-                            className="px-8 py-3 rounded-xl bg-primary-container text-white font-label-bold shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                            className="admin-btn admin-btn-primary !px-8 !py-3 !rounded-xl"
                         >
                             {mutation.isPending && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
                             Lưu cài đặt

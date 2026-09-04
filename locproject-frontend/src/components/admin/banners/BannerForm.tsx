@@ -98,7 +98,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
             <h2 className="font-headline-lg text-headline-lg text-primary mb-8">{isEdit ? 'Chỉnh sửa Banner' : 'Tạo Banner mới'}</h2>
             <p className="text-sm text-text-tertiary -mt-4 mb-8">Banner &ldquo;Carousel trang chủ&rdquo; hiển thị slider đầu trang. Ảnh Hero (thay icon chày cối) quản lý riêng tại mục &ldquo;Ảnh Hero&rdquo;.</p>
 
-            <section className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-6">
+            <section className="admin-card p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label htmlFor="banner-title" className={label}>
@@ -202,7 +202,7 @@ onChange={(e) => setPosition(e.target.value)}
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="px-8 py-3 rounded-xl bg-primary-container text-white font-label-bold shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2"
+                    className="admin-btn admin-btn-primary !px-8 !py-3 !rounded-xl"
                 >
                     {isPending && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
                     {isEdit ? 'Cập nhật banner' : 'Tạo banner'}

@@ -155,11 +155,11 @@ export default function OrderDetailPage() {
             </div>
 
             {loading ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="text-text-tertiary">Đang tải đơn hàng...</span>
                 </div>
             ) : error || !order ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="admin-card overflow-hidden">
                     <div className="flex flex-col items-center justify-center py-24 text-center px-8">
                         <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">receipt_long</span>
                         <p className="text-text-secondary font-semibold text-base">{error || 'Không tìm thấy thông tin đơn hàng'}</p>
@@ -170,7 +170,7 @@ export default function OrderDetailPage() {
                     {/* Cột trái: sản phẩm + khách hàng */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Sản phẩm */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                        <div className="admin-card overflow-hidden">
                             <div className="px-6 py-4 border-b border-border">
                                 <h3 className="font-bold text-text-primary">Sản phẩm</h3>
                             </div>
@@ -216,7 +216,7 @@ export default function OrderDetailPage() {
                         </div>
 
                         {/* Khách hàng */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                        <div className="admin-card overflow-hidden">
                             <div className="px-6 py-4 border-b border-border">
                                 <h3 className="font-bold text-text-primary">Khách hàng</h3>
                             </div>
@@ -228,7 +228,7 @@ export default function OrderDetailPage() {
                         </div>
 
                         {/* Địa chỉ giao hàng */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                        <div className="admin-card overflow-hidden">
                             <div className="px-6 py-4 border-b border-border">
                                 <h3 className="font-bold text-text-primary">Địa chỉ giao hàng</h3>
                             </div>
@@ -253,7 +253,7 @@ export default function OrderDetailPage() {
 
                         {/* Ghi chú */}
                         {order.notes ? (
-                            <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                            <div className="admin-card overflow-hidden">
                                 <div className="px-6 py-4 border-b border-border">
                                     <h3 className="font-bold text-text-primary">Ghi chú đơn hàng</h3>
                                 </div>
@@ -266,7 +266,7 @@ export default function OrderDetailPage() {
 
                     {/* Cột phải: trạng thái + lịch sử */}
                     <div className="space-y-6">
-                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                        <div className="admin-card overflow-hidden">
                             <div className="px-6 py-4 border-b border-border">
                                 <h3 className="font-bold text-text-primary">Cập nhật trạng thái</h3>
                             </div>
@@ -302,7 +302,7 @@ export default function OrderDetailPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                        <div className="admin-card overflow-hidden">
                             <div className="px-6 py-4 border-b border-border">
                                 <h3 className="font-bold text-text-primary">Lịch sử trạng thái</h3>
                             </div>

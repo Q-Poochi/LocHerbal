@@ -45,7 +45,7 @@ export default function BlogPostsAdmin() {
                 </div>
                 <Link
                     href="/admin/blog/new"
-                    className="bg-primary-container text-white px-6 py-3 rounded-xl font-label-bold flex items-center gap-2 shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] transition-all active:scale-95"
+                    className="admin-btn admin-btn-primary !px-6 !py-3 !rounded-xl"
                 >
                     <span className="material-symbols-outlined">add_box</span>
                     Tạo bài viết mới
@@ -53,23 +53,23 @@ export default function BlogPostsAdmin() {
             </div>
 
             {isLoading ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="text-text-tertiary">Đang tải bài viết...</span>
                 </div>
             ) : error ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <p className="text-text-secondary font-medium">{getErrorMessage(error, 'Không thể tải danh sách bài viết')}</p>
                 </div>
             ) : posts.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-border p-16 text-center">
+                <div className="admin-card p-16 text-center">
                     <span className="material-symbols-outlined text-[56px] text-text-tertiary mb-4">article</span>
                     <p className="text-text-secondary font-medium">Chưa có bài viết nào.</p>
                     <p className="text-sm text-text-tertiary mt-1">Tạo bài viết để chia sẻ kiến thức tới khách hàng.</p>
                 </div>
             ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
-                    <table className="w-full border-collapse">
-                        <thead className="bg-primary text-white">
+                <div className="admin-card overflow-hidden">
+                    <table className="admin-table">
+                        <thead>
                             <tr>
                                 <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left w-24">Ảnh</th>
                                 <th className="p-4 font-semibold text-[13px] uppercase tracking-wider text-left">Tiêu đề</th>

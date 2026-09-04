@@ -23,10 +23,10 @@ interface OrderRow {
 }
 
 const statusStyles: Record<string, string> = {
-    pending: 'bg-primary-100 text-primary-700',
-    confirmed: 'bg-blue-100 text-blue-700',
-    delivered: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700',
+    pending: 'bg-amber-50 text-amber-700',
+    confirmed: 'bg-blue-50 text-blue-600',
+    delivered: 'bg-emerald-50 text-emerald-700',
+    cancelled: 'bg-red-50 text-red-600',
 };
 
 const statusLabels: Record<string, string> = {
@@ -85,7 +85,7 @@ export default function RecentOrdersTable({ orders = [] }: { orders?: RecentOrde
     };
 
     return (
-        <div className="lg:col-span-6 bg-white p-6 rounded-xl shadow-sm border border-border flex flex-col">
+        <div className="lg:col-span-6 admin-card p-6 flex flex-col">
             <div className="flex justify-between items-center mb-6">
                 <h4 className="font-display font-bold text-lg text-text-primary">Đơn hàng gần đây</h4>
                 <Link
@@ -102,8 +102,8 @@ export default function RecentOrdersTable({ orders = [] }: { orders?: RecentOrde
                 </div>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-primary-700 text-white font-semibold text-xs">
+                    <table className="admin-table">
+                        <thead>
                             <tr>
                                 {['Mã đơn', 'Khách hàng', 'Sản phẩm', 'Tổng cộng', 'Trạng thái', 'Action'].map(
                                     (header) => (
@@ -128,7 +128,7 @@ export default function RecentOrdersTable({ orders = [] }: { orders?: RecentOrde
                         </thead>
                         <tbody className="divide-y divide-border">
                             {sorted.map((order) => (
-                                <tr key={order.id} className="hover:bg-surface-alt transition-colors">
+                                <tr key={order.id}>
                                     <td className="px-4 py-4 font-semibold text-primary-700">{order.code}</td>
                                     <td className="px-4 py-4 text-sm text-text-primary">{order.customer}</td>
                                     <td className="px-4 py-4 text-sm text-text-secondary truncate max-w-[120px]">
@@ -139,7 +139,7 @@ export default function RecentOrdersTable({ orders = [] }: { orders?: RecentOrde
                                     </td>
                                     <td className="px-4 py-4 align-middle whitespace-nowrap">
                                         <span
-                                            className={`inline-block px-2 py-1 text-[10px] font-bold rounded uppercase whitespace-nowrap ${statusStyles[order.status]}`}
+                                            className={`admin-badge ${statusStyles[order.status]}`}
                                         >
                                             {statusLabels[order.status]}
                                         </span>
