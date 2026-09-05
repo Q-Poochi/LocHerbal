@@ -56,11 +56,15 @@
 - [ ] STAGING_S3_ENDPOINT / STAGING_S3_REGION / STAGING_S3_ACCESS_KEY /
       STAGING_S3_SECRET_KEY / STAGING_S3_BUCKET / STAGING_S3_PUBLIC_URL
 
-  deploy-staging.yml tham chiếu 6 secrets này nhưng chúng **rỗng** ⇒ mỗi lần
-  deploy đang set `S3_ENDPOINT=""` cho backend ⇒ **tính năng upload ảnh sản
-  phẩm lỗi khi gọi** (ObjectStorageService: "S3_ENDPOINT chưa cấu hình") —
-  khớp audit "Railway env: S3 trống". Fix: cấu hình MinIO/R2 thật rồi set đủ
-  6 secrets, HOẶC gỡ khối S3 khỏi deploy-staging.yml nếu chưa dùng upload.
+  deploy-staging.yml tham chiếu 6 secrets này nhưng chúng **rỗng** ⇒ deploy
+  set `S3_ENDPOINT=""` cho backend. **KHÔNG phải bug đang ảnh hưởng khách
+  hàng**: `(process.env.S3_ENDPOINT || '').trim()` → chuỗi rỗng là falsy →
+  `client = null` (service tự disable, chỉ warn log) và upload.controller có
+  fallback `saveLocal()` ⇒ **upload ảnh sản phẩm vẫn hoạt động bình thường**
+  qua Railway Volume `/app/uploads` (verify code: object-storage.service.ts
+  :27-34 + upload.controller.ts:136-142, ngày 04/09/2026). Mức độ: **dọn dẹp
+  biến rác CI**. Chỉ cần set 6 secrets khi MUỐN bật S3/CDN cho ảnh
+  (R2/MinIO) — lưu ý ảnh cũ trên Volume không tự migrate sang bucket.
 
 ## THAM CHIẾU Railway dashboard — NGOÀI phạm vi file này
 
