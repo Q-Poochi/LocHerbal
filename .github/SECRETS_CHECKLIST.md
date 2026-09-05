@@ -1,74 +1,89 @@
-# GitHub Secrets & Variables Checklist — LocHerbal
+# GitHub Actions Secrets Checklist — LocHerbal
 
-## Cách thêm Secret vào GitHub
-Settings → Secrets and variables → Actions → New repository secret
+> **Phạm vi file này: CHỈ GitHub Actions Secrets & Variables** — những giá trị
+> set tại *Settings → Secrets and variables → Actions* và dùng trong
+> `.github/workflows/*.yml`.
+>
+> **KHÔNG phải Railway Environment Variables.** Biến runtime của production
+> (DATABASE_URL, JWT, VNPay, Redis…) được cấu hình trực tiếp trên
+> **Railway dashboard** — xem phần "Tham chiếu Railway dashboard" cuối file.
+>
+> ⚠️ Người đọc: ô chưa tick ở đây KHÔNG có nghĩa là "production chưa cấu
+> hình" — chỉ nghĩa là workflow tương ứng chưa dùng secret đó trên GitHub.
 
-## Secrets bắt buộc (Repository Secrets)
+## Trạng thái: ĐÃ SET & ĐANG DÙNG (verified 04/09/2026 qua `gh secret list`)
 
-### Production / Staging DB
-- [x] STAGING_DATABASE_URL        (đã set — giờ CHỈ dùng cho deploy-staging.yml; workflow backup KHÔNG dùng, tự resolve qua Railway API)
-- [x] STAGING_DIRECT_URL          (đã set — URL kết nối thẳng Postgres, bypass PgBouncer, dùng cho migration)
-- [ ] PROD_DATABASE_URL           (TÙY CHỌN — db-backup.yml tự resolve qua Railway API; set nếu muốn override, VD khi Railway API không suy ra được URL public)
-- [ ] PROD_DIRECT_URL             (chưa dùng)
+### Railway CI — dùng bởi deploy-staging.yml + db-backup.yml
+- [x] RAILWAY_API_TOKEN
+- [x] RAILWAY_PROJECT_ID
+- [x] RAILWAY_BACKEND_SERVICE_ID
+- [x] RAILWAY_FRONTEND_SERVICE_ID
+- [x] RAILWAY_ENVIRONMENT_ID
 
-### Backup DB (workflow db-backup.yml — chạy 03:00 UTC hằng ngày)
-- [x] RAILWAY_API_TOKEN           (đã set — auto-resolve production DB URL)
-- [x] RAILWAY_PROJECT_ID          (đã set)
-- [x] RAILWAY_BACKEND_SERVICE_ID  (đã set — fallback service khi không tìm thấy service Postgres)
-- [ ] BACKUP_S3_ENDPOINT          (NÊN set — Cloudflare R2 / MinIO / B2, bucket RIÊNG chỉ dùng cho backup)
-- [ ] BACKUP_S3_REGION            (TÙY CHỌN)
-- [ ] BACKUP_S3_ACCESS_KEY        (NÊN set)
-- [ ] BACKUP_S3_SECRET_KEY        (NÊN set)
-- [ ] BACKUP_S3_BUCKET            (NÊN set)
-      → Không set 4 secrets trên: backup tự đẩy lên GitHub Release
-        `db-backup-<timestamp>` (durable, private, giữ tới khi prune 90 ngày)
-        — vẫn tốt hơn artifact 90 ngày, nhưng nên tách hẳn storage ngoài.
+### Deploy staging — deploy-staging.yml đọc rồi `railway variable set` sang Railway
+- [x] STAGING_DATABASE_URL      (backup workflow KHÔNG dùng secret này — tự resolve qua Railway API)
+- [x] STAGING_DIRECT_URL        (cho prisma migrate)
+- [x] STAGING_JWT_ACCESS_SECRET
+- [x] STAGING_JWT_REFRESH_SECRET
+- [x] STAGING_VNP_TMN_CODE
+- [x] STAGING_VNP_HASH_SECRET
+- [x] STAGING_VNP_IPN_URL
+- [x] STAGING_VNP_URL
+- [x] STAGING_REDIS_URL
+- [x] STAGING_RESEND_API_KEY
+- [x] STAGING_EMAIL_FROM
+- [x] STAGING_SMS_PROVIDER_API_KEY
+- [x] STAGING_API_URL
+- [x] STAGING_GHN_WEBHOOK_TOKEN
+- [x] STAGING_GHTK_WEBHOOK_TOKEN
 
-### JWT
-- [ ] STAGING_JWT_ACCESS_SECRET   (random string >= 64 chars)
-- [ ] STAGING_JWT_REFRESH_SECRET  (random string >= 64 chars)
-- [ ] PRODUCTION_JWT_ACCESS_SECRET
-- [ ] PRODUCTION_JWT_REFRESH_SECRET
+### GitHub Variables (vars.*) — ĐÃ SET
+- [x] STAGING_FRONTEND_URL
+- [x] STAGING_VNP_RETURN_URL
 
-### VNPay
-- [ ] STAGING_VNP_TMN_CODE        (lấy từ sandbox.vnpayment.vn)
-- [ ] STAGING_VNP_HASH_SECRET     (lấy từ sandbox.vnpayment.vn)
-- [ ] STAGING_VNP_IPN_URL         (URL public backend nhận IPN, e.g. https://<backend>.up.railway.app/payment/vnpay-ipn)
-- [ ] STAGING_SMS_PROVIDER_API_KEY (BẮT BUỘC ở production — OtpService throw FATAL nếu NODE_ENV=production thiếu key)
-- [ ] PRODUCTION_VNP_TMN_CODE     (lấy từ portal.vnpayment.vn — production)
-- [ ] PRODUCTION_VNP_HASH_SECRET
+### Backup DB — db-backup.yml (03:00 UTC hằng ngày)
+- [ ] PROD_DATABASE_URL   (TÙY CHỌN — không set: tự resolve qua Railway API, hiện tự resolve OK)
+- [ ] BACKUP_S3_ENDPOINT  (NÊN set — Cloudflare R2 / MinIO / B2, bucket RIÊNG chỉ cho backup)
+- [ ] BACKUP_S3_REGION
+- [ ] BACKUP_S3_ACCESS_KEY
+- [ ] BACKUP_S3_SECRET_KEY
+- [ ] BACKUP_S3_BUCKET
+      → Không set: backup tự đẩy lên GitHub Release `db-backup-<ts>` (durable,
+        private — đã verify chạy thật run 33896911248).
 
-### Redis
-- [ ] STAGING_REDIS_URL           (redis://user:pass@host:6379)
-- [ ] PRODUCTION_REDIS_URL
+## Referenced NHƯNG CHƯA SET — cần xử lý (ảnh hưởng thật)
 
-### Deploy (điền sau khi chọn provider)
-- [x] RAILWAY_API_TOKEN            (Account token — Railway dashboard → Account Settings → Tokens; dùng cho CLI CI)
-- [ ] RAILWAY_BACKEND_SERVICE_ID  (Service ID của backend trên Railway)
-- [ ] RAILWAY_FRONTEND_SERVICE_ID (Service ID của frontend trên Railway)
-- [ ] RAILWAY_ENVIRONMENT_ID      (Environment ID của project trên Railway)
-- [ ] FLY_API_TOKEN               (nếu dùng Fly.io)
-- [ ] AZURE_CREDENTIALS           (nếu dùng Azure)
-- [ ] VERCEL_TOKEN                (nếu dùng Vercel cho frontend)
+- [ ] STAGING_S3_ENDPOINT / STAGING_S3_REGION / STAGING_S3_ACCESS_KEY /
+      STAGING_S3_SECRET_KEY / STAGING_S3_BUCKET / STAGING_S3_PUBLIC_URL
 
-### Shipping webhook (GHN / GHTK) — bắt buộc nếu dùng webhook
-- [ ] STAGING_GHN_WEBHOOK_TOKEN   (token đặt trong URL webhook GHN)
-- [ ] STAGING_GHTK_WEBHOOK_TOKEN  (token `?hash=` cho webhook GHTK)
+  deploy-staging.yml tham chiếu 6 secrets này nhưng chúng **rỗng** ⇒ mỗi lần
+  deploy đang set `S3_ENDPOINT=""` cho backend ⇒ **tính năng upload ảnh sản
+  phẩm lỗi khi gọi** (ObjectStorageService: "S3_ENDPOINT chưa cấu hình") —
+  khớp audit "Railway env: S3 trống". Fix: cấu hình MinIO/R2 thật rồi set đủ
+  6 secrets, HOẶC gỡ khối S3 khỏi deploy-staging.yml nếu chưa dùng upload.
 
-## Variables (không nhạy cảm, dùng vars.*)
-- [ ] STAGING_API_URL = https://api-staging.locherbal.com
-- [ ] STAGING_BACKEND_URL = https://api-staging.locherbal.com
-- [ ] STAGING_VNP_URL = https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-- [ ] STAGING_VNP_RETURN_URL = https://staging.locherbal.com/order/success
-- [ ] STAGING_FRONTEND_URL = <frontend Railway domain, dùng cho CORS_ORIGINS>
+## THAM CHIẾU Railway dashboard — NGOÀI phạm vi file này
 
-## Environments cần tạo trên GitHub
-Settings → Environments → New environment
-- [ ] staging    (không cần approval)
-- [ ] production (bắt buộc required reviewers: chọn chính bạn)
+Các biến runtime production nằm trên Railway (backend service, environment
+`production`) — KHÔNG tồn tại trên GitHub, KHÔNG workflow nào dùng
+(đã xóa các mục PRODUCTION_* cũ ra khỏi checklist vì gây hiểu lầm):
+DATABASE_URL, DIRECT_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
+VNP_TMN_CODE, VNP_HASH_SECRET, VNP_URL, VNP_RETURN_URL, VNP_IPN_URL,
+REDIS_URL, RESEND_API_KEY, EMAIL_FROM, SMS_PROVIDER, API_URL, FRONTEND_URL,
+CORS_ORIGINS, NODE_ENV=production, PORT, S3_* (nếu dùng upload).
+
+Đã verify hoạt động thật trên Railway (không cần hành động): login/RBAC/
+throttle (31/08), saga checkout + VNPay URL (31/08), /health + backup
+production (04/09).
+
+## Provider khác — chỉ khi chuyển nền tảng (hiện KHÔNG dùng)
+- [ ] FLY_API_TOKEN / AZURE_CREDENTIALS / VERCEL_TOKEN
+
+## Environments GitHub
+- [x] staging — đã tạo (deploy-staging.yml dùng)
+- production: CHƯA cần — production deploy qua Railway, không qua Actions.
 
 ## QUAN TRỌNG
 - KHÔNG commit .env vào git (đã có .gitignore)
 - KHÔNG dùng secret staging cho production
-- VNP_HASH_SECRET production KHÁC sandbox
-  (lỗi này đã gặp trong test: NJPO vs NJP0)
+- VNP_HASH_SECRET production KHÁC sandbox (lỗi đã gặp: NJPO vs NJP0)
