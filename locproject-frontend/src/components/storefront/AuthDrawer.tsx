@@ -272,7 +272,7 @@ export default function AuthDrawer() {
         <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary-700">login</span>
-            <h2 className="font-display font-bold text-lg text-text-primary">
+            <h2 className="font-medium text-lg text-text-primary font-[family-name:var(--font-be-vietnam)]">
               {tab === 'login' ? 'Đăng nhập' : tab === 'register' ? 'Tạo tài khoản' : 'Xác thực SMS OTP'}
             </h2>
           </div>
@@ -455,7 +455,7 @@ function PhoneOtpForm(props: PhoneFormTabProps) {
         </p>
 
         <input
-          className="w-full px-4 py-3 rounded-lg border border-border focus:border-primary-500 focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm"
+          className="w-full px-4 py-3 rounded-lg border border-border focus:border-primary-500 focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm tabular-nums tracking-[0.04em]"
           type="tel"
           inputMode="numeric"
           placeholder="0912345678"
@@ -500,21 +500,49 @@ function PhoneOtpForm(props: PhoneFormTabProps) {
           <label className="text-xs text-text-secondary font-medium">Mã xác thực 6 số</label>
           <span
             data-testid="otp-expiry"
-            className={`text-xs font-bold tabular-nums ${expired ? 'text-error' : 'text-primary-700'}`}
+            className={`text-xs font-medium tabular-nums ${expired ? 'text-error' : 'text-primary-700'}`}
           >
             {expired ? 'Mã đã hết hạn' : `Hết hạn sau ${mm}:${ss}`}
           </span>
         </div>
-        <input
-          className="mt-1.5 w-full px-4 py-3 rounded-lg border border-border focus:border-primary-500 focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm tracking-widest text-center"
-          type="text"
-          inputMode="numeric"
-          maxLength={6}
-          placeholder="••••••"
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
-          required
-        />
+        {/* 4a — hiển thị lại SĐT đã nhập: tabular-nums + letter-spacing */}
+        <p className="mt-1 text-xs text-text-secondary">
+          Mã đã được gửi tới số{' '}
+          <span className="font-medium tabular-nums tracking-[0.04em] text-text-primary">{phone}</span>
+        </p>
+        <div className="relative mt-1.5">
+          {/* 4b (Hướng A) — 6 ô hiển thị, render từ giá trị của input ẩn bên dưới.
+              Input thật (invisible) phủ kín 6 ô: nhận toàn bộ keyboard/paste,
+              giữ nguyên selector input[maxlength="6"] cho Playwright. */}
+          <div className="flex gap-2" aria-hidden="true">
+            {Array.from({ length: 6 }).map((_, i) => {
+              const digit = code[i] ?? '';
+              const isActive = i === Math.min(code.length, 5);
+              return (
+                <div
+                  key={i}
+                  data-testid={`otp-box-${i}`}
+                  className={`flex h-14 flex-1 items-center justify-center rounded-lg bg-white text-2xl font-medium tabular-nums transition-colors ${
+                    isActive ? 'border-2 border-primary-700' : 'border-[0.5px] border-border'
+                  } ${digit ? 'text-text-primary' : 'text-text-tertiary'}`}
+                >
+                  {digit || '•'}
+                </div>
+              );
+            })}
+          </div>
+          <input
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+            required
+            autoComplete="one-time-code"
+            aria-label="Mã xác thực 6 số"
+          />
+        </div>
       </div>
 
       {expired && (
@@ -540,7 +568,7 @@ function PhoneOtpForm(props: PhoneFormTabProps) {
           type="button"
           disabled={resendIn > 0 || otpLoading}
           onClick={onResend}
-          className="text-primary font-medium hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+          className="text-primary font-medium tabular-nums hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
         >
           Gửi lại mã {resendIn > 0 && `(${rmm}:${rss})`}
         </button>
@@ -665,7 +693,7 @@ function RegisterForm(props: RegisterFormProps) {
       />
 
       <input
-        className="w-full px-4 py-3 rounded-lg border border-border focus:border-primary-500 focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm"
+        className="w-full px-4 py-3 rounded-lg border border-border focus:border-primary-500 focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm tabular-nums tracking-[0.04em]"
         type="tel"
         inputMode="numeric"
         placeholder="Số điện thoại (0912345678)"

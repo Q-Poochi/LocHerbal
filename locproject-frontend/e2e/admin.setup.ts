@@ -16,7 +16,8 @@ setup('admin authenticate', async ({ page }) => {
 
   // Login admin → redirect về /admin
   await page.waitForURL(/\/admin/, { timeout: 15000 })
-  await expect(page.getByText('LocHerbal Admin').first()).toBeVisible({ timeout: 10000 })
+  // Sidebar admin mới: brand "LocHerbal" + subtitle "Phòng quản trị" (redesign 04/09)
+  await expect(page.getByText('Phòng quản trị').first()).toBeVisible({ timeout: 10000 })
 
   // Lưu session admin
   await page.context().storageState({ path: authFile })

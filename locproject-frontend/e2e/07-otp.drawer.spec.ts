@@ -12,11 +12,10 @@ test.describe('OTP Login (AuthDrawer)', () => {
     const drawer = page.getByTestId('auth-drawer')
     await expect(drawer).toBeVisible({ timeout: 5000 })
 
-    // Qua tab "Số điện thoại"
-    await drawer.getByRole('button', { name: /số điện thoại/i }).click()
+    // Qua tab "OTP nhanh" — purpose OTP cố định 'login' (UI mới đã bỏ selector mục đích)
+    await drawer.getByTestId('auth-tab-otp').click()
 
-    // Chọn mục đích Đăng nhập, nhập SĐT đã đăng ký (coupon-cust) → gửi OTP
-    await drawer.getByRole('button', { name: /^Đăng nhập$/ }).click()
+    // Nhập SĐT (đã đăng ký: coupon-cust) → gửi OTP
     await drawer.locator('input[type="tel"]').fill('0900000001')
     await drawer.getByRole('button', { name: /gửi mã otp/i }).click()
 
@@ -24,8 +23,8 @@ test.describe('OTP Login (AuthDrawer)', () => {
     // Hành vi đúng hiện tại: sang bước nhập mã + đếm ngược gửi lại, KHÔNG có banner DEV.
     const codeInput = drawer.locator('input[maxlength="6"]')
     await expect(codeInput).toBeVisible({ timeout: 10000 })
-    // Đếm ngược hiện
-    await expect(drawer.getByText(/gửi lại mã/i)).toContainText('(', { timeout: 15000 })
+    // Đếm ngược hiện — bám đúng nút "Gửi lại mã" (tránh strict-mode với đoạn chú thích)
+    await expect(drawer.getByRole('button', { name: /gửi lại mã/i })).toContainText('(', { timeout: 15000 })
   })
 
   // Bỏ qua: xác thực OTP thật cần mã 6 số — backend chỉ gửi qua SMS (ESMS) và lưu
@@ -40,8 +39,7 @@ test.describe('OTP Login (AuthDrawer)', () => {
     await page.locator('button', { hasText: 'Đăng nhập' }).first().click()
     const drawer = page.getByTestId('auth-drawer')
     await expect(drawer).toBeVisible({ timeout: 5000 })
-    await drawer.getByRole('button', { name: /số điện thoại/i }).click()
-    await drawer.getByRole('button', { name: /^Đăng ký$/ }).click()
+    await drawer.getByTestId('auth-tab-otp').click()
     await drawer.locator('input[type="tel"]').fill(phone)
     await drawer.getByRole('button', { name: /gửi mã otp/i }).click()
 
