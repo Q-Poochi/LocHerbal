@@ -1,4 +1,4 @@
-﻿# Updated: 2026-08-24T20:00:00Z
+# Updated: 2026-08-24T20:00:00Z
 name: Deploy Staging
 
 on:
@@ -51,6 +51,9 @@ jobs:
           RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
         run: |
           railway up --service "$RAILWAY_SERVICE_ID" --ci
+          # LƯU Ý: KHÔNG set SMS_PROVIDER / SMS_* ở đây — biến SMS quản lý trực tiếp trên
+          # Railway (đang = esms + keys thật). Workflow cũ từng ghi đè
+          # SMS_PROVIDER=mock làm hỏng OTP production (đã sửa 06/09/2026).
           railway variable set \
             --service "$RAILWAY_SERVICE_ID" \
             DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}" \
