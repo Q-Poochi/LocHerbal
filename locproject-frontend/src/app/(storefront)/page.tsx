@@ -10,6 +10,7 @@ import { apiClient } from '../../lib/api/client';
 import { usePublicBlogPosts } from '../../lib/hooks/useMarketing';
 import { resolveImageUrl } from '../../lib/utils/imageUrl';
 import type { Product } from '@/types/api.types';
+import { getVariantPricing } from '../../lib/utils/discount';
 
 type LoadState = 'loading' | 'success' | 'error';
 
@@ -299,7 +300,11 @@ export default function HomePage() {
                     style={{ transform: `translateX(-${pageIdx * 100}%)`, willChange: 'transform' }}
                   >
                     {products.map((p) => {
-                      const price = p.variants?.[0]?.price ?? 0;
+                      const pricing = getVariantPricing(p.variants?.[0]);
+                      const price = pricing.price;
+                      const hasDiscount = pricing.isDiscountActive;
+                      const discountPct = pricing.discountPercent ?? 0;
+                      const compareAt = pricing.compareAtPrice ?? 0;
                       const img = resolveImageUrl(p.thumbnailUrl);
                       return (
                         <div key={p.id} className="flex-shrink-0 w-1/2 md:w-1/4 px-3">
@@ -322,7 +327,15 @@ export default function HomePage() {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-5xl text-primary/40" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
+                                  <span className="material-symbols-outlined text-primary/40" style={{ fontSize: '72px', fontVariationSettings: "'FILL' 1" }}>eco</span>
+                                </div>
+                              )}
+
+                              {hasDiscount && (
+                                <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                                  <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    -{discountPct}%
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -337,7 +350,12 @@ export default function HomePage() {
                                 {p.name}
                               </h3>
                               <div className="mt-auto pt-3 flex items-center justify-between">
-                                <span className="font-body-lg text-body-lg font-semibold text-primary-container">{formatPrice(price)}</span>
+                                <div className="flex items-baseline gap-2">
+                                  <span className={`font-body-lg text-body-lg font-semibold ${hasDiscount ? 'text-primary-700' : 'text-primary-container'}`}>{formatPrice(price)}</span>
+                                  {hasDiscount && compareAt > 0 && (
+                                    <span className="text-caption text-outline line-through">{formatPrice(compareAt)}</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </Link>
