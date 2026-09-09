@@ -135,11 +135,11 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
         />
 
         <div className="flex items-baseline gap-2">
-          <span className="font-bold text-sm text-primary-700">
+          <span className="font-[family-name:var(--font-be-vietnam)] font-medium text-[19px] tabular-nums text-primary-700">
             {price.toLocaleString('vi-VN')}đ
           </span>
           {hasDiscount && (
-            <span className="text-[11px] text-text-tertiary line-through">
+            <span className="font-[family-name:var(--font-be-vietnam)] text-[13px] tabular-nums text-text-tertiary line-through">
               {compareAt.toLocaleString('vi-VN')}đ
             </span>
           )}

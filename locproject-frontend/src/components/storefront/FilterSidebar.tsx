@@ -69,12 +69,12 @@ export default function FilterSidebar() {
   const activeRating = searchParams.get('rating') || '';
 
   return (
-    <aside className="w-full md:w-[260px] flex-shrink-0 space-y-6 bg-white p-5 rounded-2xl border border-border sticky top-24 self-start">
+    <aside className="w-full md:w-[260px] flex-shrink-0 space-y-6 bg-white p-5 rounded-2xl border border-border sticky top-24 self-start font-[family-name:var(--font-be-vietnam)]">
       {/* ── DANH MỤC ────────────────────────────────────────── */}
       <div>
         <button
           onClick={() => toggleCollapse('categories')}
-          className="flex w-full justify-between items-center font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
+          className="flex w-full justify-between items-center font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
         >
           <span>Danh mục</span>
           <span className={`material-symbols-outlined text-text-secondary transition-transform duration-250 ${collapsed.categories ? 'rotate-180' : ''}`}>
@@ -115,7 +115,7 @@ export default function FilterSidebar() {
       <div className="pt-5 border-t border-border">
         <button
           onClick={() => toggleCollapse('price')}
-          className="flex w-full justify-between items-center font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
+          className="flex w-full justify-between items-center font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
         >
           <span>Khoảng giá</span>
           <span className={`material-symbols-outlined text-text-secondary transition-transform duration-250 ${collapsed.price ? 'rotate-180' : ''}`}>
@@ -188,7 +188,7 @@ export default function FilterSidebar() {
       <div className="pt-5 border-t border-border">
         <button
           onClick={() => toggleCollapse('dosage')}
-          className="flex w-full justify-between items-center font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
+          className="flex w-full justify-between items-center font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
         >
           <span>Dạng bào chế</span>
           <span className={`material-symbols-outlined text-text-secondary transition-transform duration-250 ${collapsed.dosage ? 'rotate-180' : ''}`}>
@@ -219,7 +219,7 @@ export default function FilterSidebar() {
       <div className="pt-5 border-t border-border">
         <button
           onClick={() => toggleCollapse('origin')}
-          className="flex w-full justify-between items-center font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
+          className="flex w-full justify-between items-center font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
         >
           <span>Xuất xứ</span>
           <span className={`material-symbols-outlined text-text-secondary transition-transform duration-250 ${collapsed.origin ? 'rotate-180' : ''}`}>
@@ -250,7 +250,7 @@ export default function FilterSidebar() {
       <div className="pt-5 border-t border-border">
         <button
           onClick={() => toggleCollapse('rating')}
-          className="flex w-full justify-between items-center font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
+          className="flex w-full justify-between items-center font-bold text-sm uppercase tracking-wider text-text-primary mb-4"
         >
           <span>Đánh giá</span>
           <span className={`material-symbols-outlined text-text-secondary transition-transform duration-250 ${collapsed.rating ? 'rotate-180' : ''}`}>

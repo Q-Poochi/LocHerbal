@@ -80,7 +80,7 @@ export default function SortBar() {
   const currentSort = searchParams.get('sort') || 'popular';
 
   return (
-    <div className="flex flex-col gap-3 bg-white p-4 rounded-2xl border border-border mb-6">
+    <div className="flex flex-col gap-3 bg-white p-4 rounded-2xl border border-border mb-6 font-[family-name:var(--font-be-vietnam)]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Active chips row */}
         <div className="flex flex-wrap items-center gap-2">
