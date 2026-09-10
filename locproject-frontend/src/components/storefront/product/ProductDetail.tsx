@@ -6,7 +6,10 @@ import ProductTabs from './ProductTabs';
 import ProductReviews from './ProductReviews';
 import RelatedProducts from './RelatedProducts';
 
-async function getProduct(slug: string): Promise<ProductDetailType | null> {
+// Export để products/[slug]/page.tsx dùng chung cho generateMetadata —
+// fetch cùng URL + options trong cùng 1 request → Next.js tự dedupe,
+// KHÔNG gọi API 2 lần.
+export async function getProduct(slug: string): Promise<ProductDetailType | null> {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
         const res = await fetch(`${baseUrl}/products/slug/${slug}`, {
