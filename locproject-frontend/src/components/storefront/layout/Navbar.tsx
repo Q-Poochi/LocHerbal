@@ -338,10 +338,10 @@ export default function Navbar() {
       {/* ── Header ───────────────────────────────────────────── */}
       <header
         id="main-header"
-        className={`sticky top-0 w-full z-50 transition-all duration-300
+        className={`sticky top-0 w-full z-50 transition-all duration-300 border-b border-emerald-900/10
           ${scrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-md'
-            : 'bg-white border-b border-border'}`}
+            ? 'bg-[#d8e6db]/90 backdrop-blur-md shadow-sm'
+            : 'bg-[#e2ede5]/85 backdrop-blur-md'}`}
       >
         <div className="flex items-center justify-between h-16 md:h-16 px-4 md:px-10 max-w-[1280px] mx-auto">
 

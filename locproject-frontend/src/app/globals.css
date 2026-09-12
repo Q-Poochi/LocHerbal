@@ -559,6 +559,95 @@ body {
   }
 }
 
+
+/* ━━━ LUSION-STYLE MOTION SCROLL SYSTEM (0 DEPENDENCY) ━━━ */
+.masked-line-wrap {
+  display: block;
+  overflow: hidden;
+  line-height: 1.25;
+  padding-bottom: 0.08em;
+}
+.masked-line-inner {
+  display: block;
+  transform: translateY(115%);
+  opacity: 0;
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 700ms ease;
+  will-change: transform, opacity;
+}
+.is-visible .masked-line-inner,
+.is-mounted .masked-line-inner {
+  transform: translateY(0%);
+  opacity: 1;
+}
+
+/* Curtain Media Reveal: frame clips from bottom to top while inner image scales down */
+.curtain-frame {
+  position: relative;
+  overflow: hidden;
+  clip-path: inset(100% 0 0 0 round 1.25rem);
+  transition: clip-path 1100ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: clip-path;
+}
+.curtain-frame.is-visible {
+  clip-path: inset(0% 0 0 0 round 1.25rem);
+}
+.curtain-inner {
+  transform: scale(1.18);
+  transition: transform 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.curtain-frame.is-visible .curtain-inner {
+  transform: scale(1);
+}
+
+/* Floating interactive card with smooth elevation */
+.lusion-card {
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 500ms ease, border-color 400ms ease;
+}
+.lusion-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -15px rgba(22, 107, 66, 0.12);
+}
+
+
+/* ━━━ ADVANCED LUSION-STYLE MOTION EXTENSIONS ━━━ */
+
+/* Marquee Infinite Smooth Ticker */
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 28s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Scroll Expand Frame: starts inset & rounded, expands on scroll */
+.scroll-expand-container {
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), border-radius 900ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 900ms ease;
+  will-change: transform, border-radius;
+}
+.scroll-expand-container.is-expanded {
+  transform: scale(1.02);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.35);
+}
+
+/* 3D Tilt Card Base */
+.tilt-card {
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms ease;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* Story Timeline Step Line */
+.timeline-dot {
+  box-shadow: 0 0 0 6px rgba(22, 107, 66, 0.15);
+}
+
 /* Fallback for prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   [class*="animate-"] { animation: none !important; }

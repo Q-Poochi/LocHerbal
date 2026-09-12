@@ -308,6 +308,18 @@ export const PAGE_BLOCK_TYPE_LABELS: Record<PageBlockType, string> = {
     timeline: 'Mốc phát triển',
 };
 
+
+export function usePublicPageBlocks(pageSlug: string) {
+    return useQuery({
+        queryKey: ['public-page-blocks', pageSlug],
+        queryFn: async () => {
+            const { data } = await apiClient.get<AdminPageBlock[]>(`/pages/${pageSlug}/blocks`);
+            return data;
+        },
+        staleTime: 60000,
+    });
+}
+
 export function useAdminPageBlocks(pageSlug: string) {
     return useQuery({
         queryKey: ['admin-page-blocks', pageSlug],
