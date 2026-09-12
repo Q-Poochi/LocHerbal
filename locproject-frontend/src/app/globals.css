@@ -501,10 +501,81 @@ body {
 .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
 .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
 
+/* ═══ SCROLL REVEAL — CSS + IntersectionObserver (0 dependency) ═══
+   Chỉ animate transform/opacity. Server render trạng thái CUỐI (SEO an toàn);
+   component ('use client') thêm .is-visible khi vào viewport.
+   prefers-reduced-motion: force hiển thị ngay (xem media query cuối file). */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 550ms ease,
+    transform 550ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger — delay theo nth-child (đến 8 con; trang dùng >8 hiếm, con 9+ delay max) */
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 550ms ease,
+    transform 550ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-stagger.is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+.reveal-stagger.is-visible > *:nth-child(1) { transition-delay: 0ms; }
+.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 70ms; }
+.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 140ms; }
+.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 210ms; }
+.reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 280ms; }
+.reveal-stagger.is-visible > *:nth-child(6) { transition-delay: 350ms; }
+.reveal-stagger.is-visible > *:nth-child(7) { transition-delay: 420ms; }
+.reveal-stagger.is-visible > *:nth-child(8) { transition-delay: 490ms; }
+.reveal-stagger.is-visible > *:nth-child(n + 9) { transition-delay: 490ms; }
+
+/* Hero text — các dòng chạy vào lần lượt khi mount (above-the-fold) */
+.hero-reveal {
+  display: block;
+}
+.hero-reveal .hero-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(22px);
+}
+.hero-reveal.is-mounted .hero-line {
+  animation: heroLineIn 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--line-i, 0) * 130ms);
+}
+@keyframes heroLineIn {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Fallback for prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   [class*="animate-"] { animation: none !important; }
   * { transition: none !important; }
+  /* Scroll-reveal: force hiển thị NGAY — nếu chỉ tắt transition, nội dung
+     kẹt ở opacity 0 (chỉ tắt transition không đủ) */
+  .reveal,
+  .reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .hero-reveal .hero-line {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

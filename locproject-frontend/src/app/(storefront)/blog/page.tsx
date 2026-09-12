@@ -5,6 +5,7 @@ import Navbar from '../../../components/storefront/layout/Navbar';
 import Footer from '../../../components/storefront/layout/Footer';
 import { usePublicBlogPosts } from '../../../lib/hooks/useMarketing';
 import { resolveImageUrl } from '../../../lib/utils/imageUrl';
+import { Reveal, StaggerReveal } from '../../../components/storefront/motion/Reveal';
 
 export default function BlogPage() {
   const { data: blogPosts = [], isLoading } = usePublicBlogPosts();
@@ -16,14 +17,16 @@ export default function BlogPage() {
         {/* ── Page header ─────────────────────────────────────────── */}
         <section className="w-full pt-10 pb-12 md:pt-14 md:pb-16">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
-            <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Journal</span>
-            <h1 className="font-headline-lg text-headline-lg md:text-headline-xl text-primary mt-2">
-              Cẩm nang sức khỏe
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-4 max-w-2xl">
-              Kiến thức dưỡng sinh, bí quyết chăm sóc sức khỏe và câu chuyện
-              về thảo dược — được tuyển chọn bởi đội ngũ LocHerbal.
-            </p>
+            <Reveal>
+              <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Journal</span>
+              <h1 className="font-headline-lg text-headline-lg md:text-headline-xl text-primary mt-2">
+                Cẩm nang sức khỏe
+              </h1>
+              <p className="font-body-md text-body-md text-on-surface-variant mt-4 max-w-2xl">
+                Kiến thức dưỡng sinh, bí quyết chăm sóc sức khỏe và câu chuyện
+                về thảo dược — được tuyển chọn bởi đội ngũ LocHerbal.
+              </p>
+            </Reveal>
           </div>
         </section>
 
@@ -52,7 +55,7 @@ export default function BlogPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <StaggerReveal className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {blogPosts.map((post) => {
                   const img = resolveImageUrl(post.thumbnailUrl);
                   return (
@@ -82,7 +85,7 @@ export default function BlogPage() {
                     </article>
                   );
                 })}
-              </div>
+              </StaggerReveal>
             )}
           </div>
         </section>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Navbar from '@/components/storefront/layout/Navbar';
 import Footer from '@/components/storefront/layout/Footer';
+import { AnimatedCounter, HeroTextReveal, Reveal, StaggerReveal } from '@/components/storefront/motion/Reveal';
 
 export const metadata = {
   title: 'Về chúng tôi - LocHerbal Apothecary',
@@ -22,12 +23,12 @@ export default function AboutPage() {
               Thảo dược thiên nhiên
             </span>
             <h1 className="text-display-lg md:text-headline-xl text-primary mt-5 leading-[1.1] tracking-[-0.02em] font-display font-bold">
-              Về LocHerbal
+              <HeroTextReveal lines={['Về LocHerbal']} />
             </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant mt-5 max-w-2xl mx-auto">
+            <Reveal className="font-body-lg text-body-lg text-on-surface-variant mt-5 max-w-2xl mx-auto">
               Khơi nguồn sức khỏe từ tinh hoa thảo mộc Việt — kết hợp tri thức bản địa
               hàng thế kỷ với tiêu chuẩn apothecary khoa học hiện đại.
-            </p>
+            </Reveal>
           </div>
         </section>
 
@@ -35,6 +36,7 @@ export default function AboutPage() {
         <section className="w-full py-16 md:py-20 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px] grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7">
+              <Reveal>
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Câu chuyện của chúng tôi</span>
               <h2 className="font-headline-lg text-headline-lg md:text-headline-xl text-primary mt-3">Từ Thảo Nhiên Đến Chuẩn Khoa Học</h2>
               <div className="space-y-5 mt-6">
@@ -49,18 +51,21 @@ export default function AboutPage() {
                   hoàn toàn yên tâm khi lựa chọn sức khỏe cho chính mình.
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-6 mt-10 max-w-md">
+              </Reveal>
+              <StaggerReveal className="grid grid-cols-3 gap-6 mt-10 max-w-md">
                 {[
-                  { n: '10+', l: 'Năm kinh nghiệm' },
-                  { n: '200+', l: 'Sản phẩm thảo dược' },
-                  { n: '50k+', l: 'Khách hàng tin dùng' },
+                  { n: 10, suffix: '+', l: 'Năm kinh nghiệm' },
+                  { n: 200, suffix: '+', l: 'Sản phẩm thảo dược' },
+                  { n: 50, suffix: 'k+', l: 'Khách hàng tin dùng' },
                 ].map((s) => (
                   <div key={s.l}>
-                    <p className="font-headline-lg text-headline-lg text-primary">{s.n}</p>
+                    <p className="font-headline-lg text-headline-lg text-primary">
+                      <AnimatedCounter value={s.n} suffix={s.suffix} />
+                    </p>
                     <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mt-1">{s.l}</p>
                   </div>
                 ))}
-              </div>
+              </StaggerReveal>
             </div>
             <div className="lg:col-span-5">
               <div className="relative rounded-lg overflow-hidden bg-gradient-to-br from-primary-container to-[#012d1d]
@@ -130,6 +135,7 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="lg:col-span-7">
+              <Reveal>
               <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.1em]">Chất lượng & tiêu chuẩn</span>
               <h2 className="font-headline-lg text-headline-lg md:text-headline-xl text-primary mt-3">Con Người & Tiêu Chuẩn</h2>
               <p className="font-body-lg text-body-lg text-on-surface-variant mt-5">
@@ -154,6 +160,7 @@ export default function AboutPage() {
                   </div>
                 ))}
               </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -161,7 +168,7 @@ export default function AboutPage() {
 
         {/* CTA */}
         <section className="w-full py-16 md:py-24 bg-primary text-on-primary text-center">
-          <div className="mx-auto max-w-[720px] px-margin-mobile md:px-[64px]">
+          <Reveal className="mx-auto max-w-[720px] px-margin-mobile md:px-[64px]">
             <h2 className="font-headline-lg text-headline-lg md:text-headline-xl">Bắt đầu hành trình sức khỏe cùng LocHerbal</h2>
             <p className="font-body-lg text-body-lg text-on-primary/80 mt-4">
               Khám phá sản phẩm hoặc đặt lịch tư vấn miễn phí với đội ngũ dược sĩ của chúng tôi.
@@ -184,7 +191,7 @@ export default function AboutPage() {
                 Đặt lịch tư vấn
               </Link>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
       <Footer />
