@@ -1,7 +1,10 @@
 import { getCompany, SITE_URL } from '@/lib/seo';
+import { SmoothScroll } from '@/components/ui/SmoothScroll';
 
-// Layout server cho toàn bộ storefront — render Organization JSON-LD
-// (schema.org) từ dữ liệu THẬT của CompanySettings. Không thay đổi UI.
+// Layout server cho toàn bộ storefront:
+// - render Organization JSON-LD (schema.org) từ dữ liệu THẬT của CompanySettings
+// - bọc children trong SmoothScroll (client component) để có cuộn mượt Lenis
+// Giữ nguyên server component để JSON-LD nằm trong HTML thô (SEO / pre-render).
 export default async function StorefrontLayout({
   children,
 }: {
@@ -25,7 +28,7 @@ export default async function StorefrontLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {children}
+      <SmoothScroll>{children}</SmoothScroll>
     </>
   );
 }
