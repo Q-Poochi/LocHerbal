@@ -558,10 +558,13 @@ describe('AuthService', () => {
       expect(updateCall.data.passwordResetExpiry).toBeInstanceOf(Date);
       expect(updateCall.data.passwordResetExpiry.getTime() - Date.now()).toBeLessThan(16 * 60 * 1000);
 
+      const sentToken = mockEmailService.sendPasswordResetEmail.mock.calls[0][2];
+      const expectedHash = crypto.createHash('sha256').update(sentToken).digest('hex');
+      expect(updateCall.data.passwordResetToken).toBe(expectedHash);
       expect(mockEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(
         'test@test.com',
         'Test User',
-        updateCall.data.passwordResetToken,
+        sentToken,
       );
     });
 

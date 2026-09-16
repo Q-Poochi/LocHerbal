@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsNotEmpty, IsString, IsInt, IsOptional, Min } from 'class-validator';
 
 export class AddCartItemDto {
     @IsNotEmpty({ message: 'productVariantId không được để trống' })
@@ -6,14 +6,14 @@ export class AddCartItemDto {
     productVariantId: string;
 
     @IsNotEmpty({ message: 'Số lượng không được để trống' })
-    @IsNumber({}, { message: 'Số lượng phải là số' })
+    @IsInt({ message: 'Số lượng phải là số nguyên' })
     @Min(1, { message: 'Số lượng tối thiểu là 1' })
     qty: number;
 }
 
 export class UpdateCartItemDto {
     @IsNotEmpty({ message: 'Số lượng không được để trống' })
-    @IsNumber({}, { message: 'Số lượng phải là số' })
+    @IsInt({ message: 'Số lượng phải là số nguyên' })
     @Min(1, { message: 'Số lượng tối thiểu là 1' })
     qty: number;
 }

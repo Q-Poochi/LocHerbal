@@ -72,7 +72,7 @@ jobs:
 
       - name: Run tests
         working-directory: LocProject
-        run: npm test -- --forceExit
+        run: npm test
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test
@@ -85,7 +85,7 @@ jobs:
 
       - name: Run e2e saga tests
         working-directory: LocProject
-        run: npx jest --config test/jest-e2e.json --forceExit
+        run: npx jest --config test/jest-e2e.json
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/ecommerce_test

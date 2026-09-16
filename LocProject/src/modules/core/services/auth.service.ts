@@ -375,17 +375,17 @@ export class AuthService {
       return { message: 'Nếu email tồn tại, hướng dẫn đã được gửi' };
     }
 
-    const passwordResetToken = crypto.randomBytes(32).toString('hex');
-    // 15 phút — ngắn hơn email verify (24h) vì đặt lại mật khẩu nhạy cảm hơn.
+    const rawResetToken = crypto.randomBytes(32).toString('hex');
+    const hashedResetToken = crypto.createHash('sha256').update(rawResetToken).digest('hex');
     const passwordResetExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { passwordResetToken, passwordResetExpiry },
+      data: { passwordResetToken: hashedResetToken, passwordResetExpiry },
     });
 
     try {
-      await this.emailService.sendPasswordResetEmail(user.email, user.fullName, passwordResetToken);
+      await this.emailService.sendPasswordResetEmail(user.email, user.fullName, rawResetToken);
     } catch (e) {
       this.logger.error(`Không gửi được email đặt lại mật khẩu tới ${user.email}: ${(e as Error).message}`);
     }
@@ -394,9 +394,15 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { passwordResetToken: token },
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    let user = await this.prisma.user.findUnique({
+      where: { passwordResetToken: hashedToken },
     });
+    if (!user) {
+      user = await this.prisma.user.findUnique({
+        where: { passwordResetToken: token },
+      });
+    }
 
     if (!user || !user.passwordResetExpiry || user.passwordResetExpiry < new Date()) {
       throw new BadRequestException('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
