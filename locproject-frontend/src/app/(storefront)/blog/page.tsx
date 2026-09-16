@@ -7,6 +7,17 @@ import Footer from '../../../components/storefront/layout/Footer';
 import { usePublicBlogPosts } from '../../../lib/hooks/useMarketing';
 import { resolveImageUrl } from '../../../lib/utils/imageUrl';
 import {
+  FadeUp,
+  FadeLeft,
+  FadeRight,
+  ScaleIn,
+  StaggerContainer,
+  StaggerItem,
+  ParallaxImage,
+  CountUp,
+  TextReveal,
+} from '@/components/ui/ScrollAnimations';
+import {
   CurtainMediaReveal,
   HeroTextReveal,
   MaskedTextReveal,
@@ -240,13 +251,13 @@ export default function BlogPage() {
                     lines={['Khám Phá Tất Cả Bài Viết']}
                   />
                 </div>
-                <StaggerReveal className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {(regularPosts.length > 0 ? regularPosts : blogPosts).map((post) => {
                     const img = resolveImageUrl(post.thumbnailUrl);
                     const snippet = stripHtml(post.content);
                     return (
-                      <article
-                        key={post.id}
+                      <StaggerItem key={post.id}>
+                        <article
                         className="lusion-card group bg-surface-container-lowest/85 backdrop-blur-sm rounded-3xl overflow-hidden
                                    border border-outline-variant/40 shadow-botanical flex flex-col h-full"
                       >
@@ -291,9 +302,10 @@ export default function BlogPage() {
                           </p>
                         </div>
                       </article>
+                      </StaggerItem>
                     );
                   })}
-                </StaggerReveal>
+                </StaggerContainer>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center">

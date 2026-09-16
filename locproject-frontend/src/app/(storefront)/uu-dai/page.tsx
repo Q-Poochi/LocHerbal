@@ -6,6 +6,15 @@ import { useCallback, useEffect, useState } from 'react';
 import Navbar from '@/components/storefront/layout/Navbar';
 import Footer from '@/components/storefront/layout/Footer';
 import CountdownTimer from '@/components/storefront/CountdownTimer';
+import {
+  FadeUp,
+  FadeLeft,
+  FadeRight,
+  ScaleIn,
+  StaggerContainer,
+  StaggerItem,
+  TextReveal,
+} from '@/components/ui/ScrollAnimations';
 import { apiClient } from '@/lib/api/client';
 import { resolveImageUrl } from '@/lib/utils/imageUrl';
 import type { Product } from '@/types/api.types';

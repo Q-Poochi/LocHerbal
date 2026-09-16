@@ -8,6 +8,17 @@ import Footer from '@/components/storefront/layout/Footer';
 import { usePublicPageBlocks } from '@/lib/hooks/useMarketing';
 import { resolveImageUrl } from '@/lib/utils/imageUrl';
 import {
+  FadeUp,
+  FadeLeft,
+  FadeRight,
+  ScaleIn,
+  StaggerContainer,
+  StaggerItem,
+  ParallaxImage,
+  CountUp,
+  TextReveal,
+} from '@/components/ui/ScrollAnimations';
+import {
   AnimatedCounter,
   CurtainMediaReveal,
   HeroTextReveal,
@@ -154,6 +165,107 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* ━━━ 3. MARQUEE CERTIFICATIONS TICKER ━━━ */}
+        <section className="w-full bg-emerald-950/5 backdrop-blur-sm my-8">
+          <MarqueeTicker items={certifications} />
+        </section>
+
+        {/* ━━━ 4. STICKY STORYTELLING: HÀNH TRÌNH 4 TRẠM ━━━ */}
+        <section className="w-full py-16 md:py-24 bg-transparent relative">
+          <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+              <div className="lg:col-span-4 lg:sticky lg:top-28">
+                <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.14em]">
+                  Chu trình khép kín
+                </span>
+                <div className="mt-3">
+                  <MaskedTextReveal
+                    className="font-headline-lg text-headline-lg md:text-3xl text-primary font-bold leading-tight"
+                    lines={['Hành Trình', 'Từ Vườn Thuốc', 'Đến Tay Bạn']}
+                  />
+                </div>
+                <p className="font-body-md text-body-md text-on-surface-variant mt-5 leading-relaxed">
+                  Để đảm bảo chất lượng tinh túy nhất, LocHerbal vận hành quy trình các trạm tiêu chuẩn nghiêm ngặt, minh bạch từng công đoạn.
+                </p>
+
+                <div className="mt-8 space-y-4 hidden lg:block border-l-2 border-outline-variant/50 pl-5">
+                  {journeySteps.map((j) => (
+                    <div key={j.step} className="group cursor-pointer">
+                      <span className="font-label-caps text-xs text-secondary font-bold">Trạm {j.step}</span>
+                      <p className="font-body-sm text-sm text-on-surface font-medium group-hover:text-primary transition-colors">
+                        {j.title}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-8 space-y-16 md:space-y-24">
+                {journeySteps.map((step, idx) => {
+                  const isEven = idx % 2 === 0;
+                  return (
+                    <div key={step.step} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                      <div className={isEven ? 'order-1' : 'order-1 md:order-2'}>
+                        <ParallaxImage className="rounded-2xl aspect-[4/3] relative w-full overflow-hidden shadow-botanical">
+                          <Image
+                            src={step.img}
+                            alt={step.title}
+                            fill
+                            sizes="(max-width: 1024px) 100vw, 500px"
+                            className="object-cover object-center"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                          <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-primary font-label-caps text-xs font-bold uppercase tracking-wider z-10">
+                            Trạm {step.step} • {step.tag}
+                          </span>
+                        </ParallaxImage>
+                      </div>
+
+                      <div className={isEven ? 'order-2' : 'order-2 md:order-1'}>
+                        {isEven ? (
+                          <>
+                            <FadeRight delay={0.1}>
+                              <div className="flex items-center gap-3">
+                                <span className="text-3xl font-display font-bold text-primary/30">{step.step}</span>
+                                <span className="font-label-caps text-xs text-tertiary uppercase tracking-wider">{step.sub}</span>
+                              </div>
+                              <h3 className="font-headline-md text-xl md:text-2xl text-primary font-bold mt-2">
+                                {step.title}
+                              </h3>
+                            </FadeRight>
+                            <FadeRight delay={0.2}>
+                              <p className="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+                                {step.desc}
+                              </p>
+                            </FadeRight>
+                          </>
+                        ) : (
+                          <>
+                            <FadeLeft delay={0.1}>
+                              <div className="flex items-center gap-3">
+                                <span className="text-3xl font-display font-bold text-primary/30">{step.step}</span>
+                                <span className="font-label-caps text-xs text-tertiary uppercase tracking-wider">{step.sub}</span>
+                              </div>
+                              <h3 className="font-headline-md text-xl md:text-2xl text-primary font-bold mt-2">
+                                {step.title}
+                              </h3>
+                            </FadeLeft>
+                            <FadeLeft delay={0.2}>
+                              <p className="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
+                                {step.desc}
+                              </p>
+                            </FadeLeft>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ━━━ 2. CINEMATIC VIDEO & AMBIENT SHOWCASE (Scroll Expand - Dynamic From Admin) ━━━ */}
         <section className="w-full py-8 md:py-12 bg-transparent">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
@@ -221,79 +333,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ━━━ 3. MARQUEE CERTIFICATIONS TICKER ━━━ */}
-        <section className="w-full bg-emerald-950/5 backdrop-blur-sm my-8">
-          <MarqueeTicker items={certifications} />
-        </section>
-
-        {/* ━━━ 4. STICKY STORYTELLING: HÀNH TRÌNH 4 TRẠM ━━━ */}
-        <section className="w-full py-16 md:py-24 bg-transparent relative">
-          <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-              <div className="lg:col-span-4 lg:sticky lg:top-28">
-                <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.14em]">
-                  Chu trình khép kín
-                </span>
-                <div className="mt-3">
-                  <MaskedTextReveal
-                    className="font-headline-lg text-headline-lg md:text-3xl text-primary font-bold leading-tight"
-                    lines={['Hành Trình', 'Từ Vườn Thuốc', 'Đến Tay Bạn']}
-                  />
-                </div>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-5 leading-relaxed">
-                  Để đảm bảo chất lượng tinh túy nhất, LocHerbal vận hành quy trình các trạm tiêu chuẩn nghiêm ngặt, minh bạch từng công đoạn.
-                </p>
-
-                <div className="mt-8 space-y-4 hidden lg:block border-l-2 border-outline-variant/50 pl-5">
-                  {journeySteps.map((j) => (
-                    <div key={j.step} className="group cursor-pointer">
-                      <span className="font-label-caps text-xs text-secondary font-bold">Trạm {j.step}</span>
-                      <p className="font-body-sm text-sm text-on-surface font-medium group-hover:text-primary transition-colors">
-                        {j.title}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="lg:col-span-8 space-y-16 md:space-y-24">
-                {journeySteps.map((step) => (
-                  <div key={step.step} className="relative">
-                    <CurtainMediaReveal aspect="aspect-[16/10] md:aspect-[16/9]" className="rounded-3xl shadow-xl overflow-hidden">
-                      <div className="relative w-full h-full bg-surface-container-high">
-                        <Image
-                          src={step.img}
-                          alt={step.title}
-                          fill
-                          sizes="(max-width: 1024px) 100vw, 750px"
-                          className="object-cover object-center"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                        <span className="absolute top-6 left-6 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-md text-primary font-label-caps text-xs font-bold uppercase tracking-wider">
-                          Trạm {step.step} • {step.tag}
-                        </span>
-                      </div>
-                    </CurtainMediaReveal>
-
-                    <div className="mt-6 p-6 md:p-8 rounded-2xl bg-white/60 backdrop-blur-md border border-outline-variant/30 shadow-botanical">
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="text-3xl font-display font-bold text-primary/30">{step.step}</span>
-                        <span className="font-label-caps text-xs text-tertiary uppercase tracking-wider">{step.sub}</span>
-                      </div>
-                      <h3 className="font-headline-md text-xl md:text-2xl text-primary font-bold mt-2">
-                        {step.title}
-                      </h3>
-                      <p className="font-body-md text-body-md text-on-surface-variant mt-3 leading-relaxed">
-                        {step.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ━━━ 5. SỐ LIỆU MINH BẠCH & THỐNG KÊ ━━━ */}
         <section className="w-full py-16 md:py-20 bg-primary-container/10 border-y border-outline-variant/30">
           <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-[64px]">
@@ -306,24 +345,26 @@ export default function AboutPage() {
                 />
               </div>
             </div>
-            <StaggerReveal className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { n: 120, suffix: '+', l: 'Hecta vùng trồng sạch', sub: 'Tại Sa Pa & Mộc Châu' },
                 { n: 15, suffix: '+', l: 'Năm kinh nghiệm dược học', sub: 'Đội ngũ chuyên môn sâu' },
                 { n: 50, suffix: 'k+', l: 'Khách hàng đồng hành', sub: 'Tỷ lệ hài lòng 98.6%' },
                 { n: 100, suffix: '%', l: 'Minh bạch nguồn gốc', sub: 'Truy xuất mã QR từng lô' },
               ].map((s) => (
-                <div key={s.l} className="p-8 rounded-2xl bg-surface-container-lowest/90 backdrop-blur-sm border border-outline-variant/40 shadow-botanical text-center flex flex-col justify-between">
-                  <p className="font-headline-lg text-3xl md:text-4xl text-primary font-bold">
-                    <AnimatedCounter value={s.n} suffix={s.suffix} />
-                  </p>
-                  <div>
-                    <h4 className="font-label-lg text-on-surface font-semibold mt-3">{s.l}</h4>
-                    <p className="font-body-sm text-xs text-on-surface-variant mt-1">{s.sub}</p>
+                <StaggerItem key={s.l}>
+                  <div className="p-8 rounded-2xl bg-surface-container-lowest/90 backdrop-blur-sm border border-outline-variant/40 shadow-botanical text-center flex flex-col justify-between h-full">
+                    <p className="font-headline-lg text-3xl md:text-4xl text-primary font-bold">
+                      <CountUp end={s.n} suffix={s.suffix} />
+                    </p>
+                    <div>
+                      <h4 className="font-label-lg text-on-surface font-semibold mt-3">{s.l}</h4>
+                      <p className="font-body-sm text-xs text-on-surface-variant mt-1">{s.sub}</p>
+                    </div>
                   </div>
-                </div>
+                </StaggerItem>
               ))}
-            </StaggerReveal>
+            </StaggerContainer>
           </div>
         </section>
 
