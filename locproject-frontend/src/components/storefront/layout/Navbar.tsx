@@ -102,14 +102,20 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
     }, 300);
   }, [query]);
 
-  const escapeHtml = (s: string) =>
-    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
-
-  const highlight = (text: string, q: string) => {
-    const safeText = escapeHtml(text);
-    if (!q) return safeText;
-    const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return safeText.replace(regex, '<mark class="bg-primary-100 text-primary-800 rounded px-0.5 not-italic">$1</mark>');
+  const renderHighlighted = (text: string, q: string) => {
+    if (!q || !q.trim()) return text;
+    const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('(' + escaped + ')', 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <mark key={index} className="bg-primary-100 text-primary-800 rounded px-0.5 not-italic">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
   };
 
   const goToProduct = (slug: string) => {
@@ -213,10 +219,9 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
                     <span className="material-symbols-outlined text-primary-400 text-xl">local_pharmacy</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p
-                      className="font-medium text-sm text-text-primary"
-                      dangerouslySetInnerHTML={{ __html: highlight(product.name, query) }}
-                    />
+                    <p className="font-medium text-sm text-text-primary">
+                      {renderHighlighted(product.name, query)}
+                    </p>
                     <p className="text-xs text-text-secondary mt-0.5">{product.category?.name}</p>
                   </div>
                   <p className="text-sm font-semibold text-primary-700 flex-shrink-0">

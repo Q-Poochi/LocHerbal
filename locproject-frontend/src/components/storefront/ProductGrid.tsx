@@ -50,14 +50,20 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
     }
   };
 
-  const escapeHtml = (s: string) =>
-    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
-
-  const highlight = (text: string, q: string) => {
-    const safeText = escapeHtml(text);
-    if (!q) return safeText;
-    const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return safeText.replace(regex, '<mark class="bg-primary-100 text-primary-800 rounded px-0.5 not-italic">$1</mark>');
+  const renderHighlighted = (text: string, q: string) => {
+    if (!q || !q.trim()) return text;
+    const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('(' + escaped + ')', 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <mark key={index} className="bg-primary-100 text-primary-800 rounded px-0.5 not-italic">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
   };
 
   return (
@@ -129,10 +135,9 @@ function PLPProductCard({ product, highlightQuery }: { product: Product; highlig
 
       {/* Info */}
       <div className="p-4">
-        <h3
-          className="font-display font-semibold text-sm text-text-primary line-clamp-2 mb-2 group-hover:text-primary-700 transition-colors h-10"
-          dangerouslySetInnerHTML={{ __html: highlight(product.name, highlightQuery) }}
-        />
+        <h3 className="font-display font-semibold text-sm text-text-primary line-clamp-2 mb-2 group-hover:text-primary-700 transition-colors h-10">
+          {renderHighlighted(product.name, highlightQuery)}
+        </h3>
 
         <div className="flex items-baseline gap-2">
           <span className="font-[family-name:var(--font-be-vietnam)] font-medium text-[19px] tabular-nums text-primary-700">
