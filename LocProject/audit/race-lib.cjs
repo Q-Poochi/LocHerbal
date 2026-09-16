@@ -184,9 +184,144 @@ function printEvidence(title, before, after) {
   console.log(`  [DB] ${title} AFTER : onHand=${after.qtyOnHand} reserved=${after.qtyReserved}`);
 }
 
+// ── Bổ sung cho kịch bản 2-7 ─────────────────────────────────────────────
+// CSRF token dùng chung cho cả batch (middleware chỉ so khớp cookie vs header,
+// token KHÔNG gắn với user) → tránh dính rate-limit 60/phút của GET /auth/csrf.
+let sharedCsrfCache = null;
+async function fetchCsrfToken() {
+  if (sharedCsrfCache) return sharedCsrfCache;
+  const r = await fetch(`${BASE_URL}/auth/csrf`);
+  sharedCsrfCache = (await r.json())?.csrfToken || '';
+  return sharedCsrfCache;
+}
+
+function bareClient(key, csrf) {
+  const c = newClient(key);
+  if (csrf) {
+    c.jar.csrfToken = csrf;
+    c.jar.cookies['csrf_token'] = csrf;
+  }
+  return c;
+}
+
+async function registerUser(client, { email, phone, fullName }) {
+  return req(client.jar, 'POST', '/auth/register', {
+    body: { email, password: PASSWORD, fullName, ...(phone ? { phone } : {}) },
+  });
+}
+
+async function refreshTokens(client) {
+  return req(client.jar, 'POST', '/auth/refresh', { token: client.token });
+}
+
+async function changePassword(client, currentPassword, newPassword) {
+  return req(client.jar, 'POST', '/auth/change-password', {
+    token: client.token,
+    body: { currentPassword, newPassword },
+  });
+}
+
+async function cancelOrder(client, orderId) {
+  return req(client.jar, 'POST', `/orders/${orderId}/cancel`, { token: client.token });
+}
+
+// ── Session evidence (kịch bản 5/6) ──────────────────────────────────────
+async function sessionStats(userId) {
+  const sessions = await prisma.userSession.findMany({
+    where: { userId },
+    select: { id: true, jti: true, isRevoked: true },
+  });
+  return {
+    total: sessions.length,
+    revoked: sessions.filter((s) => s.isRevoked).length,
+    active: sessions.filter((s) => !s.isRevoked).length,
+    sessions,
+  };
+}
+
+// ── Coupon test (kịch bản 2) ─────────────────────────────────────────────
+async function ensureTestCoupon(code, usageLimit, discountValue = 50) {
+  await prisma.couponUsage.deleteMany({ where: { coupon: { code } } });
+  await prisma.coupon.deleteMany({ where: { code } });
+  return prisma.coupon.create({
+    data: {
+      code,
+      discountType: 'PERCENTAGE',
+      discountValue,
+      minOrderValue: 0,
+      usageLimit,
+      usedCount: 0,
+      startDate: new Date(Date.now() - 3600_000),
+      endDate: new Date(Date.now() + 86_400_000),
+      isActive: true,
+    },
+  });
+}
+
+async function couponEvidence(code) {
+  const c = await prisma.coupon.findUnique({
+    where: { code },
+    include: { usages: true },
+  });
+  return {
+    usageLimit: c.usageLimit,
+    usedCount: c.usedCount,
+    usageRows: c.usages.length,
+    distinctOrders: new Set(c.usages.map((u) => u.orderId)).size,
+  };
+}
+
+// ── Cleanup người dùng test (kịch bản 4) ─────────────────────────────────
+async function cleanupTestUsers(emails) {
+  const users = await prisma.user.findMany({ where: { email: { in: emails } } });
+  const userIds = users.map((u) => u.id);
+  const customers = userIds.length
+    ? await prisma.customer.findMany({ where: { userId: { in: userIds } } })
+    : [];
+  const customerIds = customers.map((c) => c.id);
+
+  let orderIds = [];
+  if (customerIds.length) {
+    const orders = await prisma.order.findMany({
+      where: { customerId: { in: customerIds } },
+      select: { id: true },
+    });
+    orderIds = orders.map((o) => o.id);
+    await cleanupOrders(orderIds); // couponUsage + order
+    await prisma.paymentTransaction.deleteMany({ where: { orderId: { in: orderIds } } });
+    await prisma.customerAddress.deleteMany({ where: { customerId: { in: customerIds } } });
+    const carts = await prisma.cart.findMany({
+      where: { customerId: { in: customerIds } },
+      select: { id: true },
+    });
+    const cartIds = carts.map((c) => c.id);
+    if (cartIds.length) {
+      await prisma.cartItem.deleteMany({ where: { cartId: { in: cartIds } } });
+      await prisma.cart.deleteMany({ where: { id: { in: cartIds } } });
+    }
+    await prisma.customer.deleteMany({ where: { id: { in: customerIds } } });
+  }
+  if (userIds.length) {
+    await prisma.userSession.deleteMany({ where: { userId: { in: userIds } } });
+    await prisma.userRole.deleteMany({ where: { userId: { in: userIds } } });
+    await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+  }
+  return { userIds, customerIds, orderIds };
+}
+
+async function userByEmail(email) {
+  return prisma.user.findUnique({ where: { email } });
+}
+
+async function customerByEmail(email) {
+  return prisma.customer.findFirst({ where: { email } });
+}
+
 module.exports = {
   BASE_URL, prisma, PASSWORD,
   newClient, login, req, addToCart, checkout, clearCart,
   ensureRaceUsers, loginAll, ensureTestVariant, getStock,
   orderEvidence, fireSimultaneous, cleanupOrders, cleanupCartsByVariant, printEvidence,
+  fetchCsrfToken, bareClient, registerUser, refreshTokens, changePassword, cancelOrder,
+  sessionStats, ensureTestCoupon, couponEvidence, cleanupTestUsers, userByEmail, customerByEmail,
 };
