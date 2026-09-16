@@ -95,3 +95,8 @@ locproject-frontend/.playwright/
 # Screenshots (local only)
 screenshots*.png
 screenshots/
+# Local-only design archive (khong phai source cua app)
+_backup_design_archive/
+
+# Scratch SQL (query doi chieu DB thu cong, khong thuoc source)
+check-db.sql
