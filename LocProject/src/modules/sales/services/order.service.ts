@@ -450,4 +450,49 @@ export class OrderService {
       throw new BadRequestException(`Không thể chuyển đơn hàng từ ${from} sang ${to}`);
     }
   }
+
+  /**
+   * Lấy danh sách các đơn hàng cần admin xử lý thủ công (chứa note [CẦN ADMIN XỬ LÝ]).
+   */
+  async getFlaggedOrdersForAdmin(page = 1, limit = 20) {
+    const where: Prisma.OrderWhereInput = {
+      statusHistory: {
+        some: {
+          note: {
+            contains: '[CẦN ADMIN XỬ LÝ]',
+          },
+        },
+      },
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          customer: { select: { fullName: true, phone: true, email: true } },
+          items: true,
+          statusHistory: {
+            orderBy: { createdAt: 'desc' },
+          },
+          paymentTxns: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
 }

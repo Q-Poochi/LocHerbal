@@ -16,6 +16,7 @@ import { AddressController } from './controllers/address.controller';
 import { WishlistController } from './controllers/wishlist.controller';
 import { InventoryAllocationFailedListener } from './listeners/inventory-allocation-failed.listener';
 import { OrderConfirmationEmailListener } from './listeners/order-confirmation-email.listener';
+import { OrphanedOrderSweeperJob } from './jobs/orphaned-order-sweeper.job';
 import { CoreModule } from '../core/core.module';
 
 @Module({
@@ -29,6 +30,7 @@ import { CoreModule } from '../core/core.module';
     AdminCustomerService,
     InventoryAllocationFailedListener,
     OrderConfirmationEmailListener,
+    OrphanedOrderSweeperJob,
   ],
   controllers: [PaymentController, CartController, OrderController, AdminOrderController, CustomerController, AdminCustomerController, AddressController, WishlistController],
   exports: [CartService, OrderService, VNPayService],

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { RedisThrottlerStorage } from './shared/throttler/redis-throttler.storage';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './shared/config/env.validation';
@@ -28,6 +29,7 @@ import { AuditService } from './shared/services/audit.service';
     }),
     PrismaModule,
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: Number(process.env.THROTTLE_LIMIT ?? 60) }],
       // Redis storage: rate limit chia sẻ giữa các instance Railway

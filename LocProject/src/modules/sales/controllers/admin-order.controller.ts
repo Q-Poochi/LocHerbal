@@ -34,6 +34,13 @@ export class AdminOrderController {
     }
 
     @Roles('admin', 'staff')
+    @Get('flagged')
+    @ApiOperation({ summary: 'Danh sách đơn hàng cần admin review thủ công' })
+    async getFlaggedOrders(@Query('page') page = '1', @Query('limit') limit = '20') {
+        return this.orderService.getFlaggedOrdersForAdmin(+page, +limit);
+    }
+
+    @Roles('admin', 'staff')
     @Get(':id')
     @ApiOperation({ summary: 'Chi tiết đơn hàng' })
     async findById(@Param('id') id: string) {
