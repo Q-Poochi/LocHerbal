@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { apiClient } from '@/lib/api/client';
 import { getErrorMessage } from '@/lib/utils/error';
 
-type OrderStatus = 'ALL' | 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+type OrderStatus = 'ALL' | 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'FLAGGED';
 
 const statusTabs = [
     { key: 'ALL' as const, label: 'Tất cả' },
@@ -15,6 +15,7 @@ const statusTabs = [
     { key: 'SHIPPED' as const, label: 'Đang giao' },
     { key: 'DELIVERED' as const, label: 'Đã giao' },
     { key: 'CANCELLED' as const, label: 'Đã hủy' },
+    { key: 'FLAGGED' as const, label: '⚠️ Cần xử lý' },
 ];
 
 const statusStyles: Record<string, string> = {
@@ -75,11 +76,12 @@ export default function AdminOrdersPage() {
         setLoading(true);
         setError('');
         try {
-            const res = await apiClient.get<OrderListResponse>('/admin/orders', {
+            const endpoint = filterTab === 'FLAGGED' ? '/admin/orders/flagged' : '/admin/orders';
+            const res = await apiClient.get<OrderListResponse>(endpoint, {
                 params: {
                     page,
                     limit: 20,
-                    ...(filterTab !== 'ALL' ? { status: filterTab } : {}),
+                    ...(filterTab !== 'ALL' && filterTab !== 'FLAGGED' ? { status: filterTab } : {}),
                     ...(search ? { search } : {}),
                     ...(from ? { from } : {}),
                     ...(to ? { to } : {}),
