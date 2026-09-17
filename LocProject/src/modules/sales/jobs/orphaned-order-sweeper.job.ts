@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OrderCancelledEvent } from '../events/order-cancelled.event';
 
 @Injectable()
 export class OrphanedOrderSweeperJob {
@@ -22,6 +23,9 @@ export class OrphanedOrderSweeperJob {
         status: 'PENDING',
         allocationStatus: 'PENDING',
         createdAt: { lt: staleThreshold },
+      },
+      include: {
+        items: { select: { productVariantId: true, qty: true } },
       },
     });
 
@@ -52,14 +56,24 @@ export class OrphanedOrderSweeperJob {
         }
 
         // Chưa thanh toán → an toàn để hủy tự động
-        await this.prisma.$transaction(async (tx) => {
-          await tx.order.update({
-            where: { id: order.id },
+        // Hủy bằng atomic UPDATE kèm re-check paymentStatus='UNPAID' ngay trong
+        // transaction (chống TOCTOU với VNPay IPN: nếu IPN xác nhận PAID giữa
+        // lúc quét và hủy, updateMany trả count=0 → bỏ qua, không hủy oan).
+        const cancelled = await this.prisma.$transaction(async (tx) => {
+          const res = await tx.order.updateMany({
+            where: {
+              id: order.id,
+              status: 'PENDING',
+              allocationStatus: 'PENDING',
+              paymentStatus: 'UNPAID',
+            },
             data: {
               status: 'CANCELLED',
               allocationStatus: 'FAILED',
             },
           });
+          if (res.count === 0) return false;
+
           await tx.orderStatusHistory.create({
             data: {
               orderId: order.id,
@@ -68,9 +82,33 @@ export class OrphanedOrderSweeperJob {
               changedBy: 'SYSTEM_SWEEPER',
             },
           });
+          return true;
         });
 
-        this.logger.log(`[SWEEPER] Đã hủy order ${order.id} (treo, chưa thanh toán)`);
+        if (!cancelled) {
+          this.logger.warn(
+            `[SWEEPER] Bỏ qua order ${order.id} — trạng thái vừa thay đổi (có thể đã PAID qua IPN ngay trước khi hủy)`,
+          );
+          continue;
+        }
+
+        // Phát đúng event 'order.cancelled' như luồng hủy thủ công → Warehouse
+        // listener RELEASE phần tồn kho đã reserve (tái dùng logic compensation
+        // có sẵn, không viết logic giải phóng riêng).
+        this.eventEmitter.emit(
+          'order.cancelled',
+          new OrderCancelledEvent(
+            order.id,
+            order.items.map((i) => ({
+              productVariantId: i.productVariantId,
+              qty: i.qty,
+            })),
+          ),
+        );
+
+        this.logger.log(
+          `[SWEEPER] Đã hủy order ${order.id} (treo, chưa thanh toán) — đã phát order.cancelled trả tồn kho`,
+        );
       } catch (error: any) {
         this.logger.error(
           `[SWEEPER] Không thể xử lý order ${order.id}: ${error?.message || error}`,

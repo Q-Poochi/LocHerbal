@@ -3,6 +3,7 @@ import { PrismaService } from '../../../shared/prisma/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { OrderCreatedEvent } from '../events/order-created.event';
 import { OrderCancelledEvent } from '../events/order-cancelled.event';
+import { withTxRetry } from '../../../shared/prisma/tx-with-retry';
 import { CouponService } from '../../marketing/services/coupon.service';
 import { OrderStatus, PaymentStatus, Coupon, Prisma } from '@prisma/client';
 import { CheckoutDto } from '../dto/order.dto';
@@ -22,6 +23,19 @@ export class OrderService {
     private readonly eventEmitter: EventEmitter2,
     private readonly couponService: CouponService,
   ) { }
+
+  /**
+   * Delegation sang helper chung (xem shared/prisma/tx-with-retry.ts):
+   * - timeout/maxWait tường minh 15s/10s (mặc định interactive 5s không đủ
+   *   dưới tải cao — đã ghi nhận 22/50 request checkout bị abort ~5.8s)
+   * - retry 3 lần (backoff 100/300ms) CHỈ cho lỗi P2028.
+   */
+  private txWithRetry<T>(
+    fn: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    return withTxRetry(this.prisma, fn);
+  }
+
 
   /**
    * Tạo đơn hàng từ giỏ hàng (Checkout)
@@ -135,7 +149,7 @@ export class OrderService {
     const orderCode = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     // 4. Lưu database trong transaction
-    const order = await this.prisma.$transaction(async (tx) => {
+    const order = await this.txWithRetry(async (tx) => {
       // Tạo Order
       const newOrder = await tx.order.create({
         data: {
@@ -253,8 +267,12 @@ export class OrderService {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 
-    // Kiểm tra quyền sở hữu: customer chỉ hủy được đơn của mình
-    if (order.customerId !== changedBy) {
+    // Kiểm tra quyền sở hữu: customer chỉ hủy được đơn của mình.
+    // Actor hệ thống (SYSTEM_COMPENSATING / SYSTEM_SWEEPER...) được phép hủy bù
+    // mọi đơn. Trước đây check này chặn luôn compensating cancel (changedBy
+    // 'SYSTEM_COMPENSATING' !== customerId → NotFound) khiến MỌI đơn thiếu tồn
+    // kho không bao giờ được hủy + release → tồn đọng PENDING/FAILED và rò reserve.
+    if (!changedBy.startsWith('SYSTEM_') && order.customerId !== changedBy) {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 
@@ -266,7 +284,7 @@ export class OrderService {
       throw new BadRequestException('Không thể hủy đơn hàng ở trạng thái này');
     }
 
-    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+    const updatedOrder = await this.txWithRetry(async (tx) => {
       const updated = await tx.order.update({
         where: { id: orderId },
         data: { status: OrderStatus.CANCELLED },
@@ -398,7 +416,7 @@ export class OrderService {
 
     this.assertAllowedTransition(order.status, status);
 
-    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+    const updatedOrder = await this.txWithRetry(async (tx) => {
       const updated = await tx.order.update({
         where: { id },
         data: { status },
